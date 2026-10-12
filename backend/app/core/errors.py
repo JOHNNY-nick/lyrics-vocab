@@ -146,6 +146,7 @@ def installer_gestionnaires(app: FastAPI) -> None:
     @app.exception_handler(StarletteHTTPException)
     async def _http(_: Request, exc: StarletteHTTPException) -> JSONResponse:
         codes = {
+            400: ("requete_invalide", "La requête est mal formée."),
             404: ("introuvable", "Ressource introuvable."),
             405: ("methode_non_autorisee", "Méthode non autorisée."),
         }
