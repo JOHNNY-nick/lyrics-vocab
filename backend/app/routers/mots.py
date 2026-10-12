@@ -106,15 +106,18 @@ def rechercher_extraits(
         return JSONResponse(status_code=200, content=_sortie(session, mot))
     besoin_externe = not mot.traduction_fr or not mots.extraits_du_mot(session, mot_id)
     if besoin_externe:
-        if not conteneur.musixmatch.disjoncteur.autoriser() and not conteneur.deepl.configure:
+        source = conteneur.paroles.service
+        if not conteneur.paroles.disjoncteur.autoriser() and mot.traduction_fr:
             raise ServiceIndisponible()
-        for api in ("musixmatch", "deepl"):
+        for api in (source, "deepl"):
+            if api == "deepl" and not conteneur.deepl.configure:
+                continue
             try:
                 conteneur.compteur.verifier(api)
             except QuotaDepasse:
                 if api == "deepl" and mot.traduction_fr:
                     continue
-                if api == "musixmatch" and mots.extraits_du_mot(session, mot_id):
+                if api == source and mots.extraits_du_mot(session, mot_id):
                     continue
                 raise
     if not gestion.occupe(mot_id):

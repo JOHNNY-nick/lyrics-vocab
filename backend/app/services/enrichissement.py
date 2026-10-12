@@ -15,9 +15,12 @@ from app.core.errors import ErreurApi, IaIndisponible, QuotaDepasse, ServiceIndi
 from app.core.logging import journaliser
 from app.models import Artiste, Extrait, Morceau, Mot
 from app.services import ai_explainer, artistes
+from app.services.ai_traduction import traduire_par_ia
 from app.services.deepl_client import DeeplClient
+from app.services.deezer_client import DeezerClient
 from app.services.extraction import ExtraitDecoupe, extraire
 from app.services.genius_client import GeniusClient
+from app.services.lrclib_client import LrclibClient
 from app.services.musixmatch_client import MusixmatchClient
 from app.services.ollama_client import OllamaClient
 from app.services.types_externes import MorceauExterne
@@ -37,8 +40,10 @@ class Services:
 
     parametres: Parametres
     fabrique: sessionmaker[Session]
-    musixmatch: MusixmatchClient
-    genius: GeniusClient
+    # Source de paroles : Musixmatch si une clé est configurée, sinon LRCLIB (sans clé).
+    paroles: MusixmatchClient | LrclibClient
+    # Recherche d'artistes : Genius si un jeton est configuré, sinon Deezer (sans clé).
+    genius: GeniusClient | DeezerClient
     deepl: DeeplClient
     ollama: OllamaClient
     compteur: object
@@ -79,7 +84,7 @@ async def _chercher_dans(
     hors_liste: bool,
     echeance: float,
 ) -> bool:
-    """Parcourt les morceaux ; retourne faux si Musixmatch est indisponible ou épuisé."""
+    """Parcourt les morceaux ; retourne faux si la source est indisponible ou épuisée."""
     for morceau, artiste_id in morceaux:
         if len(recherche.trouvailles) >= EXTRAITS_MAX or time.monotonic() > echeance:
             return True
@@ -89,12 +94,13 @@ async def _chercher_dans(
         ):
             continue
         try:
-            texte = await services.musixmatch.obtenir_texte(morceau.musixmatch_track_id)
+            texte = await services.paroles.texte_de(morceau)
         except (ServiceIndisponible, QuotaDepasse) as exc:
-            recherche.code_erreur = _code(exc, "musixmatch")
+            recherche.code_erreur = _code(exc, services.paroles.service)
             return False
         extrait = extraire(texte, terme) if texte else None
         del texte  # MAT-16 : le texte complet n'est pas conservé
+        morceau.texte = None
         if extrait is not None:
             recherche.trouvailles.append(Trouvaille(extrait, morceau, artiste_id, hors_liste))
         await services.dormir(services.parametres.pause_entre_appels_ms / 1000)
@@ -110,22 +116,18 @@ async def _rechercher_preferes(
         if len(recherche.trouvailles) >= EXTRAITS_MAX or time.monotonic() > echeance:
             break
         try:
-            if musixmatch_id is None:
-                candidats = await services.musixmatch.rechercher_artiste(nom)
-                if not candidats:
-                    continue
-                musixmatch_id = candidats[0].musixmatch_id
-                with services.fabrique() as session:
-                    ligne = session.get(Artiste, artiste_id)
-                    if ligne is not None:
-                        ligne.musixmatch_id = musixmatch_id
-                        session.commit()
-            morceaux = await services.musixmatch.lister_morceaux(
-                musixmatch_id, services.parametres.morceaux_par_artiste
+            morceaux, identifiant = await services.paroles.morceaux_artiste(
+                nom, musixmatch_id, services.parametres.morceaux_par_artiste
             )
         except (ServiceIndisponible, QuotaDepasse) as exc:
-            recherche.code_erreur = _code(exc, "musixmatch")
+            recherche.code_erreur = _code(exc, services.paroles.service)
             return False
+        if identifiant is not None and identifiant != musixmatch_id:
+            with services.fabrique() as session:
+                ligne = session.get(Artiste, artiste_id)
+                if ligne is not None:
+                    ligne.musixmatch_id = identifiant
+                    session.commit()
         if not await _chercher_dans(
             services, recherche, terme, [(m, artiste_id) for m in morceaux], False, echeance
         ):
@@ -152,7 +154,7 @@ async def chercher_extraits(services: Services, terme: str) -> Recherche:
     if disponible and not recherche.trouvailles:
         echeance = time.monotonic() + REPLI_DUREE_MAX_S
         try:
-            morceaux = await services.musixmatch.rechercher_morceaux_par_texte(
+            morceaux = await services.paroles.rechercher_morceaux_par_texte(
                 terme, services.parametres.morceaux_repli
             )
             await asyncio.wait_for(
@@ -162,7 +164,7 @@ async def chercher_extraits(services: Services, terme: str) -> Recherche:
                 timeout=REPLI_DUREE_MAX_S,
             )
         except (ServiceIndisponible, QuotaDepasse) as exc:
-            recherche.code_erreur = _code(exc, "musixmatch")
+            recherche.code_erreur = _code(exc, services.paroles.service)
         except TimeoutError:
             recherche.code_erreur = recherche.code_erreur or "delai_depasse"
     if not recherche.trouvailles and recherche.code_erreur is None:
@@ -173,17 +175,25 @@ async def chercher_extraits(services: Services, terme: str) -> Recherche:
 async def traduire(
     services: Services, terme: str, contexte: str | None
 ) -> tuple[str | None, str | None]:
-    """Traduction EN → FR ; (traduction, code d'erreur)."""
-    if not services.deepl.configure:
-        return None, "deepl_indisponible"
+    """Traduction EN → FR par DeepL, à défaut par l'IA locale ; (traduction, code d'erreur)."""
+    code: str | None = None
+    if services.deepl.configure:
+        try:
+            for _ in range(2):  # CL-12 : une traduction vide est retentée une fois
+                traduction = await services.deepl.traduire(terme, contexte)
+                if traduction:
+                    return traduction[:LONGUEUR_MAX_TRADUCTION], None
+            code = "deepl_indisponible"
+        except (ServiceIndisponible, QuotaDepasse) as exc:
+            code = _code(exc, "deepl")
     try:
-        for _ in range(2):  # CL-12 : une traduction vide est retentée une fois
-            traduction = await services.deepl.traduire(terme, contexte)
+        if await services.ollama.disponible():
+            traduction = await traduire_par_ia(services.ollama, terme, contexte)
             if traduction:
                 return traduction[:LONGUEUR_MAX_TRADUCTION], None
-        return None, "deepl_indisponible"
-    except (ServiceIndisponible, QuotaDepasse) as exc:
-        return None, _code(exc, "deepl")
+    except ErreurApi:
+        pass
+    return None, code or "traduction_indisponible"
 
 
 def _enregistrer_extraits(session: Session, mot: Mot, recherche: Recherche) -> int:
@@ -288,7 +298,7 @@ async def enrichir(
     elif isinstance(resultat_recherche, Recherche):
         erreurs.append(resultat_recherche.code_erreur or "aucun_extrait")
     elif isinstance(resultat_recherche, BaseException):
-        erreurs.append("musixmatch_indisponible")
+        erreurs.append(f"{services.paroles.service}_indisponible")
     elif extrait_existant is None:
         erreurs.append("aucun_extrait")
 

@@ -15,7 +15,7 @@ from app.core.logging import journaliser
 from app.models import QuotaApi
 from app.services.calendrier import fuseau_valide
 
-APIS = ("musixmatch", "genius", "deepl", "ollama")
+APIS = ("musixmatch", "lrclib", "genius", "deepl", "deezer", "ollama")
 
 
 class Compteur(Protocol):

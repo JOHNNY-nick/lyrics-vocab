@@ -26,8 +26,10 @@ from app.core.resilience import Disjoncteur
 from app.routers import artistes, mots, revisions, sante, sync
 from app.services import reglages
 from app.services.deepl_client import DeeplClient
+from app.services.deezer_client import DeezerClient
 from app.services.enrichissement import GestionnaireEnrichissement, Services
 from app.services.genius_client import GeniusClient
+from app.services.lrclib_client import LrclibClient
 from app.services.musixmatch_client import MusixmatchClient
 from app.services.ollama_client import OllamaClient
 from app.services.quotas import CompteurQuotas
@@ -84,10 +86,19 @@ def construire_services(parametres: Parametres, fabrique, http: httpx.AsyncClien
         parametres=parametres,
         fabrique=fabrique,
         compteur=compteur,
-        musixmatch=MusixmatchClient(
-            parametres.musixmatch_api_key, http, compteur, disjoncteur("musixmatch")
+        # Sans clé, les services gratuits LRCLIB et Deezer prennent le relais (DECISIONS.md).
+        paroles=(
+            MusixmatchClient(
+                parametres.musixmatch_api_key, http, compteur, disjoncteur("musixmatch")
+            )
+            if parametres.musixmatch_api_key
+            else LrclibClient(http, compteur, disjoncteur("lrclib"))
         ),
-        genius=GeniusClient(parametres.genius_token, http, compteur, disjoncteur("genius")),
+        genius=(
+            GeniusClient(parametres.genius_token, http, compteur, disjoncteur("genius"))
+            if parametres.genius_token
+            else DeezerClient(http, compteur, disjoncteur("deezer"))
+        ),
         deepl=DeeplClient(parametres.deepl_api_key, http, compteur, disjoncteur("deepl")),
         ollama=OllamaClient(
             http,

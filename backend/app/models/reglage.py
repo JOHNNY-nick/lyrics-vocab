@@ -61,7 +61,9 @@ class QuotaApi(Base):
 
     __tablename__ = "quota_api"
     __table_args__ = (
-        CheckConstraint("api IN ('musixmatch','genius','deepl','ollama')", name="ck_quota_api"),
+        CheckConstraint(
+            "api IN ('musixmatch','genius','deepl','ollama','lrclib','deezer')", name="ck_quota_api"
+        ),
     )
 
     api: Mapped[str] = mapped_column(Text, primary_key=True)

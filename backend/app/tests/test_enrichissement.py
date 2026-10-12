@@ -26,8 +26,8 @@ def _preferer(fabrique, services, nom="Artiste A", musixmatch_id=10, morceaux=No
     with fabrique() as session:
         artistes.remplacer_liste(session, [{"nom": nom}])
         session.commit()
-    services.musixmatch.ids_artistes[nom] = musixmatch_id
-    services.musixmatch.morceaux_artiste[musixmatch_id] = morceaux or []
+    services.paroles.ids_artistes[nom] = musixmatch_id
+    services.paroles.morceaux_par_artiste[musixmatch_id] = morceaux or []
 
 
 def _lire(fabrique, mot_id) -> tuple[Mot, list[Extrait]]:
@@ -40,7 +40,7 @@ def _lire(fabrique, mot_id) -> tuple[Mot, list[Extrait]]:
 def test_enrichissement_complet(fabrique, services):
     mot_id = _mot(fabrique)
     _preferer(fabrique, services, morceaux=[MorceauExterne(1, "Chanson", "Artiste A", 10)])
-    services.musixmatch.textes[1] = PAROLES
+    services.paroles.textes[1] = PAROLES
     services.deepl.traductions["Lowkey"] = "discrètement ; plutôt"
     services.deepl.traductions["lowkey"] = "discrètement ; plutôt"
     statut = asyncio.run(enrichir(services, mot_id))
@@ -59,7 +59,7 @@ def test_sans_extrait(fabrique, services):
     """MAT-T05 : introuvable partout : traduction sans phrase, statut partiel."""
     mot_id = _mot(fabrique, "zorglub")
     _preferer(fabrique, services, morceaux=[MorceauExterne(1, "Chanson", "Artiste A", 10)])
-    services.musixmatch.textes[1] = PAROLES
+    services.paroles.textes[1] = PAROLES
     asyncio.run(enrichir(services, mot_id))
     mot, extraits = _lire(fabrique, mot_id)
     assert mot.statut_enrichissement == "partiel" and mot.erreur_enrichissement == "aucun_extrait"
@@ -70,9 +70,9 @@ def test_repli_hors_liste(fabrique, services):
     """MAT-T04 : absent chez les préférés, trouvé en recherche générale : hors liste."""
     mot_id = _mot(fabrique)
     _preferer(fabrique, services, morceaux=[MorceauExterne(1, "Autre", "Artiste A", 10)])
-    services.musixmatch.textes[1] = "Nothing to see here"
-    services.musixmatch.morceaux_generaux = [MorceauExterne(2, "Tube", "Artiste B", 20)]
-    services.musixmatch.textes[2] = PAROLES
+    services.paroles.textes[1] = "Nothing to see here"
+    services.paroles.morceaux_generaux = [MorceauExterne(2, "Tube", "Artiste B", 20)]
+    services.paroles.textes[2] = PAROLES
     asyncio.run(enrichir(services, mot_id))
     _, extraits = _lire(fabrique, mot_id)
     assert len(extraits) == 1 and extraits[0].hors_liste is True
@@ -83,8 +83,8 @@ def test_repli_hors_liste(fabrique, services):
 def test_sans_artiste_prefere(fabrique, services):
     """MAT-20 / CL-15 : sans liste, recherche générale directe."""
     mot_id = _mot(fabrique)
-    services.musixmatch.morceaux_generaux = [MorceauExterne(2, "Tube", "Artiste B", 20)]
-    services.musixmatch.textes[2] = PAROLES
+    services.paroles.morceaux_generaux = [MorceauExterne(2, "Tube", "Artiste B", 20)]
+    services.paroles.textes[2] = PAROLES
     asyncio.run(enrichir(services, mot_id))
     _, extraits = _lire(fabrique, mot_id)
     assert extraits and extraits[0].hors_liste
@@ -95,18 +95,18 @@ def test_trois_extraits_max(fabrique, services):
     morceaux = [MorceauExterne(i, f"T{i}", "Artiste A", 10) for i in range(1, 7)]
     _preferer(fabrique, services, morceaux=morceaux)
     for i in range(1, 7):
-        services.musixmatch.textes[i] = PAROLES
+        services.paroles.textes[i] = PAROLES
     asyncio.run(enrichir(services, mot_id))
     _, extraits = _lire(fabrique, mot_id)
     assert len(extraits) == 3
-    assert services.musixmatch.compteur.appels["musixmatch"] == 2 + 3  # artiste, morceaux, 3 textes
+    assert services.paroles.compteur.appels["musixmatch"] == 2 + 3  # artiste, morceaux, 3 textes
 
 
 def test_musixmatch_panne(fabrique, services):
     """MAT-T07 : Musixmatch coupé : traduction et explication quand même."""
     mot_id = _mot(fabrique)
     _preferer(fabrique, services)
-    services.musixmatch.panne = True
+    services.paroles.panne = True
     asyncio.run(enrichir(services, mot_id))
     mot, _ = _lire(fabrique, mot_id)
     assert mot.traduction_fr and mot.explication and mot.statut_enrichissement == "partiel"
@@ -136,7 +136,7 @@ def test_ollama_panne(fabrique, services):
     """IA-T02 : Ollama arrêté : traduction seule, statut partiel."""
     mot_id = _mot(fabrique)
     _preferer(fabrique, services, morceaux=[MorceauExterne(1, "Chanson", "Artiste A", 10)])
-    services.musixmatch.textes[1] = PAROLES
+    services.paroles.textes[1] = PAROLES
     services.ollama.panne = True
     asyncio.run(enrichir(services, mot_id))
     mot, extraits = _lire(fabrique, mot_id)
@@ -148,7 +148,7 @@ def test_cache_deuxieme_appel(fabrique, services, compteur):
     """MAT-T06 / CAC-01 / CAC-04 : second enrichissement : aucun appel externe."""
     mot_id = _mot(fabrique)
     _preferer(fabrique, services, morceaux=[MorceauExterne(1, "Chanson", "Artiste A", 10)])
-    services.musixmatch.textes[1] = PAROLES
+    services.paroles.textes[1] = PAROLES
     asyncio.run(enrichir(services, mot_id))
     avant = dict(compteur.appels)
     asyncio.run(enrichir(services, mot_id))
@@ -159,7 +159,7 @@ def test_cache_mot_recree(fabrique, services, compteur):
     """CAC-02 : un mot supprimé puis recréé réutilise extraits et traduction."""
     mot_id = _mot(fabrique)
     _preferer(fabrique, services, morceaux=[MorceauExterne(1, "Chanson", "Artiste A", 10)])
-    services.musixmatch.textes[1] = PAROLES
+    services.paroles.textes[1] = PAROLES
     asyncio.run(enrichir(services, mot_id))
     with fabrique() as session:
         mots.supprimer_mot(session, mot_id)
@@ -178,8 +178,8 @@ def test_duree_max(fabrique, services, parametres):
     mot_id = _mot(fabrique)
     morceaux = [MorceauExterne(i, f"T{i}", "Artiste A", 10) for i in range(1, 6)]
     _preferer(fabrique, services, morceaux=morceaux)
-    services.musixmatch.textes = {1: PAROLES, 2: "rien", 3: "rien", 4: "rien", 5: "rien"}
-    services.musixmatch.lenteur_s = 0.4
+    services.paroles.textes = {1: PAROLES, 2: "rien", 3: "rien", 4: "rien", 5: "rien"}
+    services.paroles.lenteur_s = 0.4
     debut = datetime.now(UTC)
     asyncio.run(enrichir(services, mot_id))
     assert datetime.now(UTC) - debut < timedelta(seconds=5)

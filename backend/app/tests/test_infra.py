@@ -144,4 +144,4 @@ def test_migration_non_appliquee_refuse_le_demarrage(parametres, services, base_
             pass
     finally:
         with base_vide.begin() as connexion:
-            connexion.execute(text("UPDATE alembic_version SET version_num='0001'"))
+            connexion.execute(text("UPDATE alembic_version SET version_num='0002'"))

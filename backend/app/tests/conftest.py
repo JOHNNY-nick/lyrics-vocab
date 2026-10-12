@@ -115,7 +115,7 @@ def services(parametres, fabrique, compteur) -> Services:
         parametres=parametres,
         fabrique=fabrique,
         compteur=compteur,
-        musixmatch=FauxMusixmatch(compteur),
+        paroles=FauxMusixmatch(compteur),
         genius=FauxGenius(compteur),
         deepl=FauxDeepl(compteur),
         ollama=FauxOllama(compteur),

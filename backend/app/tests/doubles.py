@@ -39,7 +39,7 @@ class FauxMusixmatch:
     """Musixmatch simulé : artistes, morceaux et textes en mémoire."""
 
     compteur: CompteurMemoire
-    morceaux_artiste: dict[int, list[MorceauExterne]] = field(default_factory=dict)
+    morceaux_par_artiste: dict[int, list[MorceauExterne]] = field(default_factory=dict)
     morceaux_generaux: list[MorceauExterne] = field(default_factory=list)
     textes: dict[int, str] = field(default_factory=dict)
     ids_artistes: dict[str, int] = field(default_factory=dict)
@@ -48,6 +48,7 @@ class FauxMusixmatch:
     lenteur_s: float = 0.0
     disjoncteur: Disjoncteur = field(default_factory=lambda: Disjoncteur("musixmatch", 5, 5))
     configure: bool = True
+    service: str = "musixmatch"
 
     def _appel(self) -> None:
         if self.quota:
@@ -63,11 +64,22 @@ class FauxMusixmatch:
 
     async def lister_morceaux(self, musixmatch_artist_id: int, limite: int) -> list[MorceauExterne]:
         self._appel()
-        return self.morceaux_artiste.get(musixmatch_artist_id, [])[:limite]
+        return self.morceaux_par_artiste.get(musixmatch_artist_id, [])[:limite]
 
     async def rechercher_morceaux_par_texte(self, terme: str, limite: int) -> list[MorceauExterne]:
         self._appel()
         return self.morceaux_generaux[:limite]
+
+    async def morceaux_artiste(self, nom: str, musixmatch_id: int | None, limite: int):
+        if musixmatch_id is None:
+            candidats = await self.rechercher_artiste(nom)
+            if not candidats:
+                return [], None
+            musixmatch_id = candidats[0].musixmatch_id
+        return await self.lister_morceaux(musixmatch_id, limite), musixmatch_id
+
+    async def texte_de(self, morceau: MorceauExterne) -> str | None:
+        return await self.obtenir_texte(morceau.musixmatch_track_id)
 
     async def obtenir_texte(self, musixmatch_track_id: int) -> str | None:
         self._appel()

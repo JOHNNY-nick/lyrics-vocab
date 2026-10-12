@@ -31,12 +31,18 @@ class ArtisteExterne:
 
 @dataclass
 class MorceauExterne:
-    """Morceau renvoyé par Musixmatch."""
+    """Morceau renvoyé par la source de paroles (Musixmatch ou LRCLIB).
+
+    `musixmatch_track_id` est l'identifiant du morceau chez la source utilisée. `texte` porte
+    les paroles quand la source les renvoie avec la recherche (LRCLIB) ; il est effacé dès la
+    découpe de l'extrait (MAT-16).
+    """
 
     musixmatch_track_id: int
     titre: str
     artiste_nom: str
     musixmatch_artist_id: int | None
+    texte: str | None = None
 
 
 @dataclass

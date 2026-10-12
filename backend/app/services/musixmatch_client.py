@@ -130,6 +130,21 @@ class MusixmatchClient(ClientExterne):
         )
         return self._morceaux(corps)[:limite]
 
+    async def morceaux_artiste(
+        self, nom: str, musixmatch_id: int | None, limite: int
+    ) -> tuple[list[MorceauExterne], int | None]:
+        """Morceaux d'un artiste ; résout son identifiant Musixmatch au besoin."""
+        if musixmatch_id is None:
+            candidats = await self.rechercher_artiste(nom)
+            if not candidats:
+                return [], None
+            musixmatch_id = candidats[0].musixmatch_id
+        return await self.lister_morceaux(musixmatch_id, limite), musixmatch_id
+
+    async def texte_de(self, morceau: MorceauExterne) -> str | None:
+        """Texte d'un morceau de la liste."""
+        return await self.obtenir_texte(morceau.musixmatch_track_id)
+
     async def obtenir_texte(self, musixmatch_track_id: int) -> str | None:
         """Texte brut (souvent partiel) d'un morceau, ou None."""
         corps = await self._get("track.lyrics.get", {"track_id": musixmatch_track_id})
