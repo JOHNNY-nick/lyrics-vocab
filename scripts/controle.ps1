@@ -5,6 +5,9 @@ param(
     [string]$Base = "lyrics_vocab",
     [string]$Utilisateur = "postgres"
 )
+$RacineInstall = $Racine
+if (Test-Path "$RacineInstall/secrets/pgpass.conf") { $env:PGPASSFILE = "$RacineInstall/secrets/pgpass.conf" }
+if (Test-Path "$RacineInstall/postgresql/bin/psql.exe") { $env:PATH = "$RacineInstall/postgresql/bin;$env:PATH" }
 
 function Etat([string]$Nom, [bool]$Ok, [string]$Detail = "") {
     $Marque = if ($Ok) { "[ OK ]" } else { "[ KO ]" }

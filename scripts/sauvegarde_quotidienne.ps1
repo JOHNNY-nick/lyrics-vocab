@@ -1,13 +1,17 @@
 ﻿# Sauvegarde quotidienne de la base (K.2, SAV-01 à SAV-05, 31.5).
-# Aucun mot de passe ici (CMD-02) : la connexion utilise %APPDATA%\postgresql\pgpass.conf.
+# Aucun mot de passe ici (CMD-02) : la connexion utilise un fichier pgpass
+# (C:/lyrics-vocab/secrets/pgpass.conf s'il existe, sinon %APPDATA%\postgresql\pgpass.conf).
 param(
     [string]$Racine = "C:/lyrics-vocab",
-    [string]$Copie = "D:/copie-lyrics-vocab",      # autre disque ou dossier synchronisé (SAV-02)
+    # Copie hors du PC (SAV-02) : dossier OneDrive s'il existe, sinon un autre disque.
+    [string]$Copie = $(if ($env:OneDrive) { "$env:OneDrive/lyrics-vocab-sauvegardes" } else { "D:/copie-lyrics-vocab" }),
     [string]$Base = "lyrics_vocab",
     [string]$Utilisateur = "postgres",
     [int]$Retention = 14
 )
 $ErrorActionPreference = "Stop"
+if (Test-Path "$Racine/secrets/pgpass.conf") { $env:PGPASSFILE = "$Racine/secrets/pgpass.conf" }
+if (Test-Path "$Racine/postgresql/bin/pg_dump.exe") { $env:PATH = "$Racine/postgresql/bin;$env:PATH" }
 $Dossier = "$Racine/sauvegardes"
 $Journal = "$Racine/logs/sauvegarde.log"
 New-Item -ItemType Directory -Force $Dossier, "$Racine/logs" | Out-Null

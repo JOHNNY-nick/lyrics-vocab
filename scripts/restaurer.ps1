@@ -5,6 +5,9 @@ param(
     [string]$Cible = "lyrics_vocab_restauree",
     [string]$Utilisateur = "postgres"
 )
+$RacineInstall = "C:/lyrics-vocab"
+if (Test-Path "$RacineInstall/secrets/pgpass.conf") { $env:PGPASSFILE = "$RacineInstall/secrets/pgpass.conf" }
+if (Test-Path "$RacineInstall/postgresql/bin/psql.exe") { $env:PATH = "$RacineInstall/postgresql/bin;$env:PATH" }
 $ErrorActionPreference = "Stop"
 $Debut = Get-Date
 & createdb -U $Utilisateur -h 127.0.0.1 -E UTF8 $Cible
