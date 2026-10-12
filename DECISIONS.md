@@ -77,6 +77,24 @@ Ce fichier liste les choix faits pendant le développement là où le cahier des
 | Signature de l'APK | Sans `android/key.properties`, le build `release` est signé avec la clé de débogage (pour vérifier la compilation seulement). L'APK à installer doit être signé avec la clé créée par l'utilisateur (AND-14, README). | La clé et son mot de passe sont des secrets que seul l'utilisateur crée. |
 | Version minimale d'Android | `minSdk = 26` (Android 8.0). | AND-01 (à confirmer). |
 
+## Mise en service sans compte ni droits administrateur (2026-10-12)
+
+Demande de l'utilisateur : une version complètement fonctionnelle, en s'autorisant à sortir du cahier des charges pour le backend.
+
+| Question | Choix | Raison |
+| --- | --- | --- |
+| Aucune clé Musixmatch, Genius ni DeepL | Sources gratuites sans clé : **LRCLIB** pour les paroles (recherche par artiste, paroles renvoyées avec la recherche, une seule requête par artiste), **Deezer** pour la recherche d'artistes et leurs photos, **Ollama** pour la traduction (prompt `traduction-v1`). Si une clé est renseignée dans `.env`, le service payant correspondant reprend la priorité. Seul l'extrait de 240 caractères est conservé (C1, MAT-16 inchangés). | Les comptes ne peuvent être créés que par l'utilisateur ; le système doit fonctionner sans. |
+| Identifiants LRCLIB | Stockés dans `morceau.musixmatch_track_id` (identifiant du morceau chez la source). | Évite une migration ; une seule source est active à la fois. |
+| Recherche « hors liste » avec LRCLIB | Recherche sur le titre, l'artiste et l'album (LRCLIB ne cherche pas dans les paroles), puis détection du mot dans les paroles reçues. | Limite de l'API gratuite. |
+| Quotas | Migration `0002` : `lrclib` et `deezer` ajoutés au suivi `quota_api` (sans limite journalière). | QUO-01. |
+| PostgreSQL | Binaires PostgreSQL 16.2 autonomes (ceux de `pgserver`) copiés dans `C:/lyrics-vocab/postgresql`, base dans `C:/lyrics-vocab/pgdata`, démarrés par `start_backend.ps1` avant le backend. Pas de base de fuseaux dans ce build : le serveur reste en `GMT`, tous les calculs de jour local sont faits en Python. | L'installateur officiel demande les droits administrateur ; ces binaires suffisent et incluent `pg_dump`, `pg_restore` et `psql`. |
+| Démarrage automatique (ENV-02) | Tâches planifiées à l'ouverture de session de l'utilisateur, sans droits administrateur. Option `-AuDemarrage` (administrateur) pour démarrer avec Windows sans session. `start_backend.ps1` relance le backend une minute après tout arrêt. | La création de tâches « au démarrage du PC » exige un compte administrateur et le mot de passe Windows. |
+| Copie des sauvegardes (SAV-02) | Dossier OneDrive de l'utilisateur (seul disque : C:). | Copie hors du PC sans matériel supplémentaire. |
+| Clé de signature de l'APK | Générée avec un mot de passe aléatoire, stockée dans `C:/lyrics-vocab/secrets` (hors dépôt, droits limités au compte). | AND-14 ; à sauvegarder hors du PC par l'utilisateur. |
+| `IA_TIMEOUT_S` | 60 s en production. | Le premier appel charge le modèle en mémoire ; 30 s se sont révélées justes sur ce PC. |
+| Fuseau du PC | `Africa/Casablanca` (fuseau Windows « Morocco Standard Time »). | ALG-15. |
+| Titres renvoyés par LRCLIB | Préfixe « Artiste - » et mentions « [Official Audio] », « (Official Video) »… retirés. | Affichage propre de la ligne « Titre — Artiste ». |
+
 ## Exigences [S] non réalisées (reportées en v2, REC-03)
 
 - NOT-09 : relance 3 heures après la notification.

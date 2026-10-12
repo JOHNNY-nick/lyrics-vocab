@@ -4,6 +4,8 @@ Utilisé comme source de paroles quand aucune clé Musixmatch n'est configurée.
 renvoie les paroles complètes ; seul l'extrait de 2 lignes est conservé (C1, MAT-16).
 """
 
+import re
+
 from app.services.normalisation import sans_accents
 from app.services.types_externes import ClientExterne, MorceauExterne, verifier_statut_http
 
@@ -13,6 +15,19 @@ AGENT = "LyricsVocab/1.0 (application personnelle)"
 
 def _comparable(texte: str) -> str:
     return sans_accents(texte.casefold()).strip()
+
+
+_MENTIONS = re.compile(
+    r"\s*[\[(](official|officiel|audio|video|vidéo|lyric|lyrics|visualizer|clip|hd|hq|remaster)"
+    r"[^\])]*[\])]",
+    re.IGNORECASE,
+)
+
+
+def _titre_propre(titre: str, artiste: str) -> str:
+    """Titre sans préfixe d'artiste ni mention « [Official Audio] »."""
+    propre = _MENTIONS.sub("", _sans_prefixe_artiste(titre, artiste)).strip()
+    return propre or titre
 
 
 def _sans_prefixe_artiste(titre: str, artiste: str) -> str:
@@ -60,7 +75,7 @@ class LrclibClient(ClientExterne):
             artiste = r.get("artistName") or ""
             if filtre_artiste and filtre_artiste not in _comparable(artiste):
                 continue
-            titre = _sans_prefixe_artiste((r.get("trackName") or "").strip(), artiste)
+            titre = _titre_propre((r.get("trackName") or "").strip(), artiste)
             cle = _comparable(titre)
             if cle in titres:  # mêmes paroles publiées plusieurs fois
                 continue

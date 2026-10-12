@@ -15,6 +15,33 @@ Fenêtre PWA sur le PC ───┘                 └─ FastAPI 127.0.0.1:800
                                                └─ Musixmatch, Genius, DeepL (Internet)
 ```
 
+## Installation en service sur ce PC
+
+Le système est installé et tourne sur ce PC depuis le 2026-10-12 :
+
+| Élément | État |
+| --- | --- |
+| Adresse (tailnet seulement) | https://desktop-jd3qf3s.tail971f32.ts.net |
+| Backend | `C:/lyrics-vocab/depot` (clone de ce dépôt), tâche « Lyrics Vocab Backend » à l'ouverture de session, relancé s'il s'arrête |
+| PostgreSQL 16 | binaires autonomes dans `C:/lyrics-vocab/postgresql`, données dans `C:/lyrics-vocab/pgdata`, démarré par la même tâche, écoute sur 127.0.0.1:5432 |
+| IA | Ollama (démarrage avec Windows), modèle `llama3.1:8b` |
+| Paroles, artistes, traduction | sans aucune clé : LRCLIB, Deezer, IA locale (les clés Musixmatch, Genius, DeepL restent possibles dans `.env`) |
+| Sauvegardes | tâche « Lyrics Vocab Sauvegarde » chaque jour à 21:00, copie dans `OneDrive/lyrics-vocab-sauvegardes`, restauration testée |
+| Secrets | `C:/lyrics-vocab/secrets` : mot de passe PostgreSQL, `pgpass.conf`, clé de signature de l'APK et son mot de passe. **À copier sur une clé USB ou dans un coffre** : sans la clé de signature, les mises à jour de l'APK seront refusées. |
+| APK | `C:/lyrics-vocab/apk/lyrics-vocab.apk` (18 Mo, arm64, signé) |
+
+**Installer l'application sur le téléphone (seule étape restante)** :
+1. Sur le Galaxy A13, ouvrir l'application Tailscale et se connecter (le téléphone est hors ligne dans le tailnet depuis 4 jours).
+2. Dans Chrome sur le téléphone : https://desktop-jd3qf3s.tail971f32.ts.net/apk/lyrics-vocab.apk
+3. Ouvrir le fichier téléchargé, autoriser l'installation depuis Chrome, confirmer (l'avertissement d'Android est normal).
+4. Au premier lancement : choisir ses artistes, autoriser les notifications.
+
+**Installer la PWA sur le PC** : ouvrir https://desktop-jd3qf3s.tail971f32.ts.net dans Chrome ou Edge → menu → « Installer Lyrics & Vocab », puis épingler l'icône à la barre des tâches.
+
+**Démarrage même sans ouvrir de session** (facultatif) : dans une console PowerShell administrateur, `powershell -File C:/lyrics-vocab/depot/scripts/installer_taches.ps1 -AuDemarrage` (demande le mot de passe Windows une fois).
+
+Vérifier l'état à tout moment : `powershell -File C:/lyrics-vocab/depot/scripts/controle.ps1`.
+
 ## Contenu du dépôt
 
 | Dossier | Contenu |

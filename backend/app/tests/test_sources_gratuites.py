@@ -100,6 +100,11 @@ def test_titre_sans_prefixe_et_casse():
 
     assert _sans_prefixe_artiste("Billie Eilish, Khalid - lovely", "Billie Eilish") == "lovely"
     assert _sans_prefixe_artiste("Hello - Live", "Adele") == "Hello - Live"
+    from app.services.lrclib_client import _titre_propre
+
+    assert _titre_propre("Eraser [Official Audio]", "Ed Sheeran") == "Eraser"
+    assert _titre_propre("Ed Sheeran - Perfect (Official Video)", "Ed Sheeran") == "Perfect"
+    assert _titre_propre("Lose Yourself (Remix)", "Eminem") == "Lose Yourself (Remix)"
     assert accorder_casse("Cœur", "heart") == "cœur"
     assert accorder_casse("Londres", "London") == "Londres"
     assert accorder_casse("OK", "ok") == "OK"
