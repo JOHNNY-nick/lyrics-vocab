@@ -94,6 +94,17 @@ def test_deezer_artistes():
     assert resultats[0].genius_id is None
 
 
+def test_titre_sans_prefixe_et_casse():
+    from app.services.ai_traduction import accorder_casse
+    from app.services.lrclib_client import _sans_prefixe_artiste
+
+    assert _sans_prefixe_artiste("Billie Eilish, Khalid - lovely", "Billie Eilish") == "lovely"
+    assert _sans_prefixe_artiste("Hello - Live", "Adele") == "Hello - Live"
+    assert accorder_casse("Cœur", "heart") == "cœur"
+    assert accorder_casse("Londres", "London") == "Londres"
+    assert accorder_casse("OK", "ok") == "OK"
+
+
 def test_nettoyer_traduction():
     assert nettoyer_traduction("Traduction : « discrètement ; plutôt ».") == "discrètement ; plutôt"
     assert nettoyer_traduction("") is None

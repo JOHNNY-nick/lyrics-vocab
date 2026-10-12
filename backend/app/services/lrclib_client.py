@@ -15,6 +15,15 @@ def _comparable(texte: str) -> str:
     return sans_accents(texte.casefold()).strip()
 
 
+def _sans_prefixe_artiste(titre: str, artiste: str) -> str:
+    """Retire « Artiste - » ou « Artiste, Invité - » en tête du titre."""
+    if " - " not in titre or not artiste:
+        return titre
+    tete, reste = titre.split(" - ", 1)
+    premier = _comparable(artiste.split(",")[0])
+    return reste.strip() if premier and premier in _comparable(tete) and reste.strip() else titre
+
+
 class LrclibClient(ClientExterne):
     """Recherche de morceaux et de paroles sur LRCLIB."""
 
@@ -51,7 +60,7 @@ class LrclibClient(ClientExterne):
             artiste = r.get("artistName") or ""
             if filtre_artiste and filtre_artiste not in _comparable(artiste):
                 continue
-            titre = (r.get("trackName") or "").strip()
+            titre = _sans_prefixe_artiste((r.get("trackName") or "").strip(), artiste)
             cle = _comparable(titre)
             if cle in titres:  # mêmes paroles publiées plusieurs fois
                 continue

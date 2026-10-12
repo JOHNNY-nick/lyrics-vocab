@@ -26,6 +26,13 @@ def nettoyer_traduction(brut: str) -> str | None:
     return texte
 
 
+def accorder_casse(traduction: str, mot: str) -> str:
+    """Minuscule initiale quand le mot saisi est en minuscules (« heart » → « cœur »)."""
+    if mot[:1].islower() and traduction[:1].isupper() and traduction[1:2].islower():
+        return traduction[:1].lower() + traduction[1:]
+    return traduction
+
+
 async def traduire_par_ia(ollama: OllamaClient, mot: str, contexte: str | None) -> str | None:
     """Traduction courte du mot, en tenant compte de l'extrait s'il existe (TRA-03)."""
     prompts = charger_prompts()["traduction"]
@@ -40,7 +47,7 @@ async def traduire_par_ia(ollama: OllamaClient, mot: str, contexte: str | None) 
         )
         traduction = nettoyer_traduction(brut)
         if traduction:
-            return traduction
+            return accorder_casse(traduction, mot)
         journaliser(
             "ia_sortie_invalide",
             "avertissement",
