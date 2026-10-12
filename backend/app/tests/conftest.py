@@ -91,6 +91,7 @@ def parametres(url_base, tmp_path) -> Parametres:
     return Parametres(
         database_url=url_base,
         log_dir=str(tmp_path / "logs"),
+        backup_dir=str(tmp_path / "sauvegardes"),
         static_dir=str(statique),
         fuseau_pc="Europe/Paris",
         musixmatch_api_key="cle-musixmatch-secrete",
