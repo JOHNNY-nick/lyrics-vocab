@@ -1,0 +1,30 @@
+# Secrets (SEC-02, ENV-05)
+.env
+*.jks
+key.properties
+
+# Python
+backend/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Flutter
+app/build/
+app/.dart_tool/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/android/.gradle/
+app/android/local.properties
+app/android/app/release/
+app/**/GeneratedPluginRegistrant.*
+app/coverage/
+
+# Divers
+*.log
+*.dump
+.idea/
+.vscode/

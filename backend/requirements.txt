@@ -1,0 +1,19 @@
+# Versions épinglées (DEP-01, MAINT-02) — vérifiées le 2026-10-12
+fastapi==0.143.0
+uvicorn==0.34.0
+SQLAlchemy==2.0.36
+alembic==1.14.0
+psycopg[binary]==3.3.6
+pydantic==2.9.2
+pydantic-settings==2.6.1
+httpx==0.28.1
+tenacity==9.0.0
+python-dotenv==1.0.0
+tzdata==2024.2
+
+# Tests et qualité
+pytest==8.3.4
+anyio==4.15.1
+pgserver==0.1.4
+black==24.10.0
+ruff==0.8.4

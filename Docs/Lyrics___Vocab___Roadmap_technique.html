@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lyrics & Vocab — Roadmap technique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#121014; --surface:#1a1720; --surface2:#211d28; --border:rgba(255,255,255,.09);
+  --border-h:rgba(255,255,255,.18); --text:#f1ece1; --muted:#a49bb0; --dim:#6a6376;
+  --accent:#e0a53a; --accent-d:rgba(224,165,58,.1);
+  --c1:#e0a53a; --c1d:rgba(224,165,58,.09);
+  --c2:#5b9ee0; --c2d:rgba(91,158,224,.09);
+  --c3:#c46bd6; --c3d:rgba(196,107,214,.09);
+  --c4:#6fc99a; --c4d:rgba(111,201,154,.09);
+  --c5:#e0766b; --c5d:rgba(224,118,107,.09);
+  --c6:#9aa6c4; --c6d:rgba(154,166,196,.09);
+  --c7:#d6c46b; --c7d:rgba(214,196,107,.09);
+  --c8:#7ecfd6; --c8d:rgba(126,207,214,.09);
+  --c9:#b08fe0; --c9d:rgba(176,143,224,.09);
+  --c10:#d68f6b; --c10d:rgba(214,143,107,.09);
+  --c11:#e08fb8; --c11d:rgba(224,143,184,.09);
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box; margin:0; padding:0}
+html,body{height:100%}
+body{background:var(--bg); color:var(--text); font-family:'Syne',sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased}
+code,.mono{font-family:'IBM Plex Mono',monospace}
+a{color:var(--accent)}
+
+header{
+  position:sticky; top:0; z-index:50; padding:22px clamp(20px,4vw,48px);
+  padding-top:calc(22px + env(safe-area-inset-top,0px));
+  background:rgba(18,16,20,.9); backdrop-filter:blur(10px); border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+}
+.logo{display:flex; align-items:center; gap:10px}
+.logo-dot{width:30px; height:30px; border-radius:8px; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:15px}
+.logo h1{font-size:15px; font-weight:600; letter-spacing:-.01em}
+.logo p{font-size:11px; color:var(--dim); margin-top:1px}
+.pills{display:flex; gap:8px; flex-wrap:wrap}
+.pill{font-size:10.5px; color:var(--muted); border:1px solid var(--border); padding:4px 10px; border-radius:99px}
+.pill b{color:var(--accent)}
+
+.main{max-width:840px; margin:0 auto; padding:44px clamp(20px,4vw,48px) 90px}
+
+.intro{margin-bottom:38px; padding-bottom:28px; border-bottom:1px solid var(--border)}
+.intro h2{font-size:clamp(1.6rem,3.4vw,2.2rem); font-weight:700; letter-spacing:-.02em; line-height:1.18; margin-bottom:12px; max-width:22ch}
+.intro h2 em{color:var(--accent); font-style:normal}
+.intro p{color:var(--muted); font-size:14px; max-width:60ch}
+.stats{display:flex; gap:26px; margin-top:22px; flex-wrap:wrap}
+.stat-v{font-size:20px; font-weight:700; color:var(--accent)}
+.stat-l{font-size:10.5px; color:var(--dim); margin-top:1px}
+
+.stack-grid{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:8px; margin-top:26px;
+}
+.stack-item{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px}
+.stack-item .k{font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px}
+.stack-item .v{font-size:13px; font-weight:600}
+.stack-item .r{font-size:11.5px; color:var(--muted); margin-top:3px}
+
+.struct-section{margin-top:34px}
+.struct-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; margin-top:14px}
+.struct-col{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px}
+.struct-col .sc-title{font-size:12.5px; font-weight:600; margin-bottom:3px}
+.struct-col .sc-sub{font-size:10.5px; color:var(--dim); margin-bottom:12px}
+.tree{background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:14px 16px; font-size:11px; line-height:1.7; overflow-x:auto; white-space:pre; color:var(--muted)}
+.tree .f{color:var(--text)}
+.tree .c{color:var(--accent)}
+.file-list{display:flex; flex-direction:column; gap:0; margin-top:14px}
+.file-item{display:flex; gap:12px; padding:7px 0; border-top:1px solid var(--border)}
+.file-item:first-child{border-top:none}
+.file-item .fn{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--accent); flex-shrink:0; min-width:160px}
+.file-item .fd{font-size:11.5px; color:var(--muted); line-height:1.5}
+.struct-note{margin-top:14px; font-size:12px; color:var(--muted); line-height:1.6}
+.struct-note strong{color:var(--text)}
+.flow-section{margin-top:34px}
+.flow-diagram{background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:16px; margin-top:12px; font-size:11px; line-height:1.8; overflow-x:auto; white-space:pre; color:var(--muted)}
+.flow-diagram .f{color:var(--text)}
+.flow-steps{display:flex; flex-direction:column; gap:6px; margin-top:14px}
+.flow-step{display:flex; gap:12px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:11px 14px; align-items:flex-start}
+.flow-num{font-size:11px; font-weight:700; color:var(--accent); flex-shrink:0; width:20px}
+.flow-txt .ft-name{font-size:12.5px; font-weight:600}
+.flow-txt .ft-desc{font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.55}
+.learn-section{margin-top:34px}
+.learn-cols{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-top:14px}
+.learn-col{background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px}
+.learn-col .lc-head{display:flex; align-items:center; gap:8px; margin-bottom:12px}
+.learn-col .lc-dot{width:9px; height:9px; border-radius:50%; flex-shrink:0}
+.learn-col .lc-title{font-size:12.5px; font-weight:600}
+.learn-col .lc-sub{font-size:10.5px; color:var(--dim); margin-top:1px}
+.learn-item{padding:8px 0; border-top:1px solid var(--border)}
+.learn-item:first-of-type{border-top:none}
+.learn-item .li-name{font-size:12.5px; font-weight:600}
+.learn-item .li-desc{font-size:11.5px; color:var(--muted); margin-top:2px; line-height:1.5}
+.lc-acquis .lc-dot{background:var(--c4)} .lc-acquis{border-color:rgba(111,201,154,.25)}
+.lc-rapide .lc-dot{background:var(--c1)} .lc-rapide{border-color:rgba(224,165,58,.25)}
+.lc-serieux .lc-dot{background:var(--c5)} .lc-serieux{border-color:rgba(224,118,107,.25)}
+.lc-config .lc-dot{background:var(--c2)} .lc-config{border-color:rgba(91,158,224,.25)}
+
+.timeline{position:relative; padding-left:52px}
+.timeline::before{content:'';position:absolute; left:16px; top:6px; bottom:6px; width:1px;
+  background:linear-gradient(to bottom, transparent, var(--border) 4%, var(--border) 96%, transparent)}
+
+.step{position:relative; margin-bottom:10px}
+.dot{position:absolute; left:-52px; top:13px; width:33px; height:33px; border-radius:50%;
+  background:var(--surface); border:1px solid var(--border); display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:600; cursor:pointer; transition:.2s; z-index:2}
+.step.open .dot, .step:hover .dot{border-color:currentColor; transform:scale(1.05)}
+
+.card{background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; transition:border-color .2s}
+.step.open .card, .card:hover{border-color:var(--border-h)}
+.head{display:flex; align-items:center; gap:12px; padding:15px 18px; cursor:pointer; user-select:none; flex-wrap:wrap}
+.title{font-size:14px; font-weight:600; flex:1; letter-spacing:-.01em; min-width:160px}
+.tag{font-size:10px; font-weight:500; padding:3px 9px; border-radius:99px; border:1px solid; flex-shrink:0}
+.dur{font-size:11px; color:var(--dim); flex-shrink:0}
+.chev{width:14px; height:14px; color:var(--dim); transition:transform .22s; flex-shrink:0}
+.step.open .chev{transform:rotate(90deg)}
+
+.body{display:none; border-top:1px solid var(--border); padding:18px}
+.step.open .body{display:block}
+.lbl{font-size:10px; font-weight:600; color:var(--dim); text-transform:uppercase; letter-spacing:.07em; margin-bottom:9px}
+.lbl:not(:first-child){margin-top:18px}
+.concepts{display:flex; flex-direction:column; gap:6px}
+.concept{background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:11px 14px}
+.c-name{font-size:13px; font-weight:600; margin-bottom:3px}
+.c-desc{font-size:12px; color:var(--muted); line-height:1.55}
+.c-code{display:inline-block; font-size:11px; color:var(--accent); background:var(--accent-d); padding:2px 8px; border-radius:5px; margin-top:6px}
+
+.deliv{margin-top:16px; padding:10px 14px; border-left:2px solid var(--border-h); font-size:12px; color:var(--muted); background:var(--surface2); border-radius:0 6px 6px 0}
+.deliv strong{color:var(--text)}
+
+.res{display:flex; flex-direction:column; gap:6px}
+.res a{display:flex; justify-content:space-between; gap:10px; padding:10px 14px; border-radius:10px; border:1px solid var(--border); background:var(--surface2); text-decoration:none; font-size:12px; transition:.15s}
+.res a:hover{border-color:var(--border-h); transform:translateX(3px)}
+.res .name{color:var(--text); font-weight:500}
+.res .type{color:var(--dim); font-size:10.5px; flex-shrink:0}
+
+.s1 .dot,.s1 .c-code{color:var(--c1)} .s1 .tag{color:var(--c1); border-color:rgba(224,165,58,.3); background:var(--c1d)}
+.s2 .dot,.s2 .c-code{color:var(--c2)} .s2 .tag{color:var(--c2); border-color:rgba(91,158,224,.3); background:var(--c2d)}
+.s3 .dot,.s3 .c-code{color:var(--c3)} .s3 .tag{color:var(--c3); border-color:rgba(196,107,214,.3); background:var(--c3d)}
+.s4 .dot,.s4 .c-code{color:var(--c4)} .s4 .tag{color:var(--c4); border-color:rgba(111,201,154,.3); background:var(--c4d)}
+.s5 .dot,.s5 .c-code{color:var(--c5)} .s5 .tag{color:var(--c5); border-color:rgba(224,118,107,.3); background:var(--c5d)}
+.s6 .dot,.s6 .c-code{color:var(--c6)} .s6 .tag{color:var(--c6); border-color:rgba(154,166,196,.3); background:var(--c6d)}
+.s7 .dot,.s7 .c-code{color:var(--c7)} .s7 .tag{color:var(--c7); border-color:rgba(214,196,107,.3); background:var(--c7d)}
+.s8 .dot,.s8 .c-code{color:var(--c8)} .s8 .tag{color:var(--c8); border-color:rgba(126,207,214,.3); background:var(--c8d)}
+.s9 .dot,.s9 .c-code{color:var(--c9)} .s9 .tag{color:var(--c9); border-color:rgba(176,143,224,.3); background:var(--c9d)}
+.s10 .dot,.s10 .c-code{color:var(--c10)} .s10 .tag{color:var(--c10); border-color:rgba(214,143,107,.3); background:var(--c10d)}
+
+.toc-section{margin-top:26px}
+.toc-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:8px; margin-top:14px}
+.toc-item{display:flex; align-items:flex-start; gap:11px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:11px 13px; text-decoration:none; transition:.15s}
+.toc-item:hover{border-color:var(--border-h); transform:translateX(2px)}
+.toc-num{font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; flex-shrink:0; width:20px; padding-top:1px}
+.toc-name{font-size:12.5px; font-weight:600; color:var(--text); line-height:1.4}
+.toc-meta{display:flex; gap:7px; align-items:center; margin-top:4px; flex-wrap:wrap}
+.toc-tag{font-size:9.5px; font-weight:500; padding:2px 8px; border-radius:99px; border:1px solid}
+.toc-dur{font-size:10px; color:var(--dim)}
+.s8b .dot,.s8b .c-code{color:var(--c11)} .s8b .tag{color:var(--c11); border-color:rgba(224,143,184,.3); background:var(--c11d)}
+.t8b .toc-num{color:var(--c11)} .t8b .toc-tag{color:var(--c11); border-color:rgba(224,143,184,.3); background:var(--c11d)}
+
+.annex{margin-top:46px}
+.annex h3{font-size:16px; margin:26px 0 8px}
+.annex p,.annex li{font-size:12.5px; color:var(--muted); line-height:1.6; max-width:92ch}
+.annex ul{margin:6px 0 6px 18px}
+.tbl{width:100%; border-collapse:collapse; font-size:11.5px; margin:8px 0 6px; display:block; overflow-x:auto}
+.tbl th,.tbl td{text-align:left; vertical-align:top; padding:6px 10px; border:1px solid var(--border); color:var(--muted); line-height:1.5}
+.tbl th{background:var(--surface2); color:var(--text); font-weight:600; white-space:nowrap}
+.tbl td:first-child{color:var(--text); white-space:nowrap}
+.annex code{font-family:inherit; color:var(--c7)}
+.ent{margin-top:12px; font-size:12.5px; font-weight:600; color:var(--text)}
+.dec-r{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:8px; margin-top:8px}
+.dec-r div{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:9px 12px; font-size:11.5px; color:var(--muted); line-height:1.5}
+.dec-r b{display:block; color:var(--text); font-size:12px; margin-bottom:2px}
+
+.t1 .toc-num{color:var(--c1)} .t1 .toc-tag{color:var(--c1); border-color:rgba(224,165,58,.3); background:var(--c1d)}
+.t2 .toc-num{color:var(--c2)} .t2 .toc-tag{color:var(--c2); border-color:rgba(91,158,224,.3); background:var(--c2d)}
+.t3 .toc-num{color:var(--c3)} .t3 .toc-tag{color:var(--c3); border-color:rgba(196,107,214,.3); background:var(--c3d)}
+.t4 .toc-num{color:var(--c4)} .t4 .toc-tag{color:var(--c4); border-color:rgba(111,201,154,.3); background:var(--c4d)}
+.t5 .toc-num{color:var(--c5)} .t5 .toc-tag{color:var(--c5); border-color:rgba(224,118,107,.3); background:var(--c5d)}
+.t6 .toc-num{color:var(--c6)} .t6 .toc-tag{color:var(--c6); border-color:rgba(154,166,196,.3); background:var(--c6d)}
+.t7 .toc-num{color:var(--c7)} .t7 .toc-tag{color:var(--c7); border-color:rgba(214,196,107,.3); background:var(--c7d)}
+.t8 .toc-num{color:var(--c8)} .t8 .toc-tag{color:var(--c8); border-color:rgba(126,207,214,.3); background:var(--c8d)}
+.t9 .toc-num{color:var(--c9)} .t9 .toc-tag{color:var(--c9); border-color:rgba(176,143,224,.3); background:var(--c9d)}
+.t10 .toc-num{color:var(--c10)} .t10 .toc-tag{color:var(--c10); border-color:rgba(214,143,107,.3); background:var(--c10d)}
+
+.skills-section{margin-top:22px}
+.skills-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:8px; margin-top:14px}
+.skill-chip{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:11px 13px}
+.skill-chip .sc-name{font-size:12.5px; font-weight:600}
+.skill-chip .sc-desc{font-size:11px; color:var(--muted); margin-top:3px; line-height:1.5}
+.skill-chip .sc-steps{display:flex; gap:5px; flex-wrap:wrap; margin-top:8px}
+.skill-chip .sc-step{font-size:9.5px; font-weight:600; color:var(--dim); border:1px solid var(--border); border-radius:99px; padding:2px 7px}
+
+.skill-tags{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:14px}
+.skill-tags .st{font-size:10px; font-weight:500; color:var(--muted); border:1px solid var(--border); background:var(--surface2); border-radius:99px; padding:3px 9px}
+
+footer{border-top:1px solid var(--border); padding:22px clamp(20px,4vw,48px); font-size:11.5px; color:var(--dim)}
+
+@media(max-width:640px){
+  .timeline{padding-left:42px} .dot{left:-42px; width:28px; height:28px}
+  .main{padding:32px 18px 70px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot">🎧</div>
+    <div><h1>Lyrics & Vocab</h1><p class="mono">Roadmap technique complète</p></div>
+  </div>
+  <div class="pills">
+    <span class="pill mono"><b>11</b> phases</span>
+    <a class="pill mono" href="#decisions" style="text-decoration:none;color:var(--accent)">décisions</a>
+    <a class="pill mono" href="#annexes" style="text-decoration:none;color:var(--accent)">annexes</a>
+    <span class="pill mono"><b>~13–18</b> sem.</span>
+    <span class="pill mono"><b>MVP</b> perso</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <div class="intro">
+    <h2>Toute la mécanique — <em>du concept au produit qui tourne</em></h2>
+    <p>Roadmap complète : chaque phase détaille les concepts à maîtriser, les choix techniques précis (avec alternatives), et le livrable concret attendu avant de passer à la suite.</p>
+    <div style="margin-top:16px; padding:12px 16px; border-left:2px solid var(--accent); background:var(--accent-d); border-radius:0 8px 8px 0; font-size:12.5px; color:var(--text); max-width:70ch"><strong>Architecture retenue :</strong> le backend FastAPI, PostgreSQL et Ollama tournent sur ton PC. <strong>Tailscale</strong> (réseau privé chiffré) rend ce PC joignable depuis ton téléphone en Wi-Fi comme en données mobiles, sans rien exposer sur Internet. <strong>PC</strong> : application web installable (PWA), avec une icône dans la barre des tâches. <strong>Mobile</strong> : application Android (<code class="mono">.apk</code>). Les deux utilisent la même base. Sur mobile, l'app reste utilisable sans connexion et se synchronise avec la base à la reconnexion (étape 08b). Pas de compte ni d'hébergeur : seuls tes appareils du réseau Tailscale peuvent joindre l'API.</div>
+    <div class="stats">
+      <div><div class="stat-v">11</div><div class="stat-l mono">PHASES</div></div>
+      <div><div class="stat-v">1</div><div class="stat-l mono">UTILISATEUR (MVP)</div></div>
+      <div><div class="stat-v">2</div><div class="stat-l mono">CLIENTS (WEB + APK)</div></div>
+      <div><div class="stat-v">1</div><div class="stat-l mono">BASE COMMUNE</div></div>
+      <div><div class="stat-v">3</div><div class="stat-l mono">API EXTERNES</div></div>
+      <div><div class="stat-v">0€</div><div class="stat-l mono">BUDGET DE DÉPART</div></div>
+    </div>
+
+    <div class="lbl" style="margin-top:26px">Stack retenue en un coup d'œil</div>
+    <div class="stack-grid">
+      <div class="stack-item"><div class="k">Frontend PC</div><div class="v">Flutter Web (PWA installable)</div><div class="r">s'installe depuis Chrome/Edge et s'épingle à la barre des tâches ; en dev, tourne via flutter run -d chrome</div></div>
+      <div class="stack-item"><div class="k">Frontend mobile</div><div class="v">Flutter Android (.apk)</div><div class="r">même code Dart que le web, installé directement via le fichier .apk, sans passer par le Play Store</div></div>
+      <div class="stack-item"><div class="k">Backend API</div><div class="v">FastAPI (Python)</div><div class="r">rapide à écrire, typé, doc auto Swagger</div></div>
+      <div class="stack-item"><div class="k">Base de données</div><div class="v">PostgreSQL (local, sur ton PC)</div><div class="r">une seule base, partagée par la PWA et l'APK via l'API ; sauvegardée automatiquement (étape 10)</div></div>
+      <div class="stack-item"><div class="k">Lyrics (extraits)</div><div class="v">Musixmatch API (automatique)</div><div class="r">tu saisis seulement le mot ; 1 à 2 lignes sont trouvées automatiquement ; si rien n'est trouvé, la fiche s'affiche sans phrase</div></div>
+      <div class="stack-item"><div class="k">Métadonnées morceaux</div><div class="v">Genius API</div><div class="r">titres, artistes, liens — sans paroles complètes</div></div>
+      <div class="stack-item"><div class="k">Traduction / définition</div><div class="v">DeepL API</div><div class="r">quota gratuit correct, qualité FR supérieure à Google</div></div>
+      <div class="stack-item"><div class="k">Explication IA (argot, contexte)</div><div class="v">Ollama + Llama 3.1 8B (sur ton PC)</div><div class="r">gratuit, sur la même machine que le backend (32 Go de RAM : confortable) ; explication mise en cache en base</div></div>
+      <div class="stack-item"><div class="k">Rappels</div><div class="v">Notifications locales Android + écran « Révisions du jour » sur PC</div><div class="r">les notifications sont programmées par le téléphone et marchent hors-ligne</div></div>
+      <div class="stack-item"><div class="k">Accès & hébergement</div><div class="v">Ton PC + Tailscale</div><div class="r">le backend tourne sur ton PC ; Tailscale le rend joignable en HTTPS depuis le téléphone, en Wi-Fi comme en données mobiles ; si le PC est éteint, le mobile reste utilisable hors-ligne</div></div>
+      <div class="stack-item"><div class="k">Stockage local & synchro</div><div class="v">Hive + file d'attente d'actions</div><div class="r">cache de lecture et journal des actions faites hors-ligne, rejoué vers /sync à la reconnexion</div></div>
+      <div class="stack-item"><div class="k">Authentification</div><div class="v">Aucune (réseau Tailscale)</div><div class="r">seuls tes appareils du réseau privé peuvent joindre l'API ; aucun compte à gérer</div></div>
+    </div>
+
+    <div class="dec-section" id="decisions" style="margin-top:30px"><div class="lbl">Décisions retenues</div><div class="dec-r"><div><b>Accès et hébergement</b>Ton PC + Tailscale, sans hébergeur</div><div><b>Base de données</b>PostgreSQL local sur ton PC</div><div><b>Authentification</b>Aucune : le réseau privé Tailscale suffit</div><div><b>IA d'explication</b>Ollama sur ton PC, modèle Llama 3.1 8B</div><div><b>Service de la PWA</b>Servie par FastAPI, exposée en HTTPS par tailscale serve</div><div><b>Synchronisation</b>File d'actions + envoi des seuls changements (curseur serveur)</div><div><b>Calcul des révisions hors-ligne</b>Sur le téléphone, puis recalcul par le PC à la synchronisation</div><div><b>Hors-ligne sur PC</b>Sans objet : le backend est sur le PC</div><div><b>Rappels</b>Notifications locales sur le téléphone + écran « Révisions du jour » sur PC</div><div><b>Tâches planifiées serveur</b>Aucune : « Révisions du jour » calculé à l'ouverture</div><div><b>Source des extraits</b>Musixmatch, automatique ; fiche sans phrase si rien trouvé</div><div><b>Traduction</b>DeepL</div><div><b>Installation de l'APK</b>Fichier .apk installé à la main</div><div><b>Client HTTP Flutter</b>dio</div><div><b>Dépôt Git</b>Un seul dépôt (backend/ et app/)</div><div><b>Suivi d'erreurs</b>Journaux structurés dans un fichier, sans service externe</div><div><b>Sauvegardes</b>pg_dump automatique, copie sur un autre disque ou cloud personnel, restauration testée</div><div><b>Maquettes</b>Sur papier</div></div></div>
+
+    <div class="toc-section">
+      <div class="lbl">Sommaire des 11 phases</div>
+      <div class="toc-grid">
+        <a class="toc-item t1" href="#s-1" onclick="openStep(1)"><span class="toc-num">01</span><div><div class="toc-name">Cadrage produit & spécifications</div><div class="toc-meta"><span class="toc-tag">Produit</span><span class="toc-dur">3–4 jours</span></div></div></a>
+        <a class="toc-item t2" href="#s-2" onclick="openStep(2)"><span class="toc-num">02</span><div><div class="toc-name">Choix de la stack technique</div><div class="toc-meta"><span class="toc-tag">Architecture</span><span class="toc-dur">2–3 jours</span></div></div></a>
+        <a class="toc-item t3" href="#s-3" onclick="openStep(3)"><span class="toc-num">03</span><div><div class="toc-name">Droits d'auteur & sourcing des lyrics</div><div class="toc-meta"><span class="toc-tag">Critique</span><span class="toc-dur">1 semaine</span></div></div></a>
+        <a class="toc-item t4" href="#s-4" onclick="openStep(4)"><span class="toc-num">04</span><div><div class="toc-name">Backend : modèle de données & API</div><div class="toc-meta"><span class="toc-tag">Backend</span><span class="toc-dur">1 semaine</span></div></div></a>
+        <a class="toc-item t5" href="#s-5" onclick="openStep(5)"><span class="toc-num">05</span><div><div class="toc-name">Moteur de correspondance mot ↔ lyrics + traduction</div><div class="toc-meta"><span class="toc-tag">Cœur technique</span><span class="toc-dur">1–2 semaines</span></div></div></a>
+        <a class="toc-item t6" href="#s-6" onclick="openStep(6)"><span class="toc-num">06</span><div><div class="toc-name">Répétition espacée & notifications</div><div class="toc-meta"><span class="toc-tag">Rétention</span><span class="toc-dur">1 semaine</span></div></div></a>
+        <a class="toc-item t7" href="#s-7" onclick="openStep(7)"><span class="toc-num">07</span><div><div class="toc-name">Frontend & interface utilisateur</div><div class="toc-meta"><span class="toc-tag">UI</span><span class="toc-dur">1–2 semaines</span></div></div></a>
+        <a class="toc-item t8" href="#s-8" onclick="openStep(8)"><span class="toc-num">08</span><div><div class="toc-name">Accès multi-appareils (Tailscale) & mise en service</div><div class="toc-meta"><span class="toc-tag">Requis</span><span class="toc-dur">3–4 jours</span></div></div></a>
+        <a class="toc-item t8b" href="#s-8b" onclick="openStep('8b')"><span class="toc-num">08b</span><div><div class="toc-name">Application Android (.apk) & synchronisation hors-ligne</div><div class="toc-meta"><span class="toc-tag">Mobile</span><span class="toc-dur">1,5–2 semaines</span></div></div></a>
+        <a class="toc-item t9" href="#s-9" onclick="openStep(9)"><span class="toc-num">09</span><div><div class="toc-name">Tests, lancement personnel & itération</div><div class="toc-meta"><span class="toc-tag">Qualité</span><span class="toc-dur">continu</span></div></div></a>
+        <a class="toc-item t10" href="#s-10" onclick="openStep(10)"><span class="toc-num">10</span><div><div class="toc-name">Robustesse, observabilité & continuité</div><div class="toc-meta"><span class="toc-tag">Fiabilité</span><span class="toc-dur">3–5 jours</span></div></div></a>
+      </div>
+    </div>
+
+    <div class="struct-section">
+      <div class="lbl">Structure générale du projet</div>
+      <p style="font-size:12px; color:var(--muted); margin-top:6px; max-width:70ch">Monorepo avec deux dossiers principaux, <code class="mono">backend/</code> (FastAPI) et <code class="mono">app/</code> (Flutter), chacun autonome et déployable séparément.</p>
+      <div class="struct-grid">
+        <div class="struct-col">
+          <div class="sc-title">backend/ — API FastAPI</div>
+          <div class="sc-sub mono">Python · SQLAlchemy · Alembic</div>
+          <div class="tree mono"><span class="f">backend/</span>
+├── app/
+│   ├── <span class="c">main.py</span>            <span class="f"># point d'entrée, instancie FastAPI</span>
+│   ├── core/
+│   │   ├── config.py        <span class="f"># lecture du .env (clés API, DB_URL)</span>
+│   │   ├── database.py      <span class="f"># session SQLAlchemy</span>
+│   │   └── security.py      <span class="f"># réservé (pas d'authentification applicative)</span>
+│   ├── models/               <span class="f"># classes ORM</span>
+│   │   ├── mot.py
+│   │   ├── artiste.py
+│   │   ├── morceau.py
+│   │   ├── extrait.py
+│   │   └── revision.py
+│   ├── schemas/               <span class="f"># schémas Pydantic entrée/sortie</span>
+│   │   ├── mot.py
+│   │   └── revision.py
+│   ├── routers/               <span class="f"># endpoints REST, un fichier par ressource</span>
+│   │   ├── mots.py
+│   │   ├── extraits.py
+│   │   ├── revisions.py
+│   │   └── sync.py             <span class="f"># POST /sync/push, GET /sync/pull</span>
+│   ├── services/               <span class="f"># logique métier & clients externes</span>
+│   │   ├── musixmatch_client.py
+│   │   ├── genius_client.py
+│   │   ├── deepl_client.py
+│   │   ├── ai_explainer.py    <span class="f"># appel à Ollama : explication contextuelle</span>
+│   │   ├── ai_exercise.py     <span class="f"># appel à Ollama : génération + évaluation de phrase</span>
+│   │   ├── sm2.py            <span class="f"># algorithme de répétition espacée</span>
+│   │   └── sync_service.py   <span class="f"># applique les actions reçues, renvoie les changements</span>
+│   └── tests/                 <span class="f"># pytest</span>
+├── migrations/                 <span class="f"># versions Alembic</span>
+├── .env                        <span class="f"># jamais commité (.gitignore)</span>
+├── requirements.txt
+└── alembic.ini</div>
+          <div class="file-list mono">
+            <div class="file-item"><span class="fn">main.py</span><span class="fd">Point d'entrée : crée l'app FastAPI, inclut les routers, sert aussi la PWA (fichiers statiques) ; CORS n'est utile qu'en développement (localhost).</span></div>
+            <div class="file-item"><span class="fn">core/config.py</span><span class="fd">Charge le .env et centralise la config (clés API, URL de la base) pour éviter de la disperser dans le code.</span></div>
+            <div class="file-item"><span class="fn">core/database.py</span><span class="fd">Crée le moteur SQLAlchemy et la session de connexion à Postgres, injectée dans les routes via Depends.</span></div>
+            <div class="file-item"><span class="fn">core/security.py</span><span class="fd">Réservé : il n'y a pas d'authentification applicative, l'accès est limité par le réseau privé Tailscale (voir étape 08).</span></div>
+            <div class="file-item"><span class="fn">models/*.py</span><span class="fd">Classes ORM SQLAlchemy : chaque fichier décrit une table (mot, artiste, morceau, extrait, revision) et ses relations.</span></div>
+            <div class="file-item"><span class="fn">schemas/*.py</span><span class="fd">Forme des données en entrée/sortie de l'API (Pydantic) : validation automatique et contrôle de ce qui est exposé au client.</span></div>
+            <div class="file-item"><span class="fn">routers/*.py</span><span class="fd">Définissent les endpoints HTTP, un fichier par ressource (ex. routers/mots.py = tout ce qui touche /mots).</span></div>
+            <div class="file-item"><span class="fn">services/musixmatch_client.py</span><span class="fd">Appelle l'API Musixmatch, gère la clé et parse la réponse pour en extraire l'occurrence du mot.</span></div>
+            <div class="file-item"><span class="fn">services/genius_client.py</span><span class="fd">Récupère les métadonnées (titre, artiste, pochette) d'un morceau via Genius.</span></div>
+            <div class="file-item"><span class="fn">services/deepl_client.py</span><span class="fd">Appelle DeepL pour traduire le mot/l'extrait en français.</span></div>
+            <div class="file-item"><span class="fn">services/ai_explainer.py</span><span class="fd">Appelle Ollama en local pour générer l'explication contextuelle (argot, sens figuré).</span></div>
+            <div class="file-item"><span class="fn">services/ai_exercise.py</span><span class="fd">Appelle Ollama pour générer une phrase FR d'exercice et évaluer la traduction EN de l'utilisateur.</span></div>
+            <div class="file-item"><span class="fn">services/sm2.py</span><span class="fd">Implémente l'algorithme SM-2 : calcule le prochain intervalle de révision selon la réponse de l'utilisateur.</span></div>
+            <div class="file-item"><span class="fn">routers/sync.py + services/sync_service.py</span><span class="fd">Reçoivent les actions faites hors-ligne (nouveaux mots, réponses de révision), les appliquent sans doublon, puis renvoient les changements survenus depuis la dernière synchro.</span></div>
+            <div class="file-item"><span class="fn">tests/</span><span class="fd">Tests pytest sur les endpoints et la logique métier critique.</span></div>
+            <div class="file-item"><span class="fn">migrations/</span><span class="fd">Historique versionné du schéma de base, généré et rejoué par Alembic.</span></div>
+            <div class="file-item"><span class="fn">.env</span><span class="fd">Clés API et secrets (Musixmatch, Genius, DeepL, DB) — jamais commité dans Git.</span></div>
+            <div class="file-item"><span class="fn">requirements.txt</span><span class="fd">Liste des dépendances Python du backend.</span></div>
+          </div>
+        </div>
+        <div class="struct-col">
+          <div class="sc-title">app/ — application Flutter</div>
+          <div class="sc-sub mono">Dart · Riverpod · Hive</div>
+          <div class="tree mono"><span class="f">app/</span>
+├── lib/
+│   ├── <span class="c">main.dart</span>            <span class="f"># point d'entrée</span>
+│   ├── screens/               <span class="f"># un écran = un fichier</span>
+│   │   ├── add_word_screen.dart
+│   │   ├── library_screen.dart
+│   │   ├── word_detail_screen.dart
+│   │   └── settings_screen.dart
+│   ├── widgets/                <span class="f"># composants réutilisables (cartes, boutons)</span>
+│   ├── models/                  <span class="f"># classes de données Dart (Mot, Extrait…)</span>
+│   ├── providers/                <span class="f"># state management Riverpod</span>
+│   │   ├── mots_provider.dart
+│   │   └── revisions_provider.dart
+│   ├── services/                  <span class="f"># accès réseau & stockage</span>
+│   │   ├── api_client.dart       <span class="f"># dio, base URL par environnement</span>
+│   │   ├── sync_service.dart     <span class="f"># file d'attente + synchro à la reconnexion</span>
+│   │   ├── local_cache.dart      <span class="f"># Hive : cache de lecture hors-ligne</span>
+│   │   └── notifications_service.dart
+│   └── theme/                     <span class="f"># couleurs, typographie</span>
+├── test/                          <span class="f"># tests widgets</span>
+└── pubspec.yaml                   <span class="f"># dépendances</span></div>
+          <div class="file-list mono">
+            <div class="file-item"><span class="fn">main.dart</span><span class="fd">Point d'entrée : initialise l'app et lance Flutter.</span></div>
+            <div class="file-item"><span class="fn">screens/add_word_screen.dart</span><span class="fd">Formulaire d'ajout d'un mot, envoie la requête POST /mots au backend.</span></div>
+            <div class="file-item"><span class="fn">screens/library_screen.dart</span><span class="fd">Liste des mots déjà ajoutés, triable par statut (nouveau / en cours / acquis).</span></div>
+            <div class="file-item"><span class="fn">screens/word_detail_screen.dart</span><span class="fd">Fiche mémorisation : mot, traduction, extraits, explication IA, bouton de réponse à la révision.</span></div>
+            <div class="file-item"><span class="fn">screens/settings_screen.dart</span><span class="fd">Réglages : artistes préférés, fréquence des rappels.</span></div>
+            <div class="file-item"><span class="fn">widgets/</span><span class="fd">Composants réutilisables (cartes, boutons) partagés entre plusieurs écrans, pour éviter la duplication.</span></div>
+            <div class="file-item"><span class="fn">models/</span><span class="fd">Classes Dart miroir des schémas de l'API (Mot, Extrait…), utilisées pour parser les réponses JSON du backend.</span></div>
+            <div class="file-item"><span class="fn">providers/*.dart</span><span class="fd">État Riverpod : source de vérité unique des données chargées (mots, révisions), consultée par les écrans.</span></div>
+            <div class="file-item"><span class="fn">services/api_client.dart</span><span class="fd">Configure dio : base URL choisie par environnement (localhost en dev, adresse Tailscale du PC en usage réel), intercepteurs d\'erreurs réseau.</span></div>
+            <div class="file-item"><span class="fn">services/sync_service.dart</span><span class="fd">Détecte le retour de la connexion, envoie la file d'attente d'actions au backend, puis récupère les changements pour mettre à jour le cache local.</span></div>
+            <div class="file-item"><span class="fn">services/local_cache.dart</span><span class="fd">Lecture/écriture Hive pour garder les fiches consultées accessibles hors-ligne.</span></div>
+            <div class="file-item"><span class="fn">services/notifications_service.dart</span><span class="fd">Programme les notifications locales de rappel sur Android et alimente l\'écran « Révisions du jour » au lancement.</span></div>
+            <div class="file-item"><span class="fn">theme/</span><span class="fd">Couleurs et typographie centralisées, pour une cohérence visuelle sur tous les écrans.</span></div>
+            <div class="file-item"><span class="fn">test/</span><span class="fd">Tests widgets sur les écrans essentiels.</span></div>
+            <div class="file-item"><span class="fn">pubspec.yaml</span><span class="fd">Liste des dépendances Flutter (dio, riverpod, hive_flutter…) et de la configuration du projet.</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="struct-note">
+        <strong>Pourquoi ce découpage :</strong> chaque dossier a une seule responsabilité (routers = HTTP, services = logique métier/API externes, models = schéma DB), ce qui permet de tester services/ indépendamment des routes, et de remplacer un client externe (ex. changer de fournisseur de traduction) sans toucher au reste. Côté Flutter, séparer screens/ de providers/ évite de mélanger l'état de l'app et l'affichage — un écran ne fait que lire un provider et afficher.
+        <br><br><strong>Dépôt Git : un seul dépôt racine avec les dossiers backend/ et app/, et un .gitignore commun excluant .env, /backend/.venv et /app/build.
+      </div>
+    </div>
+
+    <div class="flow-section">
+      <div class="lbl">Comment fonctionne l'application</div>
+      <p style="font-size:12px; color:var(--muted); margin-top:6px; max-width:70ch">Vue d'ensemble du parcours, du mot tapé par l'utilisateur jusqu'au rappel de révision, avec les services qui interviennent à chaque étape.</p>
+      <div class="flow-diagram mono"><span class="f">PWA (PC)</span> + <span class="f">App Android (.apk)</span>  →  <span class="f">FastAPI (ton PC, via Tailscale)</span>
+                                       │
+                     ┌─────────────────┼─────────────────┐
+                     ▼                 ▼                 ▼
+              <span class="f">Musixmatch</span>          <span class="f">DeepL</span>          <span class="f">Ollama (local)</span>
+              (extrait lyrics)   (traduction)      (explication argot)
+                     │                 │                 │
+                     └─────────────────┼─────────────────┘
+                                       ▼
+                         <span class="f">PostgreSQL</span> (cache : mot, extrait,
+                         traduction, explication, planning SM-2)
+                                       │
+                                       ▼
+                         Fiche affichée dans l'app + entrée
+                         dans le planning de révision</div>
+      <div class="flow-steps">
+        <div class="flow-step"><div class="flow-num">1</div><div class="flow-txt"><div class="ft-name">L'utilisateur ajoute un mot</div><div class="ft-desc">Depuis la PWA sur PC ou l'app Android, il tape un mot ou une expression rencontrée dans une chanson. La requête part vers le backend FastAPI de ton PC, via Tailscale, en Wi-Fi comme en données mobiles. Si le téléphone n'a pas de réseau ou ne joint pas le PC, le mot est enregistré en local et sera envoyé plus tard (voir étape 10).</div></div></div>
+        <div class="flow-step"><div class="flow-num">2</div><div class="flow-txt"><div class="ft-name">Le backend vérifie le cache</div><div class="ft-desc">Si ce mot a déjà été recherché, la fiche (extrait + traduction + explication) est renvoyée directement depuis PostgreSQL, sans réappeler aucune API externe.</div></div></div>
+        <div class="flow-step"><div class="flow-num">3</div><div class="flow-txt"><div class="ft-name">Sinon, recherche de l'extrait</div><div class="ft-desc">Le backend interroge Musixmatch, morceau par morceau, parmi les artistes préférés de l'utilisateur, jusqu'à trouver une occurrence du mot ; il en extrait 1 à 2 lignes.</div></div></div>
+        <div class="flow-step"><div class="flow-num">4</div><div class="flow-txt"><div class="ft-name">Traduction puis explication</div><div class="ft-desc">DeepL traduit le mot en français ; Ollama (sur ton PC) génère une explication courte du sens en contexte (argot, double sens). Sinon, seule la traduction DeepL est utilisée.</div></div></div>
+        <div class="flow-step"><div class="flow-num">5</div><div class="flow-txt"><div class="ft-name">Mise en cache</div><div class="ft-desc">Le résultat complet (extrait, traduction, explication) est stocké en base pour ce mot, afin de ne plus jamais refaire les mêmes appels externes.</div></div></div>
+        <div class="flow-step"><div class="flow-num">6</div><div class="flow-txt"><div class="ft-name">Entrée dans le planning de révision</div><div class="ft-desc">Le mot est ajouté à la table revision avec une première date de rappel, calculée par l'algorithme SM-2.</div></div></div>
+        <div class="flow-step"><div class="flow-num">7</div><div class="flow-txt"><div class="ft-name">Rappel à l'ouverture de l'app</div><div class="ft-desc">À chaque lancement, l'app affiche l'écran « Révisions du jour » avec les mots dont la date de rappel est atteinte (sur Android, une notification locale peut aussi le rappeler, même hors-ligne).</div></div></div>
+        <div class="flow-step"><div class="flow-num">8</div><div class="flow-txt"><div class="ft-name">Réponse de l'utilisateur</div><div class="ft-desc">L'utilisateur indique s'il se souvenait du mot ou non ; SM-2 recalcule le prochain intervalle (plus long si su, plus court sinon) et met à jour la base.</div></div></div>
+        <div class="flow-step"><div class="flow-num">9</div><div class="flow-txt"><div class="ft-name">Mode hors-ligne (mobile)</div><div class="ft-desc">Sans connexion, l'app Android lit le cache local Hive : fiches, bibliothèque et révisions du jour restent utilisables. Les actions faites (réponses de révision, mots ajoutés) sont mises dans une file d'attente locale.</div></div></div>
+        <div class="flow-step"><div class="flow-num">10</div><div class="flow-txt"><div class="ft-name">Synchronisation à la reconnexion</div><div class="ft-desc">Dès que le téléphone retrouve le réseau et ton PC, l'app envoie la file d'attente au backend, qui l'applique à la base commune (SM-2 recalculé, mots en attente enrichis), puis renvoie les changements faits depuis l'autre appareil. Un mot ajouté sur le PC apparaît sur le téléphone, et inversement.</div></div></div>
+      </div>
+    </div>
+
+    <div class="learn-section">
+      <div class="lbl">Parcours d'apprentissage — profil Python + Java</div>
+      <div class="learn-cols">
+        <div class="learn-col lc-acquis">
+          <div class="lc-head"><span class="lc-dot"></span><div><div class="lc-title">Déjà acquis</div><div class="lc-sub mono">0 apprentissage requis</div></div></div>
+          <div class="learn-item"><div class="li-name">Python</div><div class="li-desc">Base directement réutilisable pour tout le backend FastAPI.</div></div>
+          <div class="learn-item"><div class="li-name">Logique orientée objet</div><div class="li-desc">Transfère aussi bien côté SQLAlchemy que côté Flutter.</div></div>
+        </div>
+        <div class="learn-col lc-rapide">
+          <div class="lc-head"><span class="lc-dot"></span><div><div class="lc-title">Transfert rapide</div><div class="lc-sub mono">quelques jours</div></div></div>
+          <div class="learn-item"><div class="li-name">Dart & Flutter</div><div class="li-desc">Syntaxe très proche de Java (typé, OO, async/await). L'essentiel à apprendre : les widgets (StatelessWidget, StatefulWidget, Row/Column). La doc seule ne suffit pas pour apprendre vite — passer par les codelabs pratiques listés en étape 02 avant de coder l'app.</div></div>
+          <div class="learn-item"><div class="li-name">FastAPI</div><div class="li-desc">Framework à apprendre, mais routes/contrôleurs/validation te seront familiers si tu as fait du web en Java (Spring). Pydantic ≈ DTO/validation.</div></div>
+        </div>
+        <div class="learn-col lc-serieux">
+          <div class="lc-head"><span class="lc-dot"></span><div><div class="lc-title">À apprendre sérieusement</div><div class="lc-sub mono">le vrai manque</div></div></div>
+          <div class="learn-item"><div class="li-name">SQL & PostgreSQL</div><div class="li-desc">SELECT, JOIN, clés étrangères. Prioritaire : toute la donnée de l'app (mot↔extrait↔révision) repose là-dessus.</div></div>
+          <div class="learn-item"><div class="li-name">SQLAlchemy</div><div class="li-desc">Équivalent Python de Hibernate/JPA si tu en as fait en Java ; sinon nouveau mais le concept est simple une fois vu.</div></div>
+          <div class="learn-item"><div class="li-name">Riverpod</div><div class="li-desc">Gestion d'état Flutter, sans équivalent direct en Java classique.</div></div>
+          <div class="learn-item"><div class="li-name">Synchronisation hors-ligne</div><div class="li-desc">Cache local, file d'attente d'actions, idempotence et résolution de conflits : concept nouveau, à apprendre avant l'étape 08bis.</div></div>
+        </div>
+        <div class="learn-col lc-config">
+          <div class="lc-head"><span class="lc-dot"></span><div><div class="lc-title">Configuration seulement</div><div class="lc-sub mono">peu de code</div></div></div>
+          <div class="learn-item"><div class="li-name">Tailscale</div><div class="li-desc">Installer sur le PC et le téléphone, activer HTTPS, lancer tailscale serve : quelques commandes de configuration.</div></div>
+          <div class="learn-item"><div class="li-name">Git & déploiement</div><div class="li-desc">Commits et push vers GitHub ; la mise en service se fait directement sur ton PC (git pull, redémarrage du service).</div></div>
+          <div class="learn-item"><div class="li-name">Variables d'environnement</div><div class="li-desc">Fichier .env pour les clés API, exclu du dépôt Git.</div></div>
+        </div>
+      </div>
+      <div style="margin-top:14px; font-size:12px; color:var(--muted)">Ordre conseillé : <strong style="color:var(--text)">SQL</strong> → <strong style="color:var(--text)">FastAPI</strong> → <strong style="color:var(--text)">Dart/Flutter</strong> → <strong style="color:var(--text)">Tailscale</strong> en configuration à l'étape 08, puis synchronisation hors-ligne à l'étape 08bis.</div>
+    </div>
+
+    <div class="skills-section">
+      <div class="lbl">Compétences mobilisées, par étape</div>
+      <div class="skills-grid">
+        <div class="skill-chip"><div class="sc-name">SQL & PostgreSQL</div><div class="sc-desc">Modélisation relationnelle, requêtes, jointures.</div><div class="sc-steps"><span class="sc-step">02</span><span class="sc-step">04</span><span class="sc-step">08</span><span class="sc-step">10</span></div></div>
+        <div class="skill-chip"><div class="sc-name">SQLAlchemy & migrations</div><div class="sc-desc">ORM Python, versionnage du schéma avec Alembic.</div><div class="sc-steps"><span class="sc-step">04</span></div></div>
+        <div class="skill-chip"><div class="sc-name">FastAPI & API REST</div><div class="sc-desc">Routes, validation Pydantic, documentation Swagger.</div><div class="sc-steps"><span class="sc-step">02</span><span class="sc-step">04</span><span class="sc-step">05</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Intégration d'API externes</div><div class="sc-desc">Musixmatch, Genius, DeepL : auth, formats de réponse, gestion des clés.</div><div class="sc-steps"><span class="sc-step">03</span><span class="sc-step">05</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Droit d'auteur & conformité API</div><div class="sc-desc">Lecture de conditions d'usage, limites légales sur les extraits de paroles.</div><div class="sc-steps"><span class="sc-step">03</span></div></div>
+        <div class="skill-chip"><div class="sc-name">LLM local (Ollama)</div><div class="sc-desc">Installer et interroger un modèle en local via l'API Ollama, prompt engineering pour des explications courtes.</div><div class="sc-steps"><span class="sc-step">05</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Cache & gestion de quotas</div><div class="sc-desc">Éviter les appels redondants, suivre la consommation des plans gratuits.</div><div class="sc-steps"><span class="sc-step">05</span><span class="sc-step">10</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Résilience réseau</div><div class="sc-desc">Timeouts, retry/backoff, comportement de repli si une API externe tombe.</div><div class="sc-steps"><span class="sc-step">05</span><span class="sc-step">08b</span><span class="sc-step">10</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Algorithmes de planification</div><div class="sc-desc">Répétition espacée (type SM-2), calcul des prochains rappels.</div><div class="sc-steps"><span class="sc-step">06</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Notifications locales</div><div class="sc-desc">Rappels programmés par le téléphone lui-même, sans serveur.</div><div class="sc-steps"><span class="sc-step">06</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Réseau privé (Tailscale)</div><div class="sc-desc">Accès sécurisé au backend du PC depuis le téléphone, HTTPS sur le réseau privé.</div><div class="sc-steps"><span class="sc-step">08</span><span class="sc-step">08b</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Flutter & Dart</div><div class="sc-desc">Widgets, navigation, appels HTTP depuis le mobile.</div><div class="sc-steps"><span class="sc-step">02</span><span class="sc-step">07</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Gestion d'état (Riverpod)</div><div class="sc-desc">Séparer l'état de l'app de l'affichage.</div><div class="sc-steps"><span class="sc-step">07</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Stockage local & mode hors-ligne</div><div class="sc-desc">Cache des mots/extraits déjà consultés pour un usage sans connexion.</div><div class="sc-steps"><span class="sc-step">07</span><span class="sc-step">08b</span><span class="sc-step">10</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Sécurité & secrets</div><div class="sc-desc">Variables d'environnement, exclusion des clés API du dépôt Git.</div><div class="sc-steps"><span class="sc-step">08</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Mise en service & CI</div><div class="sc-desc">Backend lancé automatiquement sur le PC, tests automatiques à chaque push.</div><div class="sc-steps"><span class="sc-step">08</span><span class="sc-step">08b</span><span class="sc-step">10</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Tests automatisés</div><div class="sc-desc">pytest côté backend, tests widgets côté Flutter.</div><div class="sc-steps"><span class="sc-step">09</span><span class="sc-step">10</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Observabilité</div><div class="sc-desc">Journaux structurés dans un fichier, suivi des erreurs sans service externe.</div><div class="sc-steps"><span class="sc-step">10</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Sauvegardes de données</div><div class="sc-desc">Export régulier et testé de la base Postgres.</div><div class="sc-steps"><span class="sc-step">10</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Synchronisation hors-ligne</div><div class="sc-desc">File d'attente d'actions, rejeu idempotent, fusion des changements entre appareils.</div><div class="sc-steps"><span class="sc-step">04</span><span class="sc-step">08b</span></div></div>
+        <div class="skill-chip"><div class="sc-name">Build & distribution Android (.apk)</div><div class="sc-desc">Signature, build release, installation directe sur le téléphone.</div><div class="sc-steps"><span class="sc-step">08b</span><span class="sc-step">09</span></div></div>
+        <div class="skill-chip"><div class="sc-name">PWA installable</div><div class="sc-desc">Manifest, service worker, installation depuis Chrome/Edge et icône dans la barre des tâches.</div><div class="sc-steps"><span class="sc-step">07</span><span class="sc-step">08</span></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="timeline">
+
+    <div class="step s1" id="s-1">
+      <div class="dot mono" onclick="toggle(1)">01</div>
+      <div class="card">
+        <div class="head" onclick="toggle(1)">
+          <div class="title">Cadrage produit & spécifications</div>
+          <span class="tag mono">Produit</span>
+          <span class="dur mono">3–4 jours</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="body">
+          <div class="skill-tags"><span class="st">Cadrage produit</span></div>
+          <div class="lbl">Concepts à maîtriser</div>
+          <div class="concepts">
+            <div class="concept"><div class="c-name">User stories</div><div class="c-desc">Formuler le besoin sous forme « en tant qu'utilisateur, je veux… afin de… » pour chaque fonctionnalité clé (ajout de mot, réception de rappel, révision).</div></div>
+            <div class="concept"><div class="c-name">Scope MVP</div><div class="c-desc">Geler un périmètre volontairement étroit : 1 mot → 1 définition FR → 1 à 3 extraits → 1 planning de rappel. Tout le reste devient « v2 ».</div></div>
+            <div class="concept"><div class="c-name">Jeu de test personnel</div><div class="c-desc">Lister 15–20 mots/expressions réellement difficiles à retenir, et 5–10 artistes préférés. Ce jeu sert de test tout au long du build.</div></div>
+          </div>
+          <div class="concept"><div class="c-name">Sous-étapes détaillées</div><div class="c-desc">1) Écrire 5 à 8 user stories couvrant ajout de mot, recherche d'extrait, réception de rappel, réponse à une révision, réglages. 2) Geler explicitement le scope MVP par écrit (ce qui est dedans / ce qui est explicitement hors scope v1). 3) Choisir les 15–20 mots/expressions test et les 5–10 artistes préférés. 4) Esquisser les écrans (sur papier) sans coder. 5) Faire relire le document par soi-même à froid le lendemain avant de valider.</div></div>
+<div class="lbl">Ressources</div>
+<div class="res">
+<a href="https://www.atlassian.com/agile/project-management/user-stories" target="_blank"><span class="name">Atlassian — Guide des user stories</span><span class="type mono">GUIDE</span></a>
+</div>
+<div class="concept"><div class="c-name">Critères d'acceptation</div><div class="c-desc">☐ specs.md d'une page : écrans, scope MVP (dedans / hors v1), clients visés (PC, Android)<br>☐ 5 à 8 user stories, chacune avec au moins 2 critères d'acceptation vérifiables<br>☐ Jeu de test : 15 à 20 mots avec chanson et artiste d'origine, dont au moins 5 expressions d'argot<br>☐ 5 à 10 artistes préférés listés<br>☐ Esquisses papier des 6 écrans en version PC et version mobile, y compris l'écran hors-ligne<br>☐ Relecture à froid le lendemain, ajustements notés</div></div>
+<div class="concept"><div class="c-name">Risques et parades</div><div class="c-desc">⚠ Le périmètre grossit pendant le développement → Toute idée nouvelle va dans une liste « v2 » et n'entre pas avant l'étape 09<br>⚠ Jeu de test trop facile → Inclure argot, expressions idiomatiques, mots à plusieurs sens</div></div>
+<div class="concept"><div class="c-name">Estimation détaillée</div><div class="c-desc">Estimation : user stories 0,5 j · scope 0,5 j · jeu de test 0,5 j · esquisses 1 j · relecture 0,5 j.</div></div>
+<div class="deliv"><strong>Livrable :</strong> un document d'une page (specs.md) listant les écrans, le scope MVP, et la liste d'artistes/mots de test.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step s2" id="s-2">
+      <div class="dot mono" onclick="toggle(2)">02</div>
+      <div class="card">
+        <div class="head" onclick="toggle(2)">
+          <div class="title">Choix de la stack technique</div>
+          <span class="tag mono">Architecture</span>
+          <span class="dur mono">2–3 jours</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="body">
+          <div class="skill-tags"><span class="st">Flutter & Dart</span><span class="st">FastAPI & API REST</span><span class="st">SQL & PostgreSQL</span></div>
+          <div class="lbl">Décisions et alternatives</div>
+          <div class="concepts">
+            <div class="concept"><div class="c-name">Frontend : Flutter Web (PWA) pour le PC, Flutter Android (.apk) pour le mobile</div><div class="c-desc">Flutter retenu car un seul projet produit les deux clients : la cible web (PWA installable sur PC) et la cible Android (.apk), avec le même code Dart. On commence par la cible web pour itérer vite en local, puis on ajoute la cible Android à l'étape 08bis une fois le backend en ligne.</div><div class="c-code">flutter create lyrics_vocab_app<br>cd lyrics_vocab_app && flutter config --enable-web<br>flutter run -d chrome</div></div>
+            <div class="concept"><div class="c-name">Backend : FastAPI vs Node/Express</div><div class="c-desc">FastAPI choisi pour son typage (Pydantic), sa documentation Swagger générée automatiquement, et sa simplicité pour appeler des API externes en asynchrone.</div><div class="c-code">pip install fastapi uvicorn</div></div>
+            <div class="concept"><div class="c-name">Base de données : PostgreSQL</div><div class="c-desc">Relationnel, adapté aux liens mot↔extrait↔révision. Installé en local sur ton PC : aucune base en ligne, aucun hébergeur.</div></div>
+          </div>
+          <div class="concept"><div class="c-name">Sous-étapes détaillées</div><div class="c-desc">1) Installer le SDK Flutter et vérifier l'environnement (<code class="mono">flutter doctor</code>). 2) Installer Python 3.11+ et créer un environnement virtuel pour FastAPI. 3) Créer le dépôt Git (un seul dépôt avec les dossiers /backend et /app). 4) Installer PostgreSQL en local (installeur officiel ou conteneur Docker), créer une base vide et noter la chaîne de connexion. 5) Vérifier que le squelette Flutter tourne dans Chrome et sur un émulateur Android (installer Android Studio et le SDK Android, flutter doctor doit être au vert côté Android), et que <code class="mono">uvicorn main:app --reload</code> répond sur /docs.</div></div>
+<div class="lbl">Ressources</div>
+<div class="res">
+<a href="https://docs.flutter.dev/get-started/install" target="_blank"><span class="name">Flutter — Installation & Get Started</span><span class="type mono">DOC</span></a>
+<a href="https://codelabs.developers.google.com/codelabs/flutter-codelab-first" target="_blank"><span class="name">Codelab — Write your first Flutter app (recommandé avant de coder)</span><span class="type mono">TUTO</span></a>
+<a href="https://riverpod.dev/docs/introduction/getting_started" target="_blank"><span class="name">Codelab — Getting started with Riverpod</span><span class="type mono">TUTO</span></a>
+<a href="https://fastapi.tiangolo.com/" target="_blank"><span class="name">FastAPI — documentation officielle</span><span class="type mono">DOC</span></a>
+<a href="https://www.postgresql.org/docs/" target="_blank"><span class="name">PostgreSQL — documentation officielle</span><span class="type mono">DOC</span></a>
+</div>
+<div class="concept"><div class="c-name">Critères d'acceptation</div><div class="c-desc">☐ flutter doctor sans erreur pour Chrome et Android<br>☐ uvicorn répond sur /docs en local<br>☐ PostgreSQL local joignable depuis FastAPI<br>☐ Dépôt Git avec .gitignore, README avec les commandes d'installation et de lancement<br>☐ Versions de Python, Flutter, Dart et PostgreSQL notées dans le README</div></div>
+<div class="concept"><div class="c-name">Risques et parades</div><div class="c-desc">⚠ Versions incompatibles → Noter les versions exactes, utiliser un environnement virtuel et un requirements.txt figé<br>⚠ Installation du SDK Android longue → Prévoir une demi-journée ; commencer par la cible web</div></div>
+<div class="concept"><div class="c-name">Estimation détaillée</div><div class="c-desc">Estimation : Flutter et Android 0,5 j · Python 0,25 j · PostgreSQL 0,25 j · dépôt et README 0,25 j · codelabs Flutter et Riverpod 1 j.</div></div>
+<div class="deliv"><strong>Livrable :</strong> dépôt Git initialisé avec squelette Flutter + squelette FastAPI, connectés à une base Postgres vide.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step s3" id="s-3">
+      <div class="dot mono" onclick="toggle(3)">03</div>
+      <div class="card">
+        <div class="head" onclick="toggle(3)">
+          <div class="title">Droits d'auteur & sourcing des lyrics</div>
+          <span class="tag mono">Critique</span>
+          <span class="dur mono">1 semaine</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="body">
+          <div class="skill-tags"><span class="st">Droit d'auteur & conformité API</span><span class="st">Intégration d'API externes</span></div>
+          <div class="lbl">Concepts à maîtriser</div>
+          <div class="concepts">
+            <div class="concept"><div class="c-name">Pourquoi c'est structurant</div><div class="c-desc">Les paroles complètes sont protégées. L'app ne doit jamais stocker ou afficher une chanson entière — seulement de courts extraits (1–2 lignes) autour du mot recherché, générés à la demande.</div></div>
+            <div class="concept"><div class="c-name">Vérification préalable de l'accès Musixmatch</div><div class="c-desc">L'accès développeur à Musixmatch s'est resserré ces dernières années (quotas réduits, extraits parfois tronqués, certains endpoints réservés aux partenaires). Avant d'engager la semaine 05, créer un compte développeur, obtenir une clé de test et vérifier concrètement les limites actuelles du plan gratuit plutôt que de le supposer.</div></div>
+            <div class="concept"><div class="c-name">Musixmatch API — extraits courts</div><div class="c-desc">Conçue pour des snippets, avec un quota gratuit pour usage personnel/développeur. Endpoint principal pour rechercher une occurrence de mot dans un morceau.</div><div class="c-code">GET /matcher.lyrics.get</div></div>
+            <div class="concept"><div class="c-name">Genius API — métadonnées uniquement</div><div class="c-desc">Utile pour retrouver titres, artistes, pochettes et liens, mais son API officielle ne sert pas les paroles complètes — seulement les infos autour de la chanson.</div></div>
+          </div>
+          <div class="concept"><div class="c-name">Sous-étapes détaillées</div><div class="c-desc">1) Lire les conditions d'usage (Terms of Service) de Musixmatch et Genius avant tout code. 2) Créer un compte développeur Musixmatch, générer une clé, tester manuellement <code class="mono">matcher.lyrics.get</code> avec curl et l'interface Swagger. 3) Créer une application Genius, générer un token, tester la recherche de morceau. 4) Noter précisément les quotas du plan gratuit constatés (requêtes/jour, taille des extraits). 5) Écrire un script Python isolé (hors FastAPI) qui renvoie un extrait pour un mot + artiste donné, à partir du jeu de test de l'étape 01.</div></div>
+<div class="concept"><div class="c-name">Extraits automatiques uniquement</div><div class="c-desc">Tu saisis seulement le mot : l'app doit trouver seule l'extrait. Il n'y a pas de saisie manuelle de secours. Si Musixmatch ne trouve pas le mot (accès restreint, extrait tronqué, mot absent des chansons de tes artistes), la fiche s'affiche avec la traduction et l'explication, sans phrase. Le test de cette étape mesure donc le taux de mots du jeu de test qui obtiennent un extrait : si ce taux est trop faible, la source des extraits est à revoir avant de poursuivre.</div></div>
+<div class="concept"><div class="c-name">Critères d'acceptation</div><div class="c-desc">☐ Conditions d'usage de Musixmatch et Genius résumées en 10 lignes<br>☐ Clés obtenues et testées<br>☐ Tableau des quotas constatés (requêtes par jour, longueur des extraits)<br>☐ Script isolé renvoyant un extrait pour au moins 5 mots du jeu de test<br>☐ Taux de mots du jeu de test qui obtiennent un extrait mesuré et noté</div></div>
+<div class="concept"><div class="c-name">Risques et parades</div><div class="c-desc">⚠ Accès Musixmatch refusé ou trop restreint → Mesurer le taux de réussite dès cette étape ; s'il est trop faible, revoir la source des extraits avant la phase 05<br>⚠ Extraits tronqués → Mesurer avant de bâtir la phase 05 dessus<br>⚠ Risque juridique → Jamais de chanson entière, extraits de 1 à 2 lignes, générés à la demande</div></div>
+<div class="concept"><div class="c-name">Estimation détaillée</div><div class="c-desc">Estimation : conditions 0,5 j · comptes et clés 0,5 j · tests manuels 1 j · script 1 j · synthèse des quotas 0,5 j.</div></div>
+<div class="deliv"><strong>Livrable :</strong> clés API Musixmatch et Genius obtenues, et un script Python qui renvoie un extrait de test pour un mot donné.</div>
+          <div class="lbl">Ressources</div>
+          <div class="res">
+            <a href="https://developer.musixmatch.com/" target="_blank"><span class="name">Musixmatch Developer — documentation officielle</span><span class="type mono">DOC</span></a>
+            <a href="https://docs.genius.com/" target="_blank"><span class="name">Genius API — documentation officielle</span><span class="type mono">DOC</span></a>
+<a href="https://developer.musixmatch.com/plans" target="_blank"><span class="name">Musixmatch — plans & quotas</span><span class="type mono">DOC</span></a>
+<a href="https://docs.genius.com/#songs-h2" target="_blank"><span class="name">Genius API — endpoint Songs</span><span class="type mono">DOC</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step s4" id="s-4">
+      <div class="dot mono" onclick="toggle(4)">04</div>
+      <div class="card">
+        <div class="head" onclick="toggle(4)">
+          <div class="title">Backend : modèle de données & API</div>
+          <span class="tag mono">Backend</span>
+          <span class="dur mono">1 semaine</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="body">
+          <div class="skill-tags"><span class="st">SQL & PostgreSQL</span><span class="st">SQLAlchemy & migrations</span><span class="st">FastAPI & API REST</span></div>
+          <div class="lbl">Concepts à maîtriser</div>
+          <div class="concepts">
+            <div class="concept"><div class="c-name">Schéma relationnel</div><div class="c-desc">Tables : mot (terme, traduction, niveau), artiste (avec un champ booléen est_prefere), morceau, extrait (lié à un mot + un morceau), revision (historique des rappels et réponses, avec un champ mode pour distinguer rappel simple et exercice de production, et un champ verdict pour le résultat de la traduction évaluée par Ollama).</div><div class="c-code">CREATE TABLE mot(id, terme, traduction, niveau)<br>CREATE TABLE artiste(id, nom, est_prefere)<br>CREATE TABLE revision(..., mode, verdict, reponse_utilisateur)</div></div>
+            <div class="concept"><div class="c-name">ORM avec SQLAlchemy</div><div class="c-desc">Mapper les tables en classes Python plutôt qu'écrire du SQL brut partout, avec Alembic pour versionner les migrations.</div><div class="c-code">class Mot(Base): __tablename__ = "mot"</div></div>
+            <div class="concept"><div class="c-name">Endpoints REST</div><div class="c-desc">POST /mots (ajouter un mot), GET /mots/{id}/extraits, POST /revisions/{id}/reponse. FastAPI génère la doc Swagger automatiquement sur /docs.</div></div>
+          </div>
+          <div class="concept"><div class="c-name">Sous-étapes détaillées</div><div class="c-desc">1) Dessiner le schéma relationnel sur papier (mot, artiste, morceau, extrait, revision) avec les clés étrangères. 2) Installer SQLAlchemy + psycopg2 + Alembic, initialiser <code class="mono">alembic init migrations</code>. 3) Écrire les modèles Python (classes ORM) puis générer la première migration. 4) Définir les schémas Pydantic (entrée/sortie) séparés des modèles ORM. 5) Écrire les routes CRUD une par une en testant chacune via /docs avant de passer à la suivante. 6) Ajouter la pagination sur GET /mots.</div></div>
+<div class="lbl">Ressources</div>
+<div class="res">
+<a href="https://docs.sqlalchemy.org/en/20/" target="_blank"><span class="name">SQLAlchemy 2.0 — documentation officielle</span><span class="type mono">DOC</span></a>
+<a href="https://alembic.sqlalchemy.org/en/latest/" target="_blank"><span class="name">Alembic — migrations de schéma</span><span class="type mono">DOC</span></a>
+<a href="https://docs.pydantic.dev/latest/" target="_blank"><span class="name">Pydantic — validation de données</span><span class="type mono">DOC</span></a>
+<a href="https://fastapi.tiangolo.com/tutorial/sql-databases/" target="_blank"><span class="name">FastAPI — tutoriel SQL Databases</span><span class="type mono">DOC</span></a>
+</div>
+<div class="concept"><div class="c-name">Colonnes de synchronisation</div><div class="c-desc">Toutes les tables synchronisées portent : un <b>id UUID généré côté client</b> (pour qu'un mot créé hors-ligne ait déjà son identifiant), <b>updated_at</b>, <b>deleted_at</b> (suppression logique, pour propager les suppressions entre appareils) et <b>server_seq</b> (numéro croissant attribué par le serveur à chaque écriture, utilisé comme curseur de synchronisation). Une table revision est un journal : une réponse n'est jamais modifiée, seulement ajoutée.</div></div>
+<div class="concept"><div class="c-name">Endpoints de synchronisation</div><div class="c-desc">POST /sync/push reçoit la liste des actions faites hors-ligne, chacune avec un identifiant d'opération unique (rejouer deux fois la même action ne crée pas de doublon). GET /sync/pull?since=... renvoie tout ce qui a changé depuis le dernier curseur de synchronisation.</div><div class="c-code">POST /sync/push · GET /sync/pull?since=</div></div>
+<div class="concept"><div class="c-name">Critères d'acceptation</div><div class="c-desc">☐ Migrations Alembic créant toutes les tables de l'annexe A<br>☐ CRUD des mots complet via /docs, avec pagination et filtre par statut<br>☐ Schémas Pydantic séparés des modèles ORM<br>☐ UUID générés côté client acceptés<br>☐ Au moins un test pytest par endpoint<br>☐ Squelette de /sync/push et /sync/pull qui répond</div></div>
+<div class="concept"><div class="c-name">Risques et parades</div><div class="c-desc">⚠ Refonte du schéma en cours de route → Toute modification passe par une migration Alembic<br>⚠ Requêtes lentes (N+1) → Chargement groupé des relations, index de l'annexe A<br>⚠ Oublier les colonnes de synchronisation → Les ajouter dès la première migration</div></div>
+<div class="concept"><div class="c-name">Estimation détaillée</div><div class="c-desc">Estimation : schéma 1 j · ORM et migration 1 j · schémas 0,5 j · CRUD 1,5 j · squelette sync 1 j · tests 1 j.</div></div>
+<div class="deliv"><strong>Livrable :</strong> API FastAPI fonctionnelle en local avec CRUD sur les mots et premier squelette /sync/push et /sync/pull, testable via /docs.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step s5" id="s-5">
+      <div class="dot mono" onclick="toggle(5)">05</div>
+      <div class="card">
+        <div class="head" onclick="toggle(5)">
+          <div class="title">Moteur de correspondance mot ↔ lyrics + traduction</div>
+          <span class="tag mono">Cœur technique</span>
+          <span class="dur mono">1–2 semaines</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="body">
+          <div class="skill-tags"><span class="st">FastAPI & API REST</span><span class="st">Intégration d'API externes</span><span class="st">Cache & gestion de quotas</span><span class="st">Résilience réseau</span></div>
+          <div class="lbl">Concepts à maîtriser</div>
+          <div class="concepts">
+            <div class="concept"><div class="c-name">Recherche filtrée par artiste</div><div class="c-desc">À partir du mot saisi et de la liste d'artistes préférés de l'utilisateur, interroger Musixmatch morceau par morceau jusqu'à trouver des occurrences.</div></div>
+            <div class="concept"><div class="c-name">Découpage d'un extrait court</div><div class="c-desc">Une fois l'occurrence localisée, extraire seulement 1 à 2 lignes autour du mot, jamais la chanson entière, pour rester dans un usage raisonnable.</div></div>
+            <div class="concept"><div class="c-name">Explication automatique via DeepL</div><div class="c-desc">Générer la traduction/définition en français à partir du mot anglais, avec une relecture manuelle possible avant validation dans l'app.</div><div class="c-code">POST https://api-free.deepl.com/v2/translate</div></div>
+            <div class="concept"><div class="c-name">Repli si aucun résultat</div><div class="c-desc">Si aucun artiste préféré n'utilise le mot, élargir progressivement à des artistes du même genre musical plutôt que de renvoyer un écran vide.</div></div>
+            <div class="concept"><div class="c-name">Cache des extraits et traductions</div><div class="c-desc">Stocker en base l'extrait et la traduction dès la première recherche réussie pour un mot donné, afin de ne jamais réinterroger Musixmatch/DeepL deux fois pour le même mot — économise le quota gratuit et accélère les recherches suivantes.</div><div class="c-code">SELECT * FROM extrait WHERE mot_id = ?</div></div>
+            <div class="concept"><div class="c-name">Suivi des quotas</div><div class="c-desc">Compter les appels sortants vers chaque API externe (compteur simple en base ou en mémoire) pour repérer une approche des limites du plan gratuit avant qu'elle ne bloque l'app.</div></div>
+            <div class="concept"><div class="c-name">Repli sur un artiste non préféré</div><div class="c-desc">Si le mot n'apparaît dans aucune chanson des artistes préférés de l'utilisateur, élargir la recherche à une recherche Genius/Musixmatch générale, sans filtre d'artiste. Marquer clairement dans la fiche que l'extrait vient d'un artiste hors de la liste préférée, pour rester transparent.</div></div>
+<div class="concept"><div class="c-name">Explication contextuelle via Ollama (LLM local)</div><div class="c-desc">En complément de la traduction DeepL, envoyer le mot + l'extrait à un modèle local via Ollama pour obtenir une explication courte : argot, sens figuré, référence culturelle. Gratuit, illimité, aucune clé API, fonctionne hors-ligne une fois le modèle téléchargé.</div><div class="c-code">ollama pull llama3.1<br>ollama serve<br>POST http://localhost:11434/api/generate</div></div>
+<div class="concept"><div class="c-name">Prompt d'explication</div><div class="c-desc">Garder le prompt court et contraint (2-3 phrases max en sortie) pour rester rapide sur une machine perso : « Explique en français, en 2 phrases max, le sens de "{mot}" dans ce contexte : "{extrait}". Mentionne si c'est de l'argot. »</div></div>
+<div class="concept"><div class="c-name">Fallback si Ollama absent</div><div class="c-desc">Si le service Ollama local n'est pas lancé, l'app doit continuer à fonctionner avec juste la traduction DeepL — l'explication IA est un enrichissement, jamais un bloquant.</div></div>
+<div class="concept"><div class="c-name">Endpoint de recherche d'artiste</div><div class="c-desc">GET /artistes/recherche?q=... interroge Genius pour proposer des résultats pendant que l'utilisateur tape, utilisé à la fois pour l'onboarding et pour l'ajout d'artiste plus tard dans les réglages.</div></div>
+<div class="concept"><div class="c-name">Gestion des erreurs et retry</div><div class="c-desc">Timeout explicite sur chaque appel externe, tentative de nouvelle requête avec backoff en cas d'échec temporaire, et message clair côté app si Musixmatch, Genius ou DeepL est indisponible plutôt qu'un écran qui plante.</div></div>
+          </div>
+          <div class="concept"><div class="c-name">Sous-étapes détaillées</div><div class="c-desc">1) Écrire la fonction de recherche par artiste préféré, morceau par morceau. 2) Ajouter le découpage automatique en 1–2 lignes autour du mot trouvé. 3) Intégrer l'appel DeepL et stocker traduction + extrait en base dès le premier succès (logique de cache). 4) Ajouter un compteur d'appels par API externe (table ou variable persistée) avec seuil d'alerte. 5) Ajouter timeout + retry avec backoff exponentiel (ex. librairie tenacity) sur chaque appel HTTP sortant. 6) Implémenter le repli sur un artiste non préféré si aucun résultat chez les artistes préférés (voir concept dédié ci-dessous). 7) Tester le endpoint complet sur 5 mots du jeu de test réels.</div></div>
+<div class="lbl">Ressources</div>
+<div class="res">
+<a href="https://developer.musixmatch.com/documentation" target="_blank"><span class="name">Musixmatch — référence des endpoints</span><span class="type mono">DOC</span></a>
+<a href="https://www.deepl.com/docs-api" target="_blank"><span class="name">DeepL API — documentation officielle</span><span class="type mono">DOC</span></a>
+<a href="https://www.python-httpx.org/" target="_blank"><span class="name">HTTPX — client HTTP async pour Python</span><span class="type mono">DOC</span></a>
+<a href="https://tenacity.readthedocs.io/en/latest/" target="_blank"><span class="name">Tenacity — retry/backoff en Python</span><span class="type mono">DOC</span></a>
+<a href="https://github.com/ollama/ollama/blob/main/docs/api.md" target="_blank"><span class="name">Ollama — documentation de l'API</span><span class="type mono">DOC</span></a>
+<a href="https://github.com/ollama/ollama-python" target="_blank"><span class="name">Ollama — client Python officiel</span><span class="type mono">DOC</span></a>
+</div>
+<div class="concept"><div class="c-name">Ollama sur le même PC que le backend</div><div class="c-desc">Ollama tourne sur ton PC et écoute seulement sur localhost (OLLAMA_URL=http://localhost:11434). Modèle : Llama 3.1 8B, confortable avec 32 Go de RAM (un modèle de ce type occupe quelques Go, et plus si tu as une carte graphique : le calcul y est bien plus rapide). La première requête charge le modèle en mémoire (quelques secondes) ; le paramètre keep_alive le garde chargé entre deux appels. Teste les explications et l'évaluation sur ton jeu de 15 à 20 mots avant de t'y fier. Si Ollama est arrêté, la fiche s'affiche avec la traduction seule (statut « partiel ») et l'explication est demandée de nouveau à la prochaine ouverture.</div><div class="c-code">ollama pull llama3.1:8b</div></div>
+<div class="concept"><div class="c-name">Enrichissement différé</div><div class="c-desc">Un mot ajouté sur mobile sans connexion ne peut pas être cherché sur Musixmatch/DeepL. Il est enregistré avec le statut « en attente d'enrichissement » ; à la synchronisation, le backend lance la recherche d'extraits, la traduction et l'explication, puis la fiche complète arrive sur les deux appareils.</div></div>
+<div class="concept"><div class="c-name">Critères d'acceptation</div><div class="c-desc">☐ 5 mots du jeu de test renvoient 1 à 3 extraits réels<br>☐ Un deuxième appel pour le même mot ne déclenche aucun appel externe (vérifié par le compteur)<br>☐ Extrait de 2 lignes et 240 caractères maximum<br>☐ Timeout de 10 s et 3 tentatives avec attente croissante sur chaque appel externe<br>☐ Message clair si un service est indisponible ; fiche sans phrase si aucun extrait<br>☐ Extrait hors liste d'artistes marqué comme tel</div></div>
+<div class="concept"><div class="c-name">Risques et parades</div><div class="c-desc">⚠ Mot trouvé sous une autre forme (running, ran) → Rechercher aussi les variantes courantes<br>⚠ Faux positifs (« art » dans « heart ») → Recherche par frontières de mots, insensible à la casse<br>⚠ Quota épuisé → Compteur avec alerte à 80 %, cache obligatoire<br>⚠ Réponse de l'IA hors format → Annexe E : validation, une nouvelle tentative, puis repli</div></div>
+<div class="concept"><div class="c-name">Estimation détaillée</div><div class="c-desc">Estimation : recherche par artiste 2 j · découpe 0,5 j · DeepL et cache 1 j · quotas 0,5 j · retry 0,5 j · repli 0,5 j · IA 1,5 j · tests 1 j.</div></div>
+<div class="deliv"><strong>Livrable :</strong> endpoint POST /mots/{id}/rechercher-extraits qui renvoie 1–3 extraits réels pour un mot du jeu de test.</div>
+          <div class="lbl">Ressources</div>
+          <div class="res">
+            <a href="https://www.deepl.com/docs-api" target="_blank"><span class="name">DeepL API — documentation officielle</span><span class="type mono">DOC</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step s6" id="s-6">
+      <div class="dot mono" onclick="toggle(6)">06</div>
+      <div class="card">
+        <div class="head" onclick="toggle(6)">
+          <div class="title">Répétition espacée & notifications</div>
+          <span class="tag mono">Rétention</span>
+          <span class="dur mono">1 semaine</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="body">
+          <div class="skill-tags"><span class="st">Algorithmes de planification</span><span class="st">Notifications locales</span></div>
+          <div class="lbl">Concepts à maîtriser</div>
+          <div class="concepts">
+            <div class="concept"><div class="c-name">Algorithme de répétition espacée</div><div class="c-desc">S'inspirer du principe SM-2 (utilisé par Anki) : intervalle qui grandit si le mot est su, qui se réduit sinon. J+1, J+3, J+7, J+21…</div></div>
+            <div class="concept"><div class="c-name">Aucune tâche planifiée côté serveur</div><div class="c-desc">La liste « Révisions du jour » est une simple requête sur les dates de rappel, faite à l'ouverture de l'app : aucun job périodique n'est nécessaire.</div></div>
+            <div class="concept"><div class="c-name">Sur PC : écran « Révisions du jour »</div><div class="c-desc">Sur PC, l'écran « Révisions du jour » s'affiche à l'ouverture de l'app et liste les mots dont la date de rappel est atteinte, avec le même calcul que sur le téléphone. Il n'y a pas de notification sur PC.</div></div>
+          </div>
+          <div class="concept"><div class="c-name">Sous-étapes détaillées</div><div class="c-desc">1) Implémenter la fonction de calcul du prochain rappel selon le principe SM-2 (facteur de facilité, intervalle, répétitions). 2) Créer la table revision (mot_id, date_prevue, statut, historique de réponses). 3) Écrire l'endpoint GET /revisions/dues qui renvoie les révisions dont la date est atteinte. 4) Construire l'écran « Révisions du jour » (PC et mobile). 5) Programmer côté Android les notifications locales à partir des dates de rappel (package flutter_local_notifications), avec le mot et un fragment de lyric comme indice, sans révéler la traduction. 6) Gérer le clic sur la notification pour ouvrir directement la fiche du mot.</div></div>
+<div class="lbl">Ressources</div>
+<div class="res">
+<a href="https://pub.dev/packages/flutter_local_notifications" target="_blank"><span class="name">flutter_local_notifications — notifications locales (pub.dev)</span><span class="type mono">DOC</span></a>
+<a href="https://en.wikipedia.org/wiki/SuperMemo#Description_of_SM-2_algorithm" target="_blank"><span class="name">Algorithme SM-2 — description de référence</span><span class="type mono">REF</span></a>
+</div>
+<div class="concept"><div class="c-name">Exercice de production : phrase FR → traduction EN</div><div class="c-desc">En plus du rappel passif, proposer un mode actif : Ollama génère une phrase française utilisant le mot (dans un contexte différent de l'extrait original), l'utilisateur écrit sa traduction anglaise dans l'app.</div><div class="c-code">Prompt : "Écris une phrase simple en français utilisant le mot \"{mot_fr}\", sans reprendre le contexte de la chanson."</div></div>
+<div class="concept"><div class="c-name">Évaluation de la traduction par Ollama</div><div class="c-desc">La réponse de l'utilisateur est envoyée à Ollama avec la phrase source et une traduction de référence, pour obtenir un verdict (correct / proche / incorrect) et une explication courte si besoin. Demander une sortie structurée (JSON) pour l'exploiter facilement côté backend.</div><div class="c-code">Prompt : "Phrase: {phrase_fr}. Traduction attendue: {ref_en}. Réponse utilisateur: {reponse}. Réponds en JSON: {verdict, explication}."</div></div>
+<div class="concept"><div class="c-name">Vigilance sur la fiabilité de l'évaluation</div><div class="c-desc">Un petit modèle local peut être trop strict ou trop laxiste sur une tâche d'évaluation, plus subtile que la génération. Tester manuellement sur le jeu de 15-20 mots avant de s'y fier, et garder un fallback simple (vérification de mots-clés attendus) en filet de sécurité si le verdict semble incohérent.</div></div>
+<div class="concept"><div class="c-name">Impact sur le score SM-2</div><div class="c-desc">Le verdict de l'exercice de production remplace ou complète la réponse « je savais / je savais pas » pour recalculer le prochain intervalle de révision — une traduction correcte compte comme un rappel réussi, un verdict « incorrect » comme un échec qui rapproche la prochaine révision.</div></div>
+<div class="concept"><div class="c-name">Rappels hors-ligne sur Android</div><div class="c-desc">L'app programme elle-même ses rappels avec des notifications locales (package flutter_local_notifications), à partir des dates de révision stockées sur le téléphone. Aucune connexion ni serveur n'est nécessaire pour être notifié.</div></div>
+<div class="concept"><div class="c-name">SM-2 côté client</div><div class="c-desc">Pour que « Révisions du jour » marche hors-ligne, l'algorithme SM-2 est aussi porté en Dart : l'app calcule localement le prochain intervalle. À la synchronisation, le backend rejoue les réponses dans l'ordre et recalcule SM-2 : la base reste la référence en cas d'écart.</div></div>
+<div class="concept"><div class="c-name">Critères d'acceptation</div><div class="c-desc">☐ Table de cas SM-2 de l'annexe D entièrement verte (Python et Dart)<br>☐ Écran « Révisions du jour » listant les mots dus, triés par ancienneté<br>☐ Exercice FR→EN : JSON valide dans au moins 95 % des essais sur le jeu de test, sinon repli par mots-clés<br>☐ Verdicts cohérents avec ton jugement sur les 15 à 20 mots<br>☐ Notifications locales reçues sur le téléphone, même en mode avion</div></div>
+<div class="concept"><div class="c-name">Risques et parades</div><div class="c-desc">⚠ Sortie JSON invalide du modèle → Analyse tolérante, une nouvelle tentative, puis repli par mots-clés<br>⚠ Fuseaux horaires et heure d'été → Stocker en UTC, calculer les « dus » en date locale<br>⚠ Notifications retardées par l'économie de batterie Android → Demander l'exclusion de l'optimisation de batterie, reprogrammer au redémarrage</div></div>
+<div class="concept"><div class="c-name">Estimation détaillée</div><div class="c-desc">Estimation : SM-2 1 j · table revision et API 1 j · écran du jour 0,5 j · exercice IA 1,5 j · notifications locales 1 j · tests 1 j.</div></div>
+<div class="deliv"><strong>Livrable :</strong> une notification de test reçue sur le téléphone avec le mot + l'extrait, programmée par l'app elle-même (même sans réseau), et l'écran « Révisions du jour » fonctionnel sur PC.</div>
+          <div class="lbl">Ressources</div>
+          <div class="res">
+                      </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step s7" id="s-7">
+      <div class="dot mono" onclick="toggle(7)">07</div>
+      <div class="card">
+        <div class="head" onclick="toggle(7)">
+          <div class="title">Frontend & interface utilisateur</div>
+          <span class="tag mono">UI</span>
+          <span class="dur mono">1–2 semaines</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="body">
+          <div class="skill-tags"><span class="st">Flutter & Dart</span><span class="st">Gestion d'état (Riverpod)</span><span class="st">Stockage local & mode hors-ligne</span></div>
+          <div class="lbl">Concepts à maîtriser</div>
+          <div class="concepts">
+            <div class="concept"><div class="c-name">Écrans essentiels</div><div class="c-desc">Ajout de mot, bibliothèque des mots (triable par statut), fiche mémorisation (mot + traduction + extraits), réglages (artistes, fréquence des rappels).</div></div>
+            <div class="concept"><div class="c-name">Gestion d'état avec Riverpod</div><div class="c-desc">Séparer proprement l'état de l'app (mots chargés, mot en cours) de l'affichage, pour éviter le code spaghetti au fil des écrans.</div><div class="c-code">final motsProvider = FutureProvider((ref) => api.getMots())</div></div>
+            <div class="concept"><div class="c-name">Appels HTTP vers le backend</div><div class="c-desc">Le package dio ou http pour consommer l'API FastAPI depuis Flutter, avec gestion des erreurs réseau affichée simplement à l'utilisateur.</div></div>
+            <div class="concept"><div class="c-name">Cache local pour la fiche mémorisation</div><div class="c-desc">Garder en local (Hive, compatible web via IndexedDB) les mots déjà consultés avec leur traduction et extraits — utile même en version locale si le backend redémarre.</div></div>
+<div class="concept"><div class="c-name">Écran Onboarding (style Spotify)</div><div class="c-desc">Grille de vignettes d'artistes suggérés (sélection multiple, comme le choix des goûts musicaux sur Spotify), avec une barre de recherche au-dessus pour trouver un artiste précis via l'API. La même logique de recherche/sélection est réutilisée dans l'écran Réglages pour ajouter des artistes après coup.</div></div>
+<div class="concept"><div class="c-name">Spécificités Flutter Web</div><div class="c-desc">L'app web appelle le backend en <code class="mono">http://localhost:8000</code> (CORS à activer côté FastAPI avec <code class="mono">CORSMiddleware</code>). Certains packages mobiles n'ont pas d'équivalent web ; vérifier la compatibilité web de chaque package sur pub.dev avant de l'ajouter.</div></div>
+          </div>
+          <div class="concept"><div class="c-name">Sous-étapes détaillées</div><div class="c-desc">1) Construire l'écran Onboarding « Choisis tes artistes préférés » (grille d'artistes suggérés + barre de recherche via GET /artistes/recherche + bouton « Passer, je choisirai plus tard »), affiché uniquement au premier lancement. 2) Construire l'écran Ajout de mot (formulaire simple, appel POST /mots). 3) Construire la Bibliothèque des mots avec tri par statut (nouveau / en cours / acquis). 4) Construire la Fiche mémorisation (mot, traduction, extraits, bouton réponse). 5) Construire l'écran Réglages (artistes préférés, fréquence des rappels). 6) Mettre en place les providers Riverpod pour chaque source de données. 7) Brancher dio pour les appels HTTP avec intercepteurs d'erreurs. 8) Ajouter Hive pour mettre en cache localement chaque fiche déjà consultée. 9) Rendre l'URL de l'API configurable par environnement (voir ci-dessous).</div></div>
+<div class="lbl">Ressources</div>
+<div class="res">
+<a href="https://docs.flutter.dev/ui/widgets-intro" target="_blank"><span class="name">Flutter — introduction aux widgets</span><span class="type mono">DOC</span></a>
+<a href="https://riverpod.dev/docs/introduction/getting_started" target="_blank"><span class="name">Riverpod — documentation officielle</span><span class="type mono">DOC</span></a>
+<a href="https://pub.dev/packages/dio" target="_blank"><span class="name">dio — client HTTP pour Flutter (pub.dev)</span><span class="type mono">DOC</span></a>
+<a href="https://docs.hivedb.dev/" target="_blank"><span class="name">Hive — stockage local Flutter</span><span class="type mono">DOC</span></a>
+<a href="https://docs.flutter.dev/platform-integration/web/pwa" target="_blank"><span class="name">Flutter — Building a Progressive Web App</span><span class="type mono">DOC</span></a>
+<a href="https://developer.mozilla.org/en-US/docs/Web/Progressive_web_apps/Manifest" target="_blank"><span class="name">MDN — Web App Manifest</span><span class="type mono">DOC</span></a>
+</div>
+<div class="concept"><div class="c-name">Configuration en PWA installable</div><div class="c-desc">Flutter Web génère déjà un manifest.json et un service worker par défaut. Personnaliser web/manifest.json (nom, icônes 192x192 et 512x512, <code class="mono">"display": "standalone"</code>) pour que l'app s'installe et s'ouvre comme une appli desktop, sans barre d'adresse de navigateur.</div><div class="c-code">web/manifest.json → "display": "standalone"<br>web/icons/Icon-192.png, Icon-512.png</div></div>
+<div class="concept"><div class="c-name">Vérifier l'installabilité</div><div class="c-desc">Une fois les critères PWA remplis, Chrome affiche une icône d'installation dans la barre d'adresse. Utiliser l'audit Lighthouse (DevTools → Lighthouse → PWA) pour vérifier ce qui manque le cas échéant.</div></div>
+<div class="concept"><div class="c-name">URL de l'API configurable</div><div class="c-desc">Ne jamais écrire http://localhost:8000 en dur : lire l'URL via une variable de build (--dart-define=API_BASE_URL=...). Localhost en développement, adresse Tailscale du PC en usage réel, la même pour le web et l'APK.</div><div class="c-code">flutter run -d chrome --dart-define=API_BASE_URL=http://localhost:8000</div></div>
+<div class="concept"><div class="c-name">Icône dans la barre des tâches (PC)</div><div class="c-desc">Une fois la PWA servie en HTTPS (étape 08), Chrome ou Edge propose « Installer l'application ». L'app s'ouvre alors dans sa propre fenêtre, sans barre d'adresse, avec son icône ; on peut l'épingler à la barre des tâches Windows. Il faut un manifest correct et un service worker (voir ci-dessus).</div></div>
+<div class="concept"><div class="c-name">Conception pour trois contextes</div><div class="c-desc">Les mêmes écrans doivent fonctionner sur un grand écran (PC) et sur téléphone : mise en page adaptative (barre latérale sur PC, barre de navigation en bas sur mobile).</div></div>
+<div class="concept"><div class="c-name">Critères d'acceptation</div><div class="c-desc">☐ Les 6 écrans fonctionnels : onboarding, ajout, bibliothèque, fiche, révisions du jour, réglages<br>☐ Chaque écran a un état de chargement, d'erreur et vide<br>☐ Mise en page adaptative : à partir de 360 px et à 1280 px<br>☐ Zones tactiles d'au moins 48 dp, contraste de texte suffisant<br>☐ PWA installable : audit Lighthouse sans échec bloquant<br>☐ Aucune URL de l'API écrite en dur</div></div>
+<div class="concept"><div class="c-name">Risques et parades</div><div class="c-desc">⚠ Package incompatible avec le web → Vérifier la compatibilité web sur pub.dev avant chaque ajout<br>⚠ Cache du service worker qui sert une ancienne version → Versionner le build et invalider l'ancien cache<br>⚠ Interface conçue seulement pour PC → Tester dès le début sur un émulateur Android</div></div>
+<div class="concept"><div class="c-name">Estimation détaillée</div><div class="c-desc">Estimation : onboarding 1 j · ajout 0,5 j · bibliothèque 1 j · fiche 1 j · révisions 1 j · réglages 0,5 j · providers et HTTP 1,5 j · cache local 1 j · PWA 0,5 j.</div></div>
+<div class="deliv"><strong>Livrable :</strong> parcours complet cliquable dans l'app (PC et mobile) : ajouter un mot → voir sa fiche → marquer comme révisé ; PWA installable en local pour tester l'icône et la fenêtre dédiée.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step s8" id="s-8">
+      <div class="dot mono" onclick="toggle(8)">08</div>
+      <div class="card">
+        <div class="head" onclick="toggle(8)">
+          <div class="title">Accès multi-appareils (Tailscale) & mise en service</div>
+          <span class="tag mono">Requis — Wi-Fi et données mobiles</span>
+          <span class="dur mono">3–4 jours</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="body">
+          <div class="skill-tags"><span class="st">Réseau privé (Tailscale)</span><span class="st">Sécurité & secrets</span><span class="st">Mise en service & CI</span><span class="st">PWA installable</span></div>
+          <div style="padding:10px 14px; border-left:2px solid var(--border-h); background:var(--surface2); border-radius:0 6px 6px 0; font-size:12px; color:var(--muted); margin-bottom:14px"><strong style="color:var(--text)">Architecture :</strong> le backend, PostgreSQL et Ollama restent sur ton PC. Tailscale relie le PC et le téléphone dans un réseau privé : le téléphone joint le PC en Wi-Fi comme en données mobiles, et rien n'est exposé sur Internet. Pas d'hébergeur, pas de compte applicatif. À faire dès que le parcours fonctionne en local (étape 07) et avant l'APK (08b).</div>
+          <div class="lbl">Concepts à maîtriser</div>
+          <div class="concepts">
+<div class="concept"><div class="c-name">Comment fonctionne Tailscale</div><div class="c-desc">Tailscale crée un réseau privé chiffré (un « tailnet ») entre tes appareils. Chacun reçoit une adresse stable et un nom (MagicDNS), par exemple <code class="mono">mon-pc.tailXXXX.ts.net</code>. Le téléphone, qu'il soit en Wi-Fi ou en 4G/5G, joint le PC tant que l'application Tailscale y est active. Seuls les appareils connectés à ton compte Tailscale peuvent atteindre le PC : c'est ce qui remplace l'authentification de l'application.</div></div>
+<div class="concept"><div class="c-name">Installation et compte</div><div class="c-desc">Installer Tailscale sur le PC (Windows) et sur le téléphone Android, avec le même compte. Vérifier les conditions du plan personnel gratuit sur le site de Tailscale. Dans la console d'administration, désactiver l'expiration de clé du PC : sinon l'accès peut se couper au bout d'une durée par défaut, que tu ne verrais qu'au moment où l'app ne se synchronise plus. Sur Android, un seul VPN peut être actif à la fois : si tu en utilises un autre, il devra être désactivé.</div></div>
+<div class="concept"><div class="c-name">HTTPS sur le réseau privé</div><div class="c-desc">Activer MagicDNS et les certificats HTTPS dans la console d'administration, puis exposer le backend avec <code class="mono">tailscale serve</code>. HTTPS est nécessaire pour que la PWA s'enregistre comme application installable. La syntaxe exacte de la commande varie selon la version de Tailscale : vérifier avec <code class="mono">tailscale serve --help</code>. Ne pas utiliser « Funnel », qui exposerait le service à tout Internet.</div><div class="c-code">tailscale serve https / http://localhost:8000</div></div>
+<div class="concept"><div class="c-name">Servir la PWA depuis FastAPI</div><div class="c-desc">FastAPI sert à la fois l'API (sous le préfixe /api) et le build web de Flutter (fichiers statiques à la racine). Une seule adresse, une seule origine : pas de CORS en production. Le build se fait avec l'adresse du backend, et le service worker est versionné pour qu'un déploiement remplace bien l'ancien cache. Vérifier que manifest.json (nom, icônes 192 et 512 px, display standalone, theme_color, start_url) est servi correctement.</div><div class="c-code">flutter build web --dart-define=API_BASE_URL=https://mon-pc.tailXXXX.ts.net/api</div></div>
+<div class="concept"><div class="c-name">Backend toujours prêt</div><div class="c-desc">Lancer automatiquement au démarrage de Windows : PostgreSQL, Ollama et le backend (uvicorn), par exemple via le Planificateur de tâches ou un service. Réglages d'alimentation : empêcher la mise en veille sur secteur, ou accepter que le PC dormant soit injoignable (le mobile reste alors en mode hors-ligne). Après une coupure de courant, tout doit redémarrer sans intervention.</div></div>
+<div class="concept"><div class="c-name">Sécurité sans authentification applicative</div><div class="c-desc">Tout repose sur Tailscale et sur ton PC : règles d'accès (ACL) limitées à tes appareils personnels, partage de machine désactivé, pas de Funnel. PostgreSQL et Ollama écoutent seulement sur localhost. Pare-feu Windows actif. Si le téléphone est perdu : le retirer de la console Tailscale, et verrouiller l'écran du téléphone au quotidien. Si un jour d'autres personnes doivent utiliser l'app, il faudra ajouter une authentification.</div></div>
+<div class="concept"><div class="c-name">Quand le PC est injoignable</div><div class="c-desc">PC éteint, en veille, sans Internet, ou Tailscale coupé sur le téléphone : l'API ne répond pas. Le mobile passe en mode hors-ligne, enregistre ses actions dans la file d'attente et se synchronise au retour du PC. Si la connexion directe entre les appareils est impossible, Tailscale passe par un relais : plus lent, mais fonctionnel.</div></div>
+<div class="concept"><div class="c-name">Configuration et secrets</div><div class="c-desc">Fichier .env sur le PC (exclu de Git) : clés Musixmatch, Genius, DeepL, chaîne de connexion PostgreSQL, OLLAMA_URL et OLLAMA_MODEL. Aucune clé de service externe dans la PWA ni dans l'APK : seul le backend les connaît. Liste complète en annexe H.</div></div>
+<div class="concept"><div class="c-name">Mettre à jour le backend</div><div class="c-desc">Procédure : git pull, installation des dépendances, migrations Alembic, redémarrage du service, contrôle de /health. Garder la version précédente pour pouvoir revenir en arrière, et faire une sauvegarde de la base avant toute migration.</div></div>
+          </div>
+          <div class="concept"><div class="c-name">Sous-étapes détaillées</div><div class="c-desc">1) Créer le compte Tailscale, installer l'application sur le PC et sur le téléphone, vérifier que le téléphone voit le PC (en Wi-Fi puis en données mobiles). 2) Activer MagicDNS et HTTPS, désactiver l'expiration de clé du PC, définir les règles d'accès. 3) Faire servir la PWA par FastAPI (fichiers statiques) et placer l'API sous /api. 4) Lancer <code class="mono">tailscale serve</code> et ouvrir l'adresse HTTPS depuis le téléphone pour atteindre /health. 5) Construire la PWA avec l'adresse du backend, l'installer depuis Chrome ou Edge, l'épingler à la barre des tâches, vérifier l'icône et la fenêtre sans barre d'adresse. 6) Configurer le démarrage automatique de PostgreSQL, Ollama et du backend, et les réglages d'alimentation. 7) Vérifier que PostgreSQL et Ollama n'écoutent que sur localhost et que le pare-feu est actif. 8) Créer le fichier .env, l'ajouter au .gitignore, vérifier qu'aucun secret n'est dans l'historique Git. 9) Éteindre le PC, rallumer : tout redémarre seul. 10) Écrire dans le README la procédure de mise à jour et de retour arrière.</div></div>
+<div class="lbl">Ressources</div>
+<div class="res">
+<a href="https://pypi.org/project/python-dotenv/" target="_blank"><span class="name">python-dotenv — gestion des .env</span><span class="type mono">DOC</span></a>
+<a href="https://tailscale.com/kb/1017/install" target="_blank"><span class="name">Tailscale — installation & guide de démarrage</span><span class="type mono">DOC</span></a>
+<a href="https://tailscale.com/kb/1242/tailscale-serve" target="_blank"><span class="name">Tailscale Serve — exposer un service en HTTPS sur le tailnet</span><span class="type mono">DOC</span></a>
+<a href="https://fastapi.tiangolo.com/tutorial/static-files/" target="_blank"><span class="name">FastAPI — fichiers statiques</span><span class="type mono">DOC</span></a>
+</div>
+<div class="concept"><div class="c-name">Critères d'acceptation</div><div class="c-desc">☐ Le téléphone atteint /health du PC en Wi-Fi et en données mobiles<br>☐ PWA installée avec icône dans la barre des tâches, ouverte dans sa fenêtre dédiée<br>☐ Un appareil hors de ton compte Tailscale ne peut pas joindre l'API<br>☐ PostgreSQL et Ollama n'écoutent que sur localhost<br>☐ Redémarrage du PC : backend, base et Ollama repartent seuls<br>☐ Aucun secret dans le dépôt (analyse de l'historique)<br>☐ Procédure de mise à jour et de retour arrière écrite</div></div>
+<div class="concept"><div class="c-name">Risques et parades</div><div class="c-desc">⚠ PC éteint ou en veille → Mode hors-ligne du mobile, réglages d'alimentation, message « PC injoignable »<br>⚠ Expiration de la clé Tailscale du PC → Désactiver l'expiration de clé de cet appareil<br>⚠ Conflit avec un autre VPN sur Android → Un seul VPN actif à la fois : prévoir la bascule<br>⚠ Téléphone perdu → Retirer l'appareil de la console Tailscale, verrouillage de l'écran</div></div>
+<div class="concept"><div class="c-name">Estimation détaillée</div><div class="c-desc">Estimation : Tailscale PC et téléphone 0,5 j · HTTPS et serve 0,5 j · PWA servie par FastAPI 1 j · démarrage automatique 0,5 j · sécurité 0,5 j · tests multi-réseaux 0,5 j · procédure de mise à jour 0,5 j.</div></div>
+<div class="deliv"><strong>Livrable :</strong> le téléphone atteint le backend du PC en Wi-Fi et en données mobiles, la PWA est installée sur le PC avec son icône dans la barre des tâches, et tout redémarre seul après un redémarrage du PC.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step s8b" id="s-8b">
+      <div class="dot mono" onclick="toggle('8b')">08b</div>
+      <div class="card">
+        <div class="head" onclick="toggle('8b')">
+          <div class="title">Application Android (.apk) & synchronisation hors-ligne</div>
+          <span class="tag mono">Mobile</span>
+          <span class="dur mono">1,5–2 semaines</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="body">
+          <div class="skill-tags"><span class="st">Synchronisation hors-ligne</span><span class="st">Build & distribution Android (.apk)</span><span class="st">Stockage local & mode hors-ligne</span><span class="st">Résilience réseau</span><span class="st">Réseau privé (Tailscale)</span></div>
+          <div style="padding:10px 14px; border-left:2px solid var(--border-h); background:var(--surface2); border-radius:0 6px 6px 0; font-size:12px; color:var(--muted); margin-bottom:14px"><strong style="color:var(--text)">Principe « offline-first » :</strong> l'app Android lit et écrit d'abord dans sa base locale ; le réseau n'est qu'un moyen de synchroniser. Elle fonctionne donc de la même façon connectée ou non, et la base PostgreSQL reste la référence commune au PC et au téléphone.</div>
+          <div class="lbl">Concepts à maîtriser</div>
+          <div class="concepts">
+<div class="concept"><div class="c-name">Joindre le PC depuis le téléphone</div><div class="c-desc">« Pas de réseau » et « PC injoignable » sont deux situations différentes : l'app teste le réseau, puis appelle /health sur le PC avec un délai court. Elle affiche le bon message : « Hors ligne » (aucun réseau) ou « PC injoignable » (réseau présent, PC éteint ou Tailscale coupé). La synchronisation ne démarre que si /health répond.</div></div>
+            <div class="concept"><div class="c-name">Build et installation de l'APK</div><div class="c-desc">Le fichier .apk se génère avec Flutter et s\'installe à la main sur le téléphone (autoriser l\'installation depuis une source inconnue ; Android affiche un avertissement). Pratique : déposer l\'APK dans un dossier servi par ton backend et le télécharger depuis le téléphone via l\'adresse Tailscale. Créer une clé de signature, la sauvegarder hors du dépôt et toujours signer avec la même : sinon Android refuse la mise à jour. Augmenter le numéro de version à chaque nouvelle build. Les mises à jour sont manuelles.</div><div class="c-code">flutter build apk --release --dart-define=API_BASE_URL=https://ton-api.exemple.app</div></div>
+            <div class="concept"><div class="c-name">Cache local de lecture</div><div class="c-desc">Hive conserve sur le téléphone les mots, extraits, traductions, explications et le planning de révision. Au premier lancement connecté, et à chaque synchronisation, le cache est mis à jour depuis /sync/pull.</div></div>
+            <div class="concept"><div class="c-name">File d'attente d'actions (outbox)</div><div class="c-desc">Hors-ligne, chaque action (réponse de révision, ajout de mot, changement de réglage) est écrite en local avec un identifiant d'opération unique, dans l'ordre. Elle reste en attente jusqu'à l'envoi réussi au backend.</div></div>
+            <div class="concept"><div class="c-name">Détection de la connexion</div><div class="c-desc">Le package connectivity_plus signale un changement de réseau, mais ne garantit pas que le serveur soit joignable. La synchronisation se déclenche donc au lancement, à la reprise de l'app, au retour du réseau et sur un bouton manuel, avec nouvelle tentative progressive (backoff) en cas d'échec.</div></div>
+            <div class="concept"><div class="c-name">Synchronisation à la reconnexion</div><div class="c-desc">Ordre : 1) envoyer la file d'attente à POST /sync/push ; 2) le backend applique chaque action une seule fois grâce à l'identifiant d'opération ; 3) récupérer GET /sync/pull?since=curseur ; 4) mettre à jour le cache local et enregistrer le nouveau curseur. Un envoi interrompu peut être rejoué sans doublon.</div><div class="c-code">POST /sync/push → GET /sync/pull?since=…</div></div>
+            <div class="concept"><div class="c-name">Résolution des conflits</div><div class="c-desc">Les réponses de révision sont un journal : elles s'ajoutent, ne s'écrasent jamais, et le backend recalcule SM-2 en les rejouant dans l'ordre. Pour les réglages et autres champs modifiables, règle simple : la modification la plus récente (updated_at) gagne. Les suppressions passent par deleted_at pour se propager.</div></div>
+            <div class="concept"><div class="c-name">Mot ajouté hors-ligne</div><div class="c-desc">Sans réseau, le mot est enregistré avec le statut « en attente d'enrichissement » et visible tout de suite dans la bibliothèque. L'extrait, la traduction et l'explication arrivent après la synchronisation (voir étape 05).</div></div>
+            <div class="concept"><div class="c-name">Données mobiles</div><div class="c-desc">L\'app marche en Wi-Fi comme en données mobiles, à condition que Tailscale soit actif sur le téléphone. Les échanges sont légers (texte et 1 à 2 lignes d\'extrait par mot). Réglage « Synchroniser uniquement en Wi-Fi », désactivé par défaut. Requêtes avec un délai d\'attente de 15 s, rejouées avec une attente croissante (1 s, 2 s, 4 s, 8 s, plafond 60 s).</div></div>
+            <div class="concept"><div class="c-name">Indicateurs d'état dans l'interface</div><div class="c-desc">Bandeau « Hors ligne » quand il n'y a pas de réseau, badge « N actions en attente » sur ce qui n'est pas encore synchronisé, message « Synchronisation terminée » après un envoi réussi, et message d'erreur clair si la synchronisation échoue.</div></div>
+          </div>
+          <div class="concept"><div class="c-name">Sous-étapes détaillées</div><div class="c-desc">1) Vérifier que flutter doctor est au vert pour Android et lancer l'app sur un téléphone ou un émulateur. 2) Installer Tailscale sur le téléphone et configurer dans l'app l'adresse Tailscale du PC. 3) Mettre en place le cache local Hive et lire les écrans depuis lui. 4) Implémenter la file d'attente d'actions avec identifiants d'opération. 5) Implémenter sync_service.dart : détection du réseau, push, pull, backoff. 6) Finaliser /sync/push et /sync/pull côté backend avec rejeu idempotent et recalcul de SM-2. 7) Ajouter les indicateurs d'état (bandeau hors ligne, actions en attente, synchronisation terminée). 8) Ajouter les notifications locales de rappel. 9) Générer l'APK signé et l'installer. 10) Scénarios de test : ajout d'un mot et révisions en mode avion, puis reconnexion ; modification sur le PC pendant que le téléphone est hors-ligne ; coupure du réseau en pleine synchronisation.</div></div>
+<div class="lbl">Ressources</div>
+<div class="res">
+<a href="https://docs.flutter.dev/deployment/android" target="_blank"><span class="name">Flutter — build et release Android</span><span class="type mono">DOC</span></a>
+<a href="https://pub.dev/packages/connectivity_plus" target="_blank"><span class="name">connectivity_plus — état du réseau (pub.dev)</span><span class="type mono">DOC</span></a>
+<a href="https://pub.dev/packages/flutter_local_notifications" target="_blank"><span class="name">flutter_local_notifications (pub.dev)</span><span class="type mono">DOC</span></a>
+<a href="https://docs.flutter.dev/app-architecture/design-patterns/offline-first" target="_blank"><span class="name">Flutter — design pattern offline-first</span><span class="type mono">DOC</span></a>
+</div>
+<div class="concept"><div class="c-name">Critères d'acceptation</div><div class="c-desc">☐ APK signé installé sur le téléphone<br>☐ Scénario A : mode avion, réviser 5 mots et ajouter 2 mots, fermer l'app, la rouvrir, reconnecter : tout est synchronisé<br>☐ Scénario B : modification d'un réglage sur le PC pendant que le téléphone est hors-ligne : la plus récente gagne<br>☐ Scénario C : coupure du réseau en pleine synchronisation : aucun doublon ni perte<br>☐ Scénario D : passage du Wi-Fi aux données mobiles pendant une synchronisation<br>☐ Scénario E : PC éteint pendant plusieurs jours : le mobile reste utilisable, puis se synchronise au rallumage<br>☐ Scénario F : horloge du téléphone décalée de plusieurs minutes : pas de corruption<br>☐ Messages distincts « Hors ligne » et « PC injoignable », badge d'actions en attente, message de fin de synchronisation</div></div>
+<div class="concept"><div class="c-name">Risques et parades</div><div class="c-desc">⚠ Boucle de synchronisation infinie → Un seul cycle à la fois (verrou), attente croissante, plafond de tentatives<br>⚠ Perte d'actions → Ne jamais supprimer une action de la file avant l'accusé de réception du PC<br>⚠ Conflits dus à l'horloge du téléphone → Ordre fixé par le serveur (server_seq), pas par l'horloge de l'appareil<br>⚠ Données locales purgées par le système → Détecter une base locale vide et refaire une synchronisation complète</div></div>
+<div class="concept"><div class="c-name">Estimation détaillée</div><div class="c-desc">Estimation : cache local 1,5 j · file d'actions 1,5 j · synchro cliente 2 j · endpoints serveur finalisés 1,5 j · indicateurs 1 j · notifications locales 1 j · APK 0,5 j · scénarios de test 1,5 j.</div></div>
+<div class="deliv"><strong>Livrable :</strong> APK installé sur le téléphone ; en mode avion, ajout de mots et révisions fonctionnent ; à la reconnexion, tout est synchronisé avec la base commune, sans doublon ni perte, et visible sur la PWA.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step s9" id="s-9">
+      <div class="dot mono" onclick="toggle(9)">09</div>
+      <div class="card">
+        <div class="head" onclick="toggle(9)">
+          <div class="title">Tests, lancement personnel & itération</div>
+          <span class="tag mono">Qualité</span>
+          <span class="dur mono">continu</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="body">
+          <div class="skill-tags"><span class="st">Tests automatisés</span></div>
+          <div class="lbl">Concepts à maîtriser</div>
+          <div class="concepts">
+            <div class="concept"><div class="c-name">Tests unitaires backend</div><div class="c-desc">pytest sur les endpoints critiques (recherche d'extraits, planification de révision) pour éviter les régressions à chaque évolution.</div><div class="c-code">pytest tests/</div></div>
+            <div class="concept"><div class="c-name">Tests widgets côté Flutter</div><div class="c-desc">Quelques tests widgets sur les écrans essentiels (ajout de mot, fiche mémorisation) pour éviter qu'une régression frontend passe inaperçue.</div><div class="c-code">flutter test</div></div>
+            <div class="concept"><div class="c-name">Usage réel en conditions</div><div class="c-desc">Utiliser l'app quotidiennement avec les 15–20 mots du jeu de test pendant 2–3 semaines, pour vérifier si la mémorisation s'améliore réellement.</div></div>
+            <div class="concept"><div class="c-name">Élargissement éventuel</div><div class="c-desc">Statistiques de progression, prononciation audio, karaoké synchronisé. Si ouverture à d'autres utilisateurs : revalider les quotas et licences API à plus grande échelle.</div></div>
+          </div>
+          <div class="concept"><div class="c-name">Sous-étapes détaillées</div><div class="c-desc">1) Écrire les tests pytest sur la recherche d'extraits, le calcul SM-2 et les endpoints CRUD critiques. 2) Écrire quelques tests widgets Flutter sur l'ajout de mot et la fiche mémorisation. 3) Installer l'APK release sur son téléphone et la PWA sur le PC, puis tester en Wi-Fi, en données mobiles et en mode avion. 4) Utiliser l'app quotidiennement avec le jeu de test pendant 2 à 3 semaines en notant les frictions. 5) Prioriser les corrections avant toute nouvelle fonctionnalité (stats, audio, karaoké).</div></div>
+<div class="lbl">Ressources</div>
+<div class="res">
+<a href="https://docs.pytest.org/en/stable/" target="_blank"><span class="name">pytest — documentation officielle</span><span class="type mono">DOC</span></a>
+<a href="https://docs.flutter.dev/testing/overview" target="_blank"><span class="name">Flutter — vue d'ensemble des tests</span><span class="type mono">DOC</span></a>
+</div>
+<div class="concept"><div class="c-name">Critères d'acceptation</div><div class="c-desc">☐ Tests pytest et flutter test tous verts<br>☐ APK installé sur le téléphone et PWA sur le PC pendant 2 à 3 semaines<br>☐ Journal de frictions d'au moins 10 entrées, priorisées<br>☐ Mesure du taux de réussite aux révisions à 7 et 14 jours<br>☐ Corrections prioritaires faites avant toute nouvelle fonctionnalité</div></div>
+<div class="concept"><div class="c-name">Risques et parades</div><div class="c-desc">⚠ Abandon de l'usage → Notifications activées, session de moins de 3 minutes, objectif quotidien réaliste<br>⚠ Retours trop subjectifs → Noter à chaque session : date, appareil, réseau, mots révisés, friction</div></div>
+<div class="concept"><div class="c-name">Estimation détaillée</div><div class="c-desc">Estimation : tests automatisés 2 j puis usage quotidien 2 à 3 semaines.</div></div>
+<div class="deliv"><strong>Livrable :</strong> PWA installée sur le PC et APK installé sur le téléphone, utilisés en continu sur la même base, avec un premier retour d'usage sur 2–3 semaines.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step s10" id="s-10">
+      <div class="dot mono" onclick="toggle(10)">10</div>
+      <div class="card">
+        <div class="head" onclick="toggle(10)">
+          <div class="title">Robustesse, observabilité & continuité</div>
+          <span class="tag mono">Fiabilité</span>
+          <span class="dur mono">3–5 jours</span>
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        </div>
+        <div class="body">
+          <div class="skill-tags"><span class="st">Observabilité</span><span class="st">Sauvegardes de données</span><span class="st">Mise en service & CI</span><span class="st">Tests automatisés</span><span class="st">Stockage local & mode hors-ligne</span></div>
+          <div class="lbl">Concepts à maîtriser</div>
+          <div class="concepts">
+            <div class="concept"><div class="c-name">Logs structurés & suivi d'erreurs</div><div class="c-desc">Journaliser dans un fichier au format JSON (avec rotation) chaque appel vers Musixmatch, Genius, DeepL et Ollama : succès ou échec, durée, code. Pas de service externe : une commande ou un petit écran de réglages permet de lire les dernières erreurs. Côté app, les erreurs de synchronisation sont gardées dans une liste « à examiner » visible dans Réglages.</div></div>
+            <div class="concept"><div class="c-name">Sauvegardes de la base Postgres</div><div class="c-desc">La base n'existe que sur ton PC : la sauvegarde est la protection principale. Export pg_dump automatique chaque jour (planificateur de tâches Windows), conservé 14 jours, copié sur un autre disque ou un cloud personnel. Au moins une restauration testée sur une base vide, pour vérifier que la sauvegarde fonctionne réellement, pas seulement qu'elle se génère.</div><div class="c-code">pg_dump -Fc lyrics_vocab > backup.dump</div></div>
+            <div class="concept"><div class="c-name">Pipeline CI simple</div><div class="c-desc">Une action GitHub Actions lance pytest et flutter test à chaque push. Il n'y a pas de déploiement automatique : la mise à jour du backend se fait sur ton PC (git pull, migrations Alembic, redémarrage du service).</div><div class="c-code">.github/workflows/ci.yml</div></div>
+            <div class="concept"><div class="c-name">Vérification du mode hors-ligne</div><div class="c-desc">Tester explicitement le comportement de l'app en avion/hors-ligne : les mots déjà consultés doivent rester accessibles depuis le cache local mis en place à l'étape 07.</div></div>
+          </div>
+          <div class="concept"><div class="c-name">Sous-étapes détaillées</div><div class="c-desc">1) Ajouter des logs JSON sur chaque appel externe avec durée et statut, et la rotation des fichiers. 2) Programmer l'export pg_dump quotidien et sa copie sur un second emplacement. 3) Tester une restauration complète sur une base vide. 4) Écrire le workflow GitHub Actions qui lance pytest et flutter test à chaque push. 5) Couper artificiellement l'accès réseau du téléphone pour vérifier que les mots déjà en cache restent consultables hors-ligne, puis rétablir la connexion et vérifier que la synchronisation ne perd ni ne duplique aucune action. 6) Éteindre le PC puis le rallumer : le backend, PostgreSQL et Ollama redémarrent seuls et la synchronisation reprend.</div></div>
+<div class="lbl">Ressources</div>
+<div class="res">
+<a href="https://www.postgresql.org/docs/current/app-pgdump.html" target="_blank"><span class="name">PostgreSQL — pg_dump</span><span class="type mono">DOC</span></a>
+<a href="https://docs.github.com/en/actions" target="_blank"><span class="name">GitHub Actions — documentation officielle</span><span class="type mono">DOC</span></a>
+</div>
+<div class="concept"><div class="c-name">Critères d'acceptation</div><div class="c-desc">☐ Panne simulée de chaque API externe : le backend ne plante pas<br>☐ Restauration d'une sauvegarde testée sur une base vide<br>☐ CI qui exécute pytest et flutter test à chaque push<br>☐ Redémarrage du PC : tout repart seul et la synchronisation reprend<br>☐ Mode hors-ligne vérifié après coupure réelle du réseau<br>☐ Journaux JSON avec durée et statut de chaque appel externe</div></div>
+<div class="concept"><div class="c-name">Risques et parades</div><div class="c-desc">⚠ Sauvegarde jamais restaurée → Restauration chronométrée au moins une fois, puis une fois par trimestre<br>⚠ Disque du PC en panne → Copie des sauvegardes sur un autre disque ou un cloud personnel<br>⚠ Journaux contenant des données personnelles → Ne pas journaliser le contenu complet des mots</div></div>
+<div class="concept"><div class="c-name">Estimation détaillée</div><div class="c-desc">Estimation : journaux 0,5 j · sauvegardes et restauration 1 j · CI 1 j · tests de panne 1 j · test du redémarrage 0,5 j.</div></div>
+<div class="deliv"><strong>Livrable :</strong> une panne simulée de Musixmatch/DeepL ne fait pas planter le backend, une restauration de backup testée avec succès, l'app reste utilisable hors-ligne pour les mots déjà vus, et une reconnexion après une session hors-ligne synchronise sans perte.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+<div class="annex" id="annexes">
+<div class="lbl">Annexes techniques</div>
+<h2 style="font-size:20px">Spécifications détaillées</h2>
+<h3>A. Dictionnaire de données</h3><p>Les tables synchronisées (mot, artiste, extrait, revision, reglage) ont un identifiant UUID, updated_at, deleted_at et server_seq. Il n'y a pas de colonne utilisateur : l'application est mono-utilisateur. Index à créer : <code>mot(terme_normalise)</code> unique ; <code>revision(statut, date_prevue)</code> ; <code>extrait(mot_id)</code> ; <code>server_seq</code> sur chaque table synchronisée ; <code>revision(op_id)</code> unique.</p><div class="ent">mot — Un mot ou une expression</div><table class="tbl"><thead><tr><th>Colonne</th><th>Type</th><th>Rôle</th></tr></thead><tbody><tr><td>id</td><td>UUID, clé primaire</td><td>Généré par le client (permet de créer un mot hors-ligne)</td></tr><tr><td>terme</td><td>texte, non nul</td><td>Tel que saisi</td></tr><tr><td>terme_normalise</td><td>texte, non nul, unique</td><td>Minuscules, sans ponctuation superflue</td></tr><tr><td>traduction_fr</td><td>texte, nul permis</td><td>Traduction</td></tr><tr><td>explication</td><td>texte, nul permis</td><td>Explication contextuelle</td></tr><tr><td>source_explication</td><td>énumération : ia, traduction_seule</td><td>Origine de l'explication</td></tr><tr><td>statut_enrichissement</td><td>énumération : en_attente, en_cours, ok, partiel, echec</td><td>Avancement de la recherche d'extraits, traduction et explication</td></tr><tr><td>niveau</td><td>énumération : nouveau, en_cours, acquis</td><td>Affiché dans la bibliothèque</td></tr><tr><td>created_at, updated_at</td><td>horodatage avec fuseau</td><td>Créé et modifié</td></tr><tr><td>deleted_at</td><td>horodatage, nul permis</td><td>Suppression logique, propagée aux appareils</td></tr><tr><td>server_seq</td><td>entier long</td><td>Numéro croissant attribué par le serveur à chaque écriture : curseur de synchronisation</td></tr></tbody></table><div class="ent">artiste — Artiste</div><table class="tbl"><thead><tr><th>Colonne</th><th>Type</th><th>Rôle</th></tr></thead><tbody><tr><td>id</td><td>UUID, clé primaire</td><td></td></tr><tr><td>genius_id</td><td>entier, unique, nul permis</td><td>Identifiant Genius</td></tr><tr><td>musixmatch_id</td><td>entier, nul permis</td><td>Identifiant Musixmatch</td></tr><tr><td>nom</td><td>texte, non nul</td><td></td></tr><tr><td>image_url</td><td>texte, nul permis</td><td>Vignette pour l'onboarding</td></tr><tr><td>est_prefere</td><td>booléen</td><td>Artiste de ta liste préférée</td></tr><tr><td>rang</td><td>entier, nul permis</td><td>Ordre de recherche</td></tr><tr><td>updated_at, deleted_at, server_seq</td><td></td><td>Synchronisation</td></tr></tbody></table><div class="ent">morceau — Morceau d'un artiste</div><table class="tbl"><thead><tr><th>Colonne</th><th>Type</th><th>Rôle</th></tr></thead><tbody><tr><td>id</td><td>UUID, clé primaire</td><td></td></tr><tr><td>artiste_id</td><td>clé étrangère</td><td></td></tr><tr><td>titre</td><td>texte, non nul</td><td></td></tr><tr><td>genius_song_id, musixmatch_track_id</td><td>entiers, nuls permis</td><td></td></tr><tr><td>url_genius, pochette_url</td><td>texte, nuls permis</td><td>Lien et pochette ; jamais de paroles complètes</td></tr></tbody></table><div class="ent">extrait — Court extrait lié à un mot</div><table class="tbl"><thead><tr><th>Colonne</th><th>Type</th><th>Rôle</th></tr></thead><tbody><tr><td>id</td><td>UUID, clé primaire</td><td></td></tr><tr><td>mot_id, morceau_id</td><td>clés étrangères</td><td></td></tr><tr><td>texte</td><td>texte, 240 caractères maximum (contrainte)</td><td>1 à 2 lignes</td></tr><tr><td>ligne_debut</td><td>entier</td><td>Position dans le morceau</td></tr><tr><td>hors_liste</td><td>booléen</td><td>Vrai si l'artiste n'est pas dans ta liste préférée</td></tr><tr><td>created_at, updated_at, deleted_at, server_seq</td><td></td><td></td></tr></tbody></table><div class="ent">revision — Planning et journal des réponses</div><table class="tbl"><thead><tr><th>Colonne</th><th>Type</th><th>Rôle</th></tr></thead><tbody><tr><td>id</td><td>UUID, clé primaire</td><td></td></tr><tr><td>mot_id</td><td>clé étrangère</td><td></td></tr><tr><td>date_prevue</td><td>date</td><td>Prochain rappel</td></tr><tr><td>repetitions</td><td>entier, défaut 0</td><td>Réussites consécutives</td></tr><tr><td>facilite</td><td>réel, défaut 2,5, minimum 1,3</td><td>Facteur de facilité SM-2</td></tr><tr><td>intervalle_jours</td><td>entier, défaut 0</td><td></td></tr><tr><td>statut</td><td>énumération : planifiee, faite, ignoree</td><td></td></tr><tr><td>mode</td><td>énumération : rappel, production</td><td></td></tr><tr><td>phrase_source, reference_en</td><td>texte, nuls permis</td><td>Exercice FR→EN</td></tr><tr><td>reponse_utilisateur</td><td>texte, nul permis</td><td></td></tr><tr><td>verdict</td><td>énumération : correct, proche, incorrect, nul permis</td><td></td></tr><tr><td>explication_verdict</td><td>texte, nul permis</td><td></td></tr><tr><td>qualite</td><td>entier 0 à 5, nul permis</td><td>Note SM-2 déduite de la réponse</td></tr><tr><td>repondu_le</td><td>horodatage, nul permis</td><td></td></tr><tr><td>op_id</td><td>UUID, unique, nul permis</td><td>Identifiant d'opération pour la synchronisation</td></tr><tr><td>appareil_id</td><td>texte</td><td>pwa ou android + identifiant</td></tr><tr><td>created_at, updated_at, server_seq</td><td></td><td></td></tr></tbody></table><div class="ent">reglage — Réglages (une seule ligne)</div><table class="tbl"><thead><tr><th>Colonne</th><th>Type</th><th>Rôle</th></tr></thead><tbody><tr><td>id</td><td>entier, clé primaire</td><td></td></tr><tr><td>frequence_rappels</td><td>énumération</td><td>Quotidien, tous les 2 jours…</td></tr><tr><td>heure_rappel</td><td>heure</td><td>Heure locale</td></tr><tr><td>sync_wifi_seulement</td><td>booléen, défaut faux</td><td></td></tr><tr><td>updated_at, server_seq</td><td></td><td></td></tr></tbody></table><div class="ent">sync_op — Opérations déjà appliquées (idempotence)</div><table class="tbl"><thead><tr><th>Colonne</th><th>Type</th><th>Rôle</th></tr></thead><tbody><tr><td>op_id</td><td>UUID, clé primaire</td><td>Rejouer la même opération ne fait rien</td></tr><tr><td>appareil_id</td><td>texte</td><td></td></tr><tr><td>type</td><td>texte</td><td>mot.creer, revision.repondre, reglage.modifier…</td></tr><tr><td>applique_le</td><td>horodatage</td><td></td></tr><tr><td>resultat</td><td>JSON</td><td>Réponse renvoyée au client</td></tr></tbody></table><div class="ent">quota_api — Compteur d'appels externes</div><table class="tbl"><thead><tr><th>Colonne</th><th>Type</th><th>Rôle</th></tr></thead><tbody><tr><td>api, jour</td><td>clé primaire composée</td><td>musixmatch, genius, deepl, ollama</td></tr><tr><td>nb</td><td>entier</td><td>Nombre d'appels du jour</td></tr></tbody></table><h3>B. Contrat d'API</h3><p>Format JSON, dates en ISO 8601 UTC, toutes les routes sous le préfixe /api. Aucune authentification : l'accès est limité par le réseau Tailscale. Toutes les erreurs ont la même forme : <code>{"code":"quota_depasse","message":"…","details":{}}</code>. Codes utilisés : 400 requête invalide, 404 introuvable, 409 conflit, 422 validation, 429 limite atteinte, 503 service externe indisponible.</p><table class="tbl"><thead><tr><th>Méthode</th><th>Chemin</th><th>Entrée</th><th>Réponses</th></tr></thead><tbody><tr><td>GET</td><td>/api/health</td><td>—</td><td>200 {"status":"ok"}</td></tr><tr><td>POST</td><td>/api/mots</td><td>{id, terme}</td><td>201 mot (statut_enrichissement selon le cache) ; 409 si déjà présent ; 422 si invalide</td></tr><tr><td>GET</td><td>/api/mots</td><td>?statut=&amp;page=&amp;taille=</td><td>200 liste paginée + total</td></tr><tr><td>GET</td><td>/api/mots/{id}</td><td>—</td><td>200 mot avec extraits ; 404</td></tr><tr><td>DELETE</td><td>/api/mots/{id}</td><td>—</td><td>204 (suppression logique)</td></tr><tr><td>POST</td><td>/api/mots/{id}/rechercher-extraits</td><td>—</td><td>200 extraits ; 202 si traitement différé ; 429 si quota ; 503 si service externe indisponible</td></tr><tr><td>GET</td><td>/api/mots/{id}/extraits</td><td>—</td><td>200 liste d'extraits</td></tr><tr><td>GET</td><td>/api/revisions/dues</td><td>?date=</td><td>200 révisions dont date_prevue ≤ date</td></tr><tr><td>POST</td><td>/api/revisions/{id}/reponse</td><td>{op_id, qualite ou verdict, reponse?}</td><td>200 prochaine date et intervalle</td></tr><tr><td>POST</td><td>/api/exercices</td><td>{mot_id}</td><td>200 {phrase_fr, id}</td></tr><tr><td>POST</td><td>/api/exercices/{id}/evaluer</td><td>{reponse}</td><td>200 {verdict, explication}</td></tr><tr><td>GET</td><td>/api/artistes/recherche</td><td>?q=</td><td>200 liste (Genius) ; 429 ; 503</td></tr><tr><td>GET, PUT</td><td>/api/artistes-preferes</td><td>liste ordonnée</td><td>200 / 204</td></tr><tr><td>GET, PUT</td><td>/api/reglages</td><td>réglages</td><td>200 / 204</td></tr><tr><td>POST</td><td>/api/sync/push</td><td>{appareil_id, operations:[…]}</td><td>200 résultat par opération</td></tr><tr><td>GET</td><td>/api/sync/pull</td><td>?since=&lt;curseur&gt;&amp;limite=</td><td>200 changements + nouveau curseur + a_suite</td></tr><tr><td>GET</td><td>/api/quotas</td><td>—</td><td>200 compteurs du jour par API</td></tr></tbody></table><h3>C. Protocole de synchronisation</h3><p>Principe : l'appareil écrit d'abord en local et dans une file d'actions ; la synchronisation envoie la file puis récupère les changements. Un seul cycle à la fois ; déclenché au lancement, à la reprise de l'app, au retour du réseau, après chaque action si le PC est joignable, et par un bouton manuel.</p><div class="tree mono">POST /api/sync/push
+{
+  "appareil_id": "android-7f3a",
+  "operations": [
+    {"op_id": "b1c2…", "type": "mot.creer",
+     "donnees": {"id": "9d4e…", "terme": "lowkey", "cree_le": "2026-10-12T08:14:00Z"}},
+    {"op_id": "c3d4…", "type": "revision.repondre",
+     "donnees": {"revision_id": "a7b8…", "qualite": 4, "repondu_le": "2026-10-12T08:20:00Z"}}
+  ]
+}
+→ 200 {"resultats": [
+    {"op_id": "b1c2…", "statut": "applique"},
+    {"op_id": "c3d4…", "statut": "deja_applique"}]}
+
+GET /api/sync/pull?since=1284&amp;limite=200
+→ 200 {"curseur": 1311, "a_suite": false,
+       "changements": {"mots": […], "extraits": […], "revisions": […],
+                       "reglages": […], "artistes": […]}}</div><ol style="margin:8px 0 6px 18px"><li>Vérifier que le PC répond (/api/health, délai court) ; sinon rester en mode hors-ligne.</li><li>Lire les actions en attente dans l'ordre de création.</li><li>Les envoyer par lots de 50 à /sync/push ; le serveur applique chaque opération dans une transaction et enregistre son op_id dans sync_op ; rejouer une opération déjà appliquée renvoie « deja_applique ».</li><li>Retirer de la file uniquement les opérations dont l'accusé est « applique » ou « deja_applique » ; une erreur 4xx définitive est déplacée dans une liste « à examiner » visible dans Réglages ; une erreur réseau ou 5xx laisse l'opération en file.</li><li>Appeler /sync/pull avec le dernier curseur, répéter tant que a_suite est vrai, appliquer les changements au cache local, enregistrer le curseur.</li><li>Les suppressions arrivent comme des lignes avec deleted_at renseigné.</li><li>Conflits : réglages et champs modifiables, la modification la plus récente selon l'ordre serveur gagne ; réponses de révision, journal qui s'ajoute ; mot créé hors-ligne en double d'un mot du serveur (même terme_normalise) : fusion sur le mot existant.</li><li>Base locale vide ou curseur inconnu du serveur : synchronisation complète (since=0).</li><li>Mots créés hors-ligne : statut « en_attente » ; le serveur lance ensuite la recherche d'extrait, la traduction et l'explication, puis renvoie la fiche complète au prochain pull.</li></ol><h3>D. Algorithme de révision (SM-2 adapté)</h3><p>Entrée : note de qualité q de 0 à 5. « Je ne savais pas » = 1, « Je savais » = 4, option « Facile » = 5 (facultative). Exercice de production : correct = 4, proche = 3, incorrect = 1. Valeurs initiales : repetitions = 0, facilite = 2,5, intervalle = 0. Le téléphone applique cet algorithme hors-ligne ; le PC rejoue les réponses dans l'ordre à la synchronisation et sa valeur fait foi.</p><div class="tree mono">si q &lt; 3 :
+    repetitions = 0 ; intervalle = 1 ; facilite inchangée
+sinon :
+    si repetitions == 0 : intervalle = 1
+    si repetitions == 1 : intervalle = 3
+    sinon               : intervalle = ceil(intervalle_precedent × facilite)
+    repetitions += 1
+    facilite = max(1,3 ; facilite + 0,1 − (5 − q) × (0,08 + (5 − q) × 0,02))
+date_prevue = date_de_reponse + intervalle jours</div><p>Les intervalles de départ 1 et 3 jours sont ceux de ta roadmap (l'algorithme d'origine utilise 1 et 6). L'intervalle est calculé avec la facilité d'avant la mise à jour. Table de cas de test à exécuter en Python et en Dart :</p><table class="tbl"><thead><tr><th>Cas</th><th>Départ (répét., facilité, intervalle)</th><th>q</th><th>Résultat attendu</th></tr></thead><tbody><tr><td>1</td><td>0, 2,5, 0</td><td>4</td><td>1, 2,5, 1</td></tr><tr><td>2</td><td>1, 2,5, 1</td><td>4</td><td>2, 2,5, 3</td></tr><tr><td>3</td><td>2, 2,5, 3</td><td>4</td><td>3, 2,5, 8</td></tr><tr><td>4</td><td>3, 2,5, 8</td><td>5</td><td>4, 2,6, 20</td></tr><tr><td>5</td><td>3, 2,5, 8</td><td>3</td><td>4, 2,36, 20</td></tr><tr><td>6</td><td>3, 2,5, 8</td><td>1</td><td>0, 2,5, 1</td></tr><tr><td>7</td><td>2, 1,3, 3</td><td>3</td><td>3, 1,3, 4</td></tr><tr><td>8</td><td>0, 2,5, 0</td><td>0</td><td>0, 2,5, 1</td></tr></tbody></table><h3>E. Prompts et règles pour l'IA</h3><p>Modèle : Llama 3.1 8B via Ollama sur ton PC. Paramètres : température 0,2 ; réponse non diffusée en continu ; limite de génération 150 jetons pour l'explication ; délai d'attente 30 s ; une nouvelle tentative maximum.</p><div class="tree mono">Explication
+"Explique en français, en 2 phrases maximum, le sens de "{mot}" dans ce
+contexte : "{extrait}". Indique si c'est de l'argot ou une expression figurée.
+Ne cite pas d'autres paroles de chanson."
+
+Génération de phrase
+"Écris une phrase simple en français (12 mots maximum) utilisant le mot
+"{mot_fr}", dans un contexte différent de la chanson. Réponds par la phrase seule."
+
+Évaluation (sortie JSON demandée)
+"Phrase : {phrase_fr}. Traduction attendue : {ref_en}. Réponse de l'utilisateur :
+{reponse}. Réponds uniquement en JSON : {"verdict": "correct|proche|incorrect",
+"explication": "une phrase de 200 caractères maximum"}."</div><p>Validation : le JSON doit contenir un verdict dans la liste autorisée et une explication de 200 caractères maximum ; sinon une nouvelle tentative, puis repli par mots-clés : on normalise (minuscules, sans ponctuation) la réponse et la référence, et on calcule la part de mots de la référence présents dans la réponse : 70 % ou plus = correct, de 40 % à 70 % = proche, moins = incorrect. Le verdict de repli est marqué comme tel. Les sorties de l'IA sont toujours affichées comme « générées automatiquement ».</p><h3>F. Matrice de tests</h3><table class="tbl"><thead><tr><th>Domaine</th><th>Sujet</th><th>Cas</th><th>Résultat attendu</th></tr></thead><tbody><tr><td>Backend</td><td>SM-2</td><td>Les 8 cas de l'annexe D</td><td>Résultats exacts</td></tr><tr><td>Backend</td><td>POST /mots</td><td>Mot déjà existant</td><td>409</td></tr><tr><td>Backend</td><td>Cache</td><td>Deuxième recherche du même mot</td><td>Aucun appel externe</td></tr><tr><td>Backend</td><td>Découpe d'extrait</td><td>Mot « art » dans « heart »</td><td>Pas de correspondance</td></tr><tr><td>Backend</td><td>Quotas</td><td>Compteur à 80 % puis 100 %</td><td>Alerte puis 429</td></tr><tr><td>Backend</td><td>Services externes</td><td>Musixmatch, DeepL, Ollama en panne (simulée)</td><td>Réponse claire, pas de plantage ; fiche sans phrase ou sans explication</td></tr><tr><td>Réseau</td><td>Accès</td><td>Appareil hors de ton compte Tailscale</td><td>API injoignable</td></tr><tr><td>Réseau</td><td>Ports</td><td>PostgreSQL et Ollama depuis un autre appareil</td><td>Refusé (écoutent sur localhost)</td></tr><tr><td>Sync</td><td>Idempotence</td><td>Même /sync/push envoyé deux fois</td><td>Un seul effet</td></tr><tr><td>Sync</td><td>Interruption</td><td>Coupure après l'envoi, avant l'accusé</td><td>Rejeu sans doublon</td></tr><tr><td>Sync</td><td>Deux appareils</td><td>Même mot créé sur PC et téléphone</td><td>Fusion en un seul mot</td></tr><tr><td>Sync</td><td>Suppression</td><td>Mot supprimé sur PC, modifié sur téléphone</td><td>Règle définie et testée</td></tr><tr><td>Sync</td><td>Horloge</td><td>Téléphone avancé de 10 minutes</td><td>Ordre serveur respecté</td></tr><tr><td>Mobile</td><td>Hors-ligne</td><td>Mode avion : bibliothèque, fiche, révisions</td><td>Tout lisible, réponses enregistrées</td></tr><tr><td>Mobile</td><td>PC éteint</td><td>Réseau présent, PC éteint</td><td>Message « PC injoignable », mode hors-ligne</td></tr><tr><td>Mobile</td><td>Ajout hors-ligne</td><td>Nouveau mot sans réseau</td><td>Statut « en attente », enrichi à la reconnexion</td></tr><tr><td>Mobile</td><td>Réseaux</td><td>Wi-Fi, 4G/5G, passage de l'un à l'autre</td><td>Synchronisation réussie</td></tr><tr><td>Mobile</td><td>Notifications</td><td>Redémarrage du téléphone</td><td>Rappels reprogrammés</td></tr><tr><td>Web</td><td>PWA</td><td>Installation, icône, fenêtre dédiée</td><td>Conforme</td></tr><tr><td>Web</td><td>Mise à jour</td><td>Nouveau déploiement</td><td>Nouvelle version chargée</td></tr><tr><td>Web</td><td>Responsive</td><td>360 px, 768 px, 1280 px</td><td>Aucun débordement</td></tr><tr><td>Qualité</td><td>Usage réel</td><td>2 à 3 semaines</td><td>Journal de frictions traité</td></tr><tr><td>Continuité</td><td>Sauvegarde</td><td>Restauration sur base vide</td><td>Données identiques</td></tr><tr><td>Continuité</td><td>Redémarrage</td><td>Redémarrage du PC</td><td>Tout repart seul</td></tr></tbody></table><h3>G. Liste de contrôle sécurité</h3><ul><li>Accès à l'API uniquement via le réseau Tailscale ; règles d'accès limitées à tes appareils ; Funnel jamais activé.</li><li>PostgreSQL et Ollama écoutent seulement sur localhost ; pare-feu Windows actif.</li><li>Aucun secret dans le dépôt, dans l'APK ni dans la PWA (analyse de l'historique Git).</li><li>Limite de taille des requêtes et validation stricte des entrées (longueur du mot ≤ 100 caractères).</li><li>Requêtes SQL uniquement via l'ORM ou paramétrées.</li><li>Journaux sans contenu personnel superflu.</li><li>Clé de signature de l'APK sauvegardée hors du dépôt, mot de passe protégé.</li><li>Téléphone verrouillé ; en cas de perte, retrait de l'appareil de la console Tailscale.</li><li>Dépendances mises à jour régulièrement, versions épinglées.</li><li>Conditions d'usage des API respectées : extraits courts, aucune chanson complète stockée.</li></ul><h3>H. Variables d'environnement et secrets</h3><table class="tbl"><thead><tr><th>Nom</th><th>Où</th><th>Exemple</th><th>Secret</th></tr></thead><tbody><tr><td>DATABASE_URL</td><td>backend</td><td>postgresql://…@localhost/lyrics_vocab</td><td>oui</td></tr><tr><td>MUSIXMATCH_API_KEY</td><td>backend</td><td>…</td><td>oui</td></tr><tr><td>GENIUS_TOKEN</td><td>backend</td><td>…</td><td>oui</td></tr><tr><td>DEEPL_API_KEY</td><td>backend</td><td>…</td><td>oui</td></tr><tr><td>OLLAMA_URL</td><td>backend</td><td>http://localhost:11434</td><td>non</td></tr><tr><td>OLLAMA_MODEL</td><td>backend</td><td>llama3.1:8b</td><td>non</td></tr><tr><td>LOG_DIR</td><td>backend</td><td>dossier des journaux JSON</td><td>non</td></tr><tr><td>BACKUP_DIR</td><td>sauvegarde</td><td>dossier de pg_dump</td><td>non</td></tr><tr><td>API_BASE_URL</td><td>app (build)</td><td>https://mon-pc.tailXXXX.ts.net/api</td><td>non</td></tr><tr><td>Fichier de signature Android</td><td>poste de build</td><td>upload-keystore.jks</td><td>oui</td></tr></tbody></table><h3>I. Risques globaux</h3><table class="tbl"><thead><tr><th>Risque</th><th>Probabilité</th><th>Impact</th><th>Parade</th></tr></thead><tbody><tr><td>Accès Musixmatch insuffisant</td><td>Élevée</td><td>Moyen</td><td>Mesurer à l'étape 03 ; revoir la source des extraits si le taux est trop faible</td></tr><tr><td>PC éteint ou injoignable</td><td>Élevée</td><td>Faible</td><td>Mode hors-ligne du mobile, synchronisation au retour</td></tr><tr><td>Perte de données à la synchronisation</td><td>Faible</td><td>Élevé</td><td>Journal append-only, accusés, tests de coupure</td></tr><tr><td>Panne de disque du PC</td><td>Faible</td><td>Élevé</td><td>Sauvegardes copiées ailleurs, restauration testée</td></tr><tr><td>Expiration de la clé Tailscale</td><td>Moyenne</td><td>Moyen</td><td>Désactiver l'expiration de clé du PC</td></tr><tr><td>Quota DeepL dépassé</td><td>Moyenne</td><td>Faible</td><td>Cache, compteur, alerte</td></tr><tr><td>Qualité de l'IA insuffisante</td><td>Moyenne</td><td>Faible</td><td>Repli sur la traduction seule, test sur le jeu</td></tr><tr><td>Abandon de l'usage</td><td>Moyenne</td><td>Élevé</td><td>Notifications, sessions courtes, objectif réaliste</td></tr><tr><td>Dérive du périmètre</td><td>Élevée</td><td>Moyen</td><td>Liste v2, gel jusqu'à l'étape 09</td></tr><tr><td>Clé de signature de l'APK perdue</td><td>Faible</td><td>Élevé</td><td>Sauvegarde hors dépôt ; sinon réinstallation de l'app</td></tr></tbody></table><h3>J. Définition de « terminé » pour le MVP</h3><ul><li>PWA installée sur le PC avec icône dans la barre des tâches ; APK installé sur le téléphone.</li><li>Les deux clients fonctionnent en Wi-Fi et en données mobiles (via Tailscale), sur la même base.</li><li>Le mobile fonctionne en mode avion et PC éteint, et se synchronise sans perte à la reconnexion.</li><li>Le parcours ajouter un mot, voir sa fiche, réviser, est complet ; les 15 à 20 mots du jeu de test sont dans l'app.</li><li>Tests automatisés verts, restauration de sauvegarde testée, procédure de mise à jour écrite.</li><li>Deux à trois semaines d'usage réel documentées.</li></ul>
+</div>
+</div>
+
+<footer class="mono">lyrics_vocab_roadmap.html · roadmap générée avec Claude</footer>
+
+<script>
+function toggle(n){document.getElementById('s-'+n).classList.toggle('open')}
+function openStep(n){document.getElementById('s-'+n).classList.add('open')}
+</script>
+
+</body>
+</html>
