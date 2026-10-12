@@ -1,0 +1,6 @@
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    use_null_aware_elements: false
+    sort_child_properties_last: false

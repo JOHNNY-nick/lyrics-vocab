@@ -13,6 +13,7 @@ def test_sante(client):
     corps = client.get("/api/health").json()
     assert corps["status"] == "ok" and corps["base"] == "ok"
     assert corps["version"] and "curseur" in corps and corps["heure_serveur"].endswith("Z")
+    assert corps["alerte_sauvegarde"] is True  # aucune sauvegarde dans le dossier de test (SAV-T02)
 
 
 def test_creer_mot_nominal(client, base_vide):

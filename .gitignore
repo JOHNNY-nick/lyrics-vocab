@@ -28,3 +28,4 @@ app/coverage/
 *.dump
 .idea/
 .vscode/
+app/android/key.properties

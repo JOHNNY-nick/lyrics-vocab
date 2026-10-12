@@ -16,6 +16,8 @@ from app.version import VERSION
 routeur = APIRouter(prefix="/api", tags=["santé"])
 ESPACE_DISQUE_ALERTE_OCTETS = 1024**3
 FICHIER_VERSION_APK = "version.json"
+MARQUEUR_SAUVEGARDE = "derniere_reussie.txt"
+AGE_MAX_SAUVEGARDE_JOURS = 2
 
 
 def _version_apk(dossier: str | None) -> dict | None:
@@ -26,6 +28,16 @@ def _version_apk(dossier: str | None) -> dict | None:
         return json.loads(fichier.read_text(encoding="utf-8"))
     except (OSError, ValueError):
         return None
+
+
+def _sauvegarde(dossier: str) -> tuple[str | None, bool]:
+    """Date de la dernière sauvegarde réussie et alerte si elle date de plus de 2 jours (SAV-05)."""
+    try:
+        texte = (Path(dossier) / MARQUEUR_SAUVEGARDE).read_text(encoding="utf-8-sig").strip()
+        jour = datetime.strptime(texte, "%Y-%m-%d").date()
+    except (OSError, ValueError):
+        return None, True
+    return jour.isoformat(), (datetime.now(UTC).date() - jour).days > AGE_MAX_SAUVEGARDE_JOURS
 
 
 @routeur.get("/health")
@@ -39,6 +51,7 @@ def sante(request: Request) -> dict:
         base, curseur = "indisponible", None
     etat_ollama = request.app.state.services.ollama.etat_en_cache()
     parametres = request.app.state.parametres
+    derniere_sauvegarde, alerte_sauvegarde = _sauvegarde(parametres.backup_dir)
     disque = None
     try:
         disque = shutil.disk_usage(parametres.log_dir).free < ESPACE_DISQUE_ALERTE_OCTETS
@@ -54,6 +67,8 @@ def sante(request: Request) -> dict:
         "heure_serveur": format_utc(datetime.now(UTC)),
         "alerte_disque": bool(disque),
         "apk": _version_apk(parametres.apk_dir),
+        "derniere_sauvegarde": derniere_sauvegarde,
+        "alerte_sauvegarde": alerte_sauvegarde,
     }
 
 
