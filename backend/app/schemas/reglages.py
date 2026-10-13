@@ -1,5 +1,6 @@
 """Schémas des réglages et des artistes (37, 18.6)."""
 
+from datetime import time
 from typing import Annotated, Literal
 from uuid import UUID
 
@@ -13,6 +14,7 @@ MAX_RAPPELS_SUP = 2
 Frequence = Literal[
     "quotidien", "tous_les_2_jours", "tous_les_3_jours", "hebdomadaire", "desactive"
 ]
+Intervalle = Literal[0, 30, 60, 120, 180, 240, 360]
 HeureTexte = Annotated[str, Field(pattern=r"^([01][0-9]|2[0-3]):[0-5][0-9]$")]
 
 
@@ -23,6 +25,9 @@ class ReglagesSchema(BaseModel):
     frequence_rappels: Frequence
     heure_rappel: Heure
     heures_rappel_sup: list[HeureTexte] = Field(default_factory=list, max_length=MAX_RAPPELS_SUP)
+    intervalle_notifications_min: Intervalle = 120
+    notifications_debut: Heure = time(9, 0)
+    notifications_fin: Heure = time(21, 0)
     mots_par_session: int = Field(ge=5, le=100)
     mode_revision: Literal["rappel", "melange"]
     heure_changement_jour: Heure
@@ -36,6 +41,9 @@ class ReglagesPartiels(BaseModel):
     frequence_rappels: Frequence | None = None
     heure_rappel: Heure | None = None
     heures_rappel_sup: list[HeureTexte] | None = Field(default=None, max_length=MAX_RAPPELS_SUP)
+    intervalle_notifications_min: Intervalle | None = None
+    notifications_debut: Heure | None = None
+    notifications_fin: Heure | None = None
     mots_par_session: int | None = Field(default=None, ge=5, le=100)
     mode_revision: Literal["rappel", "melange"] | None = None
     heure_changement_jour: Heure | None = None

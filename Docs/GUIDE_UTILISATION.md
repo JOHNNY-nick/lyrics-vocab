@@ -115,7 +115,7 @@ L'exercice a besoin du PC (c'est l'IA du PC qui écrit et corrige les phrases) :
 | --- | --- |
 | Artistes | Tes artistes préférés et leur ordre |
 | Révisions | Nombre de mots par session (5 à 100), mode Rappel ou Mélange, heure de changement de jour (avant 4 h du matin, on est encore la veille), option « Facile » |
-| Rappels (téléphone) | Fréquence (chaque jour, tous les 2 jours, tous les 3 jours, une fois par semaine, désactivé), heure, jusqu'à **3 rappels par jour** (« + Ajouter un rappel dans la journée », ✕ pour en retirer un), autorisation des notifications |
+| Notifications | **Un mot au hasard** : désactivé, ou toutes les 30 min, 1 h, 2 h, 3 h, 4 h, 6 h ; **plage horaire** (« Entre 09:00 et 21:00 » par défaut) ; sur le téléphone, autorisation des notifications |
 | Synchronisation (téléphone) | Wi-Fi seulement, « Synchroniser maintenant », dernière synchronisation, actions en attente, liste « À examiner » |
 | Serveur (téléphone) | Adresse du PC, avec le bouton « Tester » |
 | Informations | Versions, état de l'IA, quotas, dernière sauvegarde |
@@ -131,7 +131,7 @@ L'exercice a besoin du PC (c'est l'IA du PC qui écrit et corrige les phrases) :
   - **« Ton PC est injoignable »** : il y a du réseau mais le PC ne répond pas. Vérifie que le PC est allumé (pas en veille) et que **Tailscale est connecté sur le téléphone**. C'est la cause la plus fréquente ;
   - **« Synchronisation terminée »** : tout est à jour ;
   - **« Une action n'a pas pu être envoyée »** : voir Réglages → À examiner, où chaque action peut être réessayée ou abandonnée.
-- **Rappels** : une notification « N mots à réviser » arrive aux heures et à la fréquence choisies (chaque jour à 19 h par défaut), seulement s'il y a des mots à revoir. Avec plusieurs rappels par jour, ceux de l'après-midi ou du soir arrivent même si tu as déjà commencé tes révisions, tant qu'il reste des mots, avec un extrait dont le mot est masqué. La toucher ouvre les révisions. Elle fonctionne même sans réseau.
+- **Notifications** : à l'intervalle choisi (toutes les 2 h par défaut, de 9 h à 21 h), un mot de ta bibliothèque tiré au hasard arrive avec sa traduction et son explication. **Toucher la notification ouvre la fiche du mot**, sur le PC (notification Windows, même quand l'application est fermée, tant que le PC est allumé) comme sur le téléphone (même sans réseau). Les notifications tombent aux mêmes heures sur le PC et le téléphone (9 h, 11 h, 13 h…) avec **le même mot**.
 
 ## 10. Bon à savoir
 

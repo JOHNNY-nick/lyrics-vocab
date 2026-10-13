@@ -7,77 +7,88 @@ import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../models/divers.dart';
-import '../models/revision.dart';
+import '../models/mot.dart';
 import 'calendrier.dart';
-import 'extraction.dart';
 import 'local_cache.dart';
 
-const joursPlanifies = 14;
-const chargeRevisions = 'revisions';
-const canalId = 'rappels';
-const canalNom = 'Rappels de révision';
-const longueurIndiceMax = 90;
+const joursPlanifies = 3;
+const notificationsMax = 60;
+const canalId = 'mots';
+const canalNom = 'Un mot de ta bibliothèque';
+const longueurTexteMax = 180;
+const multiplicateurTirage = 2654435761;
 
-/// Un rappel à programmer.
+/// Une notification à programmer : un mot, son explication, sa fiche au toucher.
 class RappelPlanifie {
-  const RappelPlanifie({required this.quand, required this.nombre, required this.corps, this.motId});
+  const RappelPlanifie({required this.quand, required this.titre, required this.corps, required this.motId});
   final DateTime quand; // heure murale locale
-  final int nombre;
+  final String titre;
   final String corps;
-  final String? motId;
+  final String motId;
 }
 
-/// Calcule les rappels des 14 prochains jours (logique pure, NOT-03, NOT-04, NOT-08).
+/// Créneaux d'un jour : début de la plage + k × intervalle ; une fin avant le début va
+/// jusqu'à minuit (même règle que backend/app/services/notifications_mots.py).
+List<DateTime> creneauxDuJour(DateTime jour, String debut, String fin, int intervalle) {
+  if (intervalle <= 0) return const [];
+  final (hd, md) = lireHeure(debut);
+  final (hf, mf) = lireHeure(fin);
+  final depart = DateTime(jour.year, jour.month, jour.day, hd, md);
+  var limite = DateTime(jour.year, jour.month, jour.day, hf, mf);
+  if (!limite.isAfter(depart)) limite = DateTime(jour.year, jour.month, jour.day + 1);
+  return [for (var t = depart; t.isBefore(limite); t = t.add(Duration(minutes: intervalle))) t];
+}
+
+/// Minutes depuis le 1er janvier 2000 en heure locale (identique au PC).
+int cleCreneau(DateTime t) =>
+    DateTime.utc(t.year, t.month, t.day).difference(DateTime.utc(2000)).inDays * 1440 +
+    t.hour * 60 +
+    t.minute;
+
+/// Mot du créneau, jamais le même que celui du créneau précédent (identique au PC).
+int indiceMot(int cle, int intervalle, int nombre) {
+  if (nombre <= 1) return 0;
+  int brut(int c) => ((c * multiplicateurTirage) % 0x100000000) % nombre;
+  final i = brut(cle);
+  return i == brut(cle - intervalle) ? (i + 1) % nombre : i;
+}
+
+/// Notifications des 3 prochains jours (60 au plus) : un mot traduit tiré au hasard à chaque
+/// créneau, avec son explication ; le toucher ouvre sa fiche.
 List<RappelPlanifie> planifierRappels({
   required DateTime maintenantLocal,
   required Reglages reglages,
-  required List<Revision> planifiees,
-  required String? Function(String motId) indice,
-  bool inclureAujourdhui = true,
+  required List<Mot> mots,
 }) {
-  final pas = joursEntreRappels[reglages.frequenceRappels];
-  if (pas == null) return const [];
+  final intervalle = reglages.intervalleNotificationsMin;
+  final candidats = mots.where((m) => m.deletedAt == null && m.traductionFr != null).toList()
+    ..sort((a, b) => a.id.compareTo(b.id));
+  if (intervalle <= 0 || candidats.isEmpty) return const [];
   final rappels = <RappelPlanifie>[];
-  for (var j = 0; j < joursPlanifies; j += pas) {
-    // Après une révision, plus de rappel aujourd'hui, sauf si l'utilisateur en a demandé
-    // plusieurs par jour : les suivants restent, s'il reste des mots à réviser.
-    if (!inclureAujourdhui && j == 0 && reglages.heuresRappelSup.isEmpty) continue;
-    for (final heure in reglages.heuresRappel) {
-      final (h, m) = lireHeure(heure);
-      final quand = DateTime(maintenantLocal.year, maintenantLocal.month, maintenantLocal.day + j, h, m);
-      if (!quand.isAfter(maintenantLocal)) continue;
-      final rappel = _rappel(quand, reglages, planifiees, indice);
-      if (rappel != null) rappels.add(rappel);
+  for (var j = 0; j < joursPlanifies && rappels.length < notificationsMax; j++) {
+    final jour = DateTime(maintenantLocal.year, maintenantLocal.month, maintenantLocal.day + j);
+    for (final quand in creneauxDuJour(
+      jour,
+      reglages.notificationsDebut,
+      reglages.notificationsFin,
+      intervalle,
+    )) {
+      if (!quand.isAfter(maintenantLocal) || rappels.length >= notificationsMax) continue;
+      final mot = candidats[indiceMot(cleCreneau(quand), intervalle, candidats.length)];
+      var corps = (mot.explicationIA ? mot.explication! : '').replaceAll('\n', ' ');
+      if (corps.length > longueurTexteMax) corps = '${corps.substring(0, longueurTexteMax - 1).trimRight()}…';
+      rappels.add(
+        RappelPlanifie(
+          quand: quand,
+          titre: mot.traductionFr == null ? mot.terme : '${mot.terme} — ${mot.traductionFr}',
+          corps: corps,
+          motId: mot.id,
+        ),
+      );
     }
   }
   return rappels;
 }
-
-/// Jours entre deux journées de rappel, par fréquence (absente : rappels désactivés).
-const joursEntreRappels = {'quotidien': 1, 'tous_les_2_jours': 2, 'tous_les_3_jours': 3, 'hebdomadaire': 7};
-
-RappelPlanifie? _rappel(
-  DateTime quand,
-  Reglages reglages,
-  List<Revision> planifiees,
-  String? Function(String motId) indice,
-) {
-  final jour = jourLocalDepuisHeureLocale(quand, reglages.heureChangementJour);
-  final dues = planifiees.where((r) => !r.datePrevue.isAfter(jour)).toList()
-    ..sort((a, b) => a.datePrevue.compareTo(b.datePrevue));
-  if (dues.isEmpty) return null;
-  final premier = dues.first;
-  var corps = indice(premier.motId) ?? 'Un mot t\'attend.';
-  if (corps.length > longueurIndiceMax) corps = '${corps.substring(0, longueurIndiceMax)}…';
-  return RappelPlanifie(
-    quand: quand,
-    nombre: dues.length,
-    corps: corps.replaceAll('\n', ' / '),
-    motId: dues.length == 1 ? premier.motId : null,
-  );
-}
-
-String titreRappel(int n) => n == 1 ? '1 mot à réviser' : '$n mots à réviser';
 
 abstract class ServiceNotifications {
   Future<void> initialiser();
@@ -91,6 +102,10 @@ abstract class ServiceNotifications {
 }
 
 class NotificationsNeutres implements ServiceNotifications {
+  NotificationsNeutres({this.chargeInitiale});
+
+  /// PWA ouverte depuis une notification Windows : « mot:ID » lu dans l'adresse.
+  final String? chargeInitiale;
   final _appuis = StreamController<String>.broadcast();
   @override
   Future<void> initialiser() async {}
@@ -103,7 +118,7 @@ class NotificationsNeutres implements ServiceNotifications {
   @override
   Stream<String> get appuis => _appuis.stream;
   @override
-  Future<String?> chargeAuLancement() async => null;
+  Future<String?> chargeAuLancement() async => chargeInitiale;
 }
 
 class NotificationsAndroid implements ServiceNotifications {
@@ -148,30 +163,12 @@ class NotificationsAndroid implements ServiceNotifications {
   Future<void> reprogrammer(LocalCache cache, {bool inclureAujourdhui = true}) async {
     await _plugin.cancelAll();
     if (!await permissionAccordee()) return;
-    String? indice(String motId) {
-      final mot = cache.mot(motId);
-      if (mot == null) return null;
-      if (mot.extraits.isEmpty) return mot.terme.replaceAll(RegExp(r'\S'), '_');
-      final e = mot.extraits.first;
-      return masquerMot(e.texte, e.surbrillanceDebut, e.surbrillanceFin); // NOT-13
-    }
-
     final rappels = planifierRappels(
       maintenantLocal: DateTime.now(),
       reglages: cache.reglages(),
-      planifiees: cache.revisionsPlanifiees(),
-      indice: indice,
-      inclureAujourdhui: inclureAujourdhui,
+      mots: cache.tousMots(),
     );
-    const details = NotificationDetails(
-      android: AndroidNotificationDetails(
-        canalId,
-        canalNom,
-        channelDescription: 'Mots à réviser du jour',
-        importance: Importance.defaultImportance,
-        priority: Priority.defaultPriority,
-      ),
-    );
+
     for (var i = 0; i < rappels.length; i++) {
       final r = rappels[i];
       final quand = tz.TZDateTime(
@@ -182,15 +179,25 @@ class NotificationsAndroid implements ServiceNotifications {
         r.quand.hour,
         r.quand.minute,
       );
+      final details = NotificationDetails(
+        android: AndroidNotificationDetails(
+          canalId,
+          canalNom,
+          channelDescription: 'Un mot de ta bibliothèque et son explication',
+          importance: Importance.defaultImportance,
+          priority: Priority.defaultPriority,
+          styleInformation: BigTextStyleInformation(r.corps, contentTitle: r.titre),
+        ),
+      );
       try {
         await _plugin.zonedSchedule(
           i + 1,
-          titreRappel(r.nombre),
+          r.titre,
           r.corps,
           quand,
           details,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          payload: r.motId == null ? chargeRevisions : 'mot:${r.motId}',
+          payload: 'mot:${r.motId}',
         );
       } catch (e) {
         debugPrint('Rappel non programmé : $e');

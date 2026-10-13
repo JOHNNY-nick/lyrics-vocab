@@ -22,6 +22,10 @@ class Reglage(SynchroMixin, Base):
         ),
         CheckConstraint("mots_par_session BETWEEN 5 AND 100", name="ck_reglage_mots_session"),
         CheckConstraint("mode_revision IN ('rappel','melange')", name="ck_reglage_mode"),
+        CheckConstraint(
+            "intervalle_notifications_min IN (0,30,60,120,180,240,360)",
+            name="ck_reglage_intervalle_notifications",
+        ),
     )
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
@@ -32,6 +36,16 @@ class Reglage(SynchroMixin, Base):
     # Rappels supplémentaires dans la journée, « HH:MM » (2 au plus, voir DECISIONS.md).
     heures_rappel_sup: Mapped[list] = mapped_column(
         JSONB, nullable=False, server_default=text("'[]'::jsonb")
+    )
+    # Notifications d'un mot au hasard toutes les N minutes dans la plage (0 : désactivées).
+    intervalle_notifications_min: Mapped[int] = mapped_column(
+        Integer, nullable=False, server_default=text("120")
+    )
+    notifications_debut: Mapped[time] = mapped_column(
+        Time, nullable=False, server_default=text("'09:00'")
+    )
+    notifications_fin: Mapped[time] = mapped_column(
+        Time, nullable=False, server_default=text("'21:00'")
     )
     mots_par_session: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default=text("20")

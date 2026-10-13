@@ -150,6 +150,15 @@ Demande de l'utilisateur : une version complètement fonctionnelle, en s'autoris
 | Ajout d'un mot (33 à 45 s → environ 8 s) | Plus de pause de 0,2 s par morceau quand la source (LRCLIB) a déjà renvoyé les paroles avec sa recherche ; recherches des artistes préférés lancées 4 par 4 ; phrases d'exemple écrites après que la fiche est marquée terminée. | La pause, prévue pour l'API Musixmatch (une requête par morceau), faisait 25 × 0,2 s d'attente par artiste et atteignait la limite de 30 s. |
 | Correction plus exigeante | Au moins 60 % des mots porteurs de sens (au lieu de 50 %) pour « correct » ; consigne `evaluation-v5` : un mot remplacé par un mot de sens différent, une faute de grammaire ou d'orthographe empêchent « correct ». | Cas signalé : « lamps » au lieu de « candles » jugé correct. |
 
+## Notifications d'un mot au hasard (2026-10-13)
+
+| Sujet | Décision | Raison |
+| --- | --- | --- |
+| Principe | Remplace le rappel « N mots à réviser » à heure fixe : toutes les N minutes (30 min à 6 h, ou désactivé) dans une plage horaire (9 h–21 h par défaut), un mot traduit tiré au hasard, avec sa traduction et son explication ; le toucher ouvre la fiche. Réglages partagés (`reglage.intervalle_notifications_min`, `notifications_debut`, `notifications_fin`, migration 0005). | Demande de l'utilisateur. |
+| Même mot partout | Créneaux sur une grille fixe (début + k × intervalle) ; mot choisi par un tirage déterministe sur la clé du créneau (minutes depuis 2000, × 2654435761 mod 2³² mod n, mots triés par identifiant), jamais deux fois de suite le même. Même calcul en Python et en Dart, vérifié par les deux suites de tests. | Le PC et le téléphone notifient au même moment : sans cela, deux mots différents arriveraient en même temps. |
+| PC | Le backend (toujours lancé dans la session de l'utilisateur) affiche une notification Windows (`scripts/notifier.ps1`, identité « Lyrics & Vocab » enregistrée dans le registre de l'utilisateur) ; le clic ouvre `lyricsvocab://mot/<id>`, protocole qui lance `scripts/ouvrir_mot.vbs` puis `chrome --app=<adresse>?mot=<id>` ; la PWA ouvre la fiche demandée. Activé par `NOTIFICATIONS_PC=true` et `URL_APPLICATION`. | Une notification web exigerait que la page reste ouverte (ou un service de push) ; le backend tourne déjà en permanence sur ce PC. |
+| Téléphone | Notifications locales programmées pour 3 jours (60 au plus), reprogrammées à chaque ouverture ou synchronisation ; texte long affiché en entier. | Fonctionne sans réseau, comme les rappels précédents. |
+
 ## Exigences [S] non réalisées (reportées en v2, REC-03)
 
 - NOT-09 : relance 3 heures après la notification.

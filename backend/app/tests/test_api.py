@@ -332,6 +332,9 @@ def test_reglages(client):
         "frequence_rappels": "quotidien",
         "heure_rappel": "19:00",
         "heures_rappel_sup": [],
+        "intervalle_notifications_min": 120,
+        "notifications_debut": "09:00",
+        "notifications_fin": "21:00",
         "mots_par_session": 20,
         "mode_revision": "rappel",
         "heure_changement_jour": "04:00",
@@ -357,6 +360,12 @@ def test_reglages(client):
         client.put("/api/reglages", json={**corps, "heures_rappel_sup": ["25:00"]}).status_code
         == 422
     )
+    toutes_les_30 = {**corps, "intervalle_notifications_min": 30, "notifications_debut": "08:30"}
+    assert client.put("/api/reglages", json=toutes_les_30).status_code == 204
+    relu = client.get("/api/reglages").json()
+    assert (relu["intervalle_notifications_min"], relu["notifications_debut"]) == (30, "08:30")
+    mauvais = {**corps, "intervalle_notifications_min": 45}
+    assert client.put("/api/reglages", json=mauvais).status_code == 422
 
 
 def test_quotas_et_journaux(client):

@@ -16,7 +16,6 @@ import '../services/sync_service.dart';
 import '../strings.dart';
 import '../theme/jetons.dart';
 import '../widgets/composants.dart';
-import '../widgets/icones.dart';
 import 'onboarding_screen.dart';
 
 /// Informations du serveur (version, Ollama, quotas, erreurs), lues seulement si joignable.
@@ -92,7 +91,7 @@ class SettingsScreen extends ConsumerWidget {
     final sections = <Widget>[
       const _SectionArtistes(),
       _SectionRevisions(reglages: r, modifier: modifier),
-      if (env.mobile) _SectionRappels(reglages: r, modifier: modifier),
+      _SectionRappels(reglages: r, modifier: modifier),
       if (env.mobile) _SectionSync(reglages: r, modifier: modifier),
       if (env.adresseModifiable) const _SectionServeur(),
       const _SectionInformations(),
@@ -360,8 +359,8 @@ class _SectionRevisions extends ConsumerWidget {
   }
 }
 
-/// Rappels supplémentaires dans la journée (en plus de l'heure principale).
-const maxRappelsSup = 2;
+/// Intervalles proposés (minutes ; 0 : désactivé), mêmes valeurs que le serveur.
+const intervallesNotifications = [0, 30, 60, 120, 180, 240, 360];
 
 class _SectionRappels extends ConsumerWidget {
   const _SectionRappels({required this.reglages, required this.modifier});
@@ -380,85 +379,56 @@ class _SectionRappels extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _Ligne(
-            libelle: S.frequence,
+            libelle: S.intervalleNotifications,
+            sousTitre: S.sousTitreNotifications,
             controle: _Choix(
-              options: const {
-                'quotidien': S.quotidien,
-                'tous_les_2_jours': S.tousLes2Jours,
-                'tous_les_3_jours': S.tousLes3Jours,
-                'hebdomadaire': S.hebdomadaire,
-                'desactive': S.desactive,
+              options: {
+                for (final m in intervallesNotifications) '$m': m == 0 ? S.desactive : S.toutesLes(m),
               },
-              valeur: reglages.frequenceRappels,
-              onChanged: (v) => modifier(reglages.copyWith(frequenceRappels: v)),
+              valeur: '${reglages.intervalleNotificationsMin}',
+              onChanged: (v) => modifier(reglages.copyWith(intervalleNotificationsMin: int.parse(v))),
             ),
           ),
-          if (reglages.frequenceRappels != 'desactive') ...[
+          if (reglages.intervalleNotificationsMin > 0)
             _Ligne(
-              libelle: S.heure,
-              sousTitre: S.sousTitreHeureRappel,
-              controle: _BoutonHeure(
-                libelle: S.heure,
-                heure: reglages.heureRappel,
-                onChanged: (v) => modifier(reglages.copyWith(heureRappel: v)),
+              libelle: S.plageNotifications,
+              controle: Wrap(
+                alignment: WrapAlignment.end,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  _BoutonHeure(
+                    libelle: S.plageNotifications,
+                    heure: reglages.notificationsDebut,
+                    onChanged: (v) => modifier(reglages.copyWith(notificationsDebut: v)),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: Espaces.e8),
+                    child: Text(S.etJusqua, style: Textes.corps.copyWith(color: c.texteSecondaire)),
+                  ),
+                  _BoutonHeure(
+                    libelle: S.etJusqua,
+                    heure: reglages.notificationsFin,
+                    onChanged: (v) => modifier(reglages.copyWith(notificationsFin: v)),
+                  ),
+                ],
               ),
             ),
-            // Jusqu'à 3 rappels par jour : l'heure principale et 2 rappels supplémentaires.
-            for (var i = 0; i < reglages.heuresRappelSup.length; i++)
-              _Ligne(
-                libelle: S.autreRappel,
-                controle: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _BoutonHeure(
-                      libelle: S.autreRappel,
-                      heure: reglages.heuresRappelSup[i],
-                      onChanged: (v) => modifier(
-                        reglages.copyWith(heuresRappelSup: List.of(reglages.heuresRappelSup)..[i] = v),
-                      ),
+          if (env.mobile)
+            _Ligne(
+              libelle: S.permissionNotifications,
+              sousTitre: accordee ? S.autorisees : S.refusees,
+              controle: accordee
+                  ? const SizedBox.shrink()
+                  : BoutonLien(
+                      libelle: S.autoriser,
+                      onPressed: () async {
+                        await env.notifications.demanderPermission();
+                        ref.invalidate(permissionNotificationsProvider);
+                        if (env.cache != null) await env.notifications.reprogrammer(env.cache!);
+                      },
                     ),
-                    BoutonIcone(
-                      forme: Icones.fermer,
-                      libelle: S.retirerRappel,
-                      couleur: c.texteSecondaire,
-                      onPressed: () => modifier(
-                        reglages.copyWith(heuresRappelSup: List.of(reglages.heuresRappelSup)..removeAt(i)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            if (reglages.heuresRappelSup.length < maxRappelsSup)
-              Align(
-                alignment: Alignment.centerLeft,
-                child: BoutonLien(
-                  libelle: S.ajouterRappel,
-                  onPressed: () async {
-                    final choix = await _choisirHeure(context, '12:00');
-                    if (choix != null) {
-                      await modifier(
-                        reglages.copyWith(heuresRappelSup: [...reglages.heuresRappelSup, choix]),
-                      );
-                    }
-                  },
-                ),
-              ),
-          ],
-          _Ligne(
-            libelle: S.permissionNotifications,
-            sousTitre: accordee ? S.autorisees : S.refusees,
-            controle: accordee
-                ? const SizedBox.shrink()
-                : BoutonLien(
-                    libelle: S.autoriser,
-                    onPressed: () async {
-                      await env.notifications.demanderPermission();
-                      ref.invalidate(permissionNotificationsProvider);
-                      if (env.cache != null) await env.notifications.reprogrammer(env.cache!);
-                    },
-                  ),
-          ),
-          if (!accordee && permission.hasValue)
+            ),
+          if (env.mobile && !accordee && permission.hasValue)
             Container(
               padding: const EdgeInsets.all(Espaces.e12),
               decoration: BoxDecoration(
@@ -467,8 +437,10 @@ class _SectionRappels extends ConsumerWidget {
               ),
               child: Text(S.notificationRefusee, style: Textes.legende.copyWith(color: c.surAccent)),
             ),
-          const SizedBox(height: Espaces.e8),
-          Text(S.batterieTexte, style: Textes.legende.copyWith(color: c.texteSecondaire)),
+          if (env.mobile) ...[
+            const SizedBox(height: Espaces.e8),
+            Text(S.batterieTexte, style: Textes.legende.copyWith(color: c.texteSecondaire)),
+          ],
         ],
       ),
     );

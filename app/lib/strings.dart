@@ -159,7 +159,13 @@ class S {
   static const reglages = 'Réglages';
   static const sectionArtistes = 'ARTISTES';
   static const sectionRevisions = 'RÉVISIONS';
-  static const sectionRappels = 'RAPPELS';
+  static const sectionRappels = 'NOTIFICATIONS';
+  static const intervalleNotifications = 'Un mot au hasard';
+  static const sousTitreNotifications = 'Avec son explication ; la toucher ouvre sa fiche (PC et téléphone).';
+  static const plageNotifications = 'Entre';
+  static const etJusqua = 'et';
+  static String toutesLes(int minutes) =>
+      minutes < 60 ? 'Toutes les $minutes min' : 'Toutes les ${minutes ~/ 60} h';
   static const sectionSync = 'SYNCHRONISATION';
   static const sectionServeur = 'SERVEUR';
   static const sectionInformations = 'INFORMATIONS';

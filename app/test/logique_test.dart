@@ -1,7 +1,7 @@
 // SM-2, normalisation, jour local, masquage, rappels : mêmes cas que le backend (REV-T01, ALG-01).
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lyrics_vocab/models/divers.dart';
-import 'package:lyrics_vocab/models/revision.dart';
+import 'package:lyrics_vocab/models/mot.dart';
 import 'package:lyrics_vocab/services/calendrier.dart';
 import 'package:lyrics_vocab/services/extraction.dart';
 import 'package:lyrics_vocab/services/normalisation.dart';
@@ -127,89 +127,87 @@ void main() {
     });
   });
 
-  group('Rappels (40.4)', () {
-    Revision revision(String jour) => Revision(id: jour, motId: 'm$jour', datePrevue: lireDate(jour));
-    test('une notification seulement si un mot est dû', () {
-      final rappels = planifierRappels(
-        maintenantLocal: DateTime(2026, 10, 12, 10),
-        reglages: const Reglages(),
-        planifiees: [revision('2026-10-14')],
-        indice: (_) => 'I ______ miss you',
-      );
-      expect(rappels.first.quand, DateTime(2026, 10, 14, 19));
-      expect(rappels.first.nombre, 1);
-      expect(rappels.first.corps, contains('______'));
-      expect(rappels.length, 12);
+  group("Notifications d'un mot au hasard", () {
+    Mot mot(String id, String terme, {String? explication}) => Mot(
+      id: id,
+      terme: terme,
+      termeNormalise: terme,
+      traductionFr: 'traduction de $terme',
+      explication: explication,
+      sourceExplication: explication == null ? null : 'ia',
+      createdAt: DateTime.utc(2026),
+      updatedAt: DateTime.utc(2026),
+    );
+    final mots = [for (var i = 0; i < 9; i++) mot('id-$i', 'mot$i', explication: 'Explication du mot $i.')];
+
+    test('créneaux sur une grille fixe dans la plage horaire', () {
+      final jour = DateTime(2026, 10, 13);
+      expect(creneauxDuJour(jour, '09:00', '21:00', 120).map((t) => t.hour), [9, 11, 13, 15, 17, 19]);
+      expect(creneauxDuJour(jour, '22:00', '01:00', 60).map((t) => t.hour), [22, 23]);
+      expect(creneauxDuJour(jour, '09:00', '21:00', 0), isEmpty);
     });
-    test('désactivé et tous les 2 jours', () {
-      final dues = [revision('2026-10-12')];
+
+    test('même tirage que le PC (notifications_mots.py)', () {
+      expect(cleCreneau(DateTime(2026, 10, 13, 9)), 14086620);
+      expect(indiceMot(14086620, 120, 9), 6);
+      expect(indiceMot(123, 60, 1), 0);
+    });
+
+    test('mot, explication et fiche au toucher', () {
+      final rappels = planifierRappels(
+        maintenantLocal: DateTime(2026, 10, 13, 10, 30),
+        reglages: const Reglages(),
+        mots: mots,
+      );
+      expect(rappels.first.quand, DateTime(2026, 10, 13, 11));
+      expect(rappels.length, 5 + 6 + 6); // 11 h à 19 h aujourd'hui, puis deux jours entiers
+      final premier = rappels.first;
+      final attendu = mots[indiceMot(cleCreneau(premier.quand), 120, 9)];
+      expect(premier.motId, attendu.id);
+      expect(premier.titre, '${attendu.terme} — traduction de ${attendu.terme}');
+      expect(premier.corps, startsWith('Explication du mot'));
+    });
+
+    test('désactivées, ou aucun mot traduit', () {
       expect(
         planifierRappels(
-          maintenantLocal: DateTime(2026, 10, 12, 10),
-          reglages: const Reglages(frequenceRappels: 'desactive'),
-          planifiees: dues,
-          indice: (_) => null,
+          maintenantLocal: DateTime(2026, 10, 13, 10),
+          reglages: const Reglages(intervalleNotificationsMin: 0),
+          mots: mots,
         ),
         isEmpty,
       );
-      final rappels = planifierRappels(
-        maintenantLocal: DateTime(2026, 10, 12, 10),
-        reglages: const Reglages(frequenceRappels: 'tous_les_2_jours', heureRappel: '08:15'),
-        planifiees: dues,
-        indice: (_) => null,
+      expect(
+        planifierRappels(
+          maintenantLocal: DateTime(2026, 10, 13, 10),
+          reglages: const Reglages(),
+          mots: const [],
+        ),
+        isEmpty,
       );
-      expect(rappels.map((r) => r.quand.day).take(3), [14, 16, 18]);
-      expect(rappels.first.quand.hour, 8);
     });
-    test('aujourd\'hui exclu quand l\'application est ouverte (NOT-08)', () {
+
+    test('toutes les 30 min : 60 notifications au plus', () {
       final rappels = planifierRappels(
-        maintenantLocal: DateTime(2026, 10, 12, 10),
-        reglages: const Reglages(),
-        planifiees: [revision('2026-10-12')],
-        indice: (_) => null,
-        inclureAujourdhui: false,
+        maintenantLocal: DateTime(2026, 10, 13, 6),
+        reglages: const Reglages(intervalleNotificationsMin: 30),
+        mots: mots,
       );
-      expect(rappels.first.quand.day, 13);
+      expect(rappels.length, notificationsMax);
     });
-    test('tous les 3 jours, chaque semaine, plusieurs rappels par jour', () {
-      final dues = [revision('2026-10-12')];
-      List<DateTime> quand(Reglages r, {bool aujourdhui = true}) => planifierRappels(
-        maintenantLocal: DateTime(2026, 10, 12, 10),
-        reglages: r,
-        planifiees: dues,
-        indice: (_) => null,
-        inclureAujourdhui: aujourdhui,
-      ).map((r) => r.quand).toList();
-      expect(quand(const Reglages(frequenceRappels: 'tous_les_3_jours')).map((d) => d.day), [
-        12,
-        15,
-        18,
-        21,
-        24,
-      ]);
-      expect(quand(const Reglages(frequenceRappels: 'hebdomadaire')).map((d) => d.day), [12, 19]);
-      const trois = Reglages(heureRappel: '19:00', heuresRappelSup: ['08:00', '13:30']);
-      // Aujourd'hui, 8 h est passée : 13 h 30 et 19 h ; demain, les trois rappels.
-      expect(quand(trois).take(5), [
-        DateTime(2026, 10, 12, 13, 30),
-        DateTime(2026, 10, 12, 19),
-        DateTime(2026, 10, 13, 8),
-        DateTime(2026, 10, 13, 13, 30),
-        DateTime(2026, 10, 13, 19),
-      ]);
-      // Plusieurs rappels par jour : ceux du reste de la journée sont gardés après une révision.
-      expect(quand(trois, aujourdhui: false).first, DateTime(2026, 10, 12, 13, 30));
-    });
-    test('réglages : rappels supplémentaires lus, écrits et comparés', () {
+
+    test('réglages : intervalle et plage lus et écrits', () {
       final r = Reglages.fromJson({
-        'heures_rappel_sup': ['08:00:00'],
+        'intervalle_notifications_min': 30,
+        'notifications_debut': '08:30:00',
+        'notifications_fin': '22:00:00',
       });
-      expect(r.heuresRappelSup, ['08:00']);
-      expect(r.toJson()['heures_rappel_sup'], ['08:00']);
-      expect(r.copyWith(heuresRappelSup: ['08:00']).difference(r), isEmpty);
-      expect(r.copyWith(heuresRappelSup: ['09:00']).difference(r), {
-        'heures_rappel_sup': ['09:00'],
-      });
+      expect(
+        (r.intervalleNotificationsMin, r.notificationsDebut, r.notificationsFin),
+        (30, '08:30', '22:00'),
+      );
+      expect(r.toJson()['intervalle_notifications_min'], 30);
+      expect(r.copyWith(intervalleNotificationsMin: 60).difference(r), {'intervalle_notifications_min': 60});
     });
   });
 }

@@ -39,6 +39,11 @@ Future<String> _fuseau() async {
   }
 }
 
+String? _ficheDemandee() {
+  final id = Uri.base.queryParameters['mot'];
+  return id != null && RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(id) ? 'mot:$id' : null;
+}
+
 Future<Environnement> construireEnvironnement(Magasin prefs) async {
   final mobile = !kIsWeb;
   final appareilId = await appareilIdDepuis(prefs, mobile: mobile);
@@ -53,7 +58,8 @@ Future<Environnement> construireEnvironnement(Magasin prefs) async {
       api: api,
       depot: DepotApi(api),
       connectivite: ConnectiviteNeutre(),
-      notifications: NotificationsNeutres(),
+      // Notification Windows du PC : l'application s'ouvre sur la fiche (?mot=ID).
+      notifications: NotificationsNeutres(chargeInitiale: _ficheDemandee()),
       prononciation: PrononciationAppareil(),
       dictee: DicteeAppareil(),
     );

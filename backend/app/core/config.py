@@ -36,6 +36,10 @@ class Parametres(BaseSettings):
     quota_genius_jour: int = 1000
     quota_deepl_mois: int = 500000
     fuseau_pc: str = "Europe/Paris"
+    # Notifications Windows d'un mot au hasard (PC de l'utilisateur) et adresse de la PWA
+    # ouverte au clic (voir scripts/notifier.ps1).
+    notifications_pc: bool = False
+    url_application: str = ""
     mode: str = "production"
 
     # Tableau 26.2

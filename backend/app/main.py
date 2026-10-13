@@ -25,7 +25,7 @@ from app.core.logging import configurer_journaux, journaliser
 from app.core.middleware import CorrelationMiddleware, LimiteDebitMiddleware, TailleCorpsMiddleware
 from app.core.resilience import Disjoncteur
 from app.routers import artistes, mots, revisions, sante, sync
-from app.services import exercices_prets, reglages
+from app.services import exercices_prets, notifications_mots, reglages
 from app.services.deepl_client import DeeplClient
 from app.services.deezer_client import DeezerClient
 from app.services.enrichissement import GestionnaireEnrichissement, Services
@@ -186,11 +186,13 @@ def creer_app(
             gestion.reprendre(au_demarrage=True)
             asyncio.create_task(conteneur.ollama.disponible())
             preparation = asyncio.create_task(exercices_prets.boucle(conteneur))
+            notifications = asyncio.create_task(notifications_mots.boucle(conteneur))
         try:
             yield
         finally:
             if demarrer_taches:
                 preparation.cancel()
+                notifications.cancel()
             await gestion.arreter()
             await http.aclose()
             moteur.dispose()

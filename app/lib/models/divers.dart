@@ -70,6 +70,9 @@ class Reglages {
     this.frequenceRappels = 'quotidien',
     this.heureRappel = '19:00',
     this.heuresRappelSup = const [],
+    this.intervalleNotificationsMin = 120,
+    this.notificationsDebut = '09:00',
+    this.notificationsFin = '21:00',
     this.motsParSession = 20,
     this.modeRevision = 'rappel',
     this.heureChangementJour = '04:00',
@@ -81,6 +84,11 @@ class Reglages {
 
   /// Rappels supplémentaires dans la journée (« HH:MM », 2 au plus).
   final List<String> heuresRappelSup;
+
+  /// Notification d'un mot au hasard toutes les N minutes dans la plage (0 : désactivées).
+  final int intervalleNotificationsMin;
+  final String notificationsDebut;
+  final String notificationsFin;
   final int motsParSession;
 
   /// Toutes les heures de rappel de la journée, dans l'ordre.
@@ -92,6 +100,9 @@ class Reglages {
   factory Reglages.fromJson(Map<String, dynamic> json) => Reglages(
     frequenceRappels: json['frequence_rappels'] as String? ?? 'quotidien',
     heureRappel: (json['heure_rappel'] as String? ?? '19:00').substring(0, 5),
+    intervalleNotificationsMin: lireEntier(json['intervalle_notifications_min'], 120),
+    notificationsDebut: (json['notifications_debut'] as String? ?? '09:00').substring(0, 5),
+    notificationsFin: (json['notifications_fin'] as String? ?? '21:00').substring(0, 5),
     heuresRappelSup: [
       for (final h in json['heures_rappel_sup'] as List<dynamic>? ?? const []) (h as String).substring(0, 5),
     ],
@@ -105,6 +116,9 @@ class Reglages {
     'frequence_rappels': frequenceRappels,
     'heure_rappel': heureRappel,
     'heures_rappel_sup': heuresRappelSup,
+    'intervalle_notifications_min': intervalleNotificationsMin,
+    'notifications_debut': notificationsDebut,
+    'notifications_fin': notificationsFin,
     'mots_par_session': motsParSession,
     'mode_revision': modeRevision,
     'heure_changement_jour': heureChangementJour,
@@ -125,6 +139,9 @@ class Reglages {
     String? frequenceRappels,
     String? heureRappel,
     List<String>? heuresRappelSup,
+    int? intervalleNotificationsMin,
+    String? notificationsDebut,
+    String? notificationsFin,
     int? motsParSession,
     String? modeRevision,
     String? heureChangementJour,
@@ -133,6 +150,9 @@ class Reglages {
     frequenceRappels: frequenceRappels ?? this.frequenceRappels,
     heureRappel: heureRappel ?? this.heureRappel,
     heuresRappelSup: heuresRappelSup ?? this.heuresRappelSup,
+    intervalleNotificationsMin: intervalleNotificationsMin ?? this.intervalleNotificationsMin,
+    notificationsDebut: notificationsDebut ?? this.notificationsDebut,
+    notificationsFin: notificationsFin ?? this.notificationsFin,
     motsParSession: motsParSession ?? this.motsParSession,
     modeRevision: modeRevision ?? this.modeRevision,
     heureChangementJour: heureChangementJour ?? this.heureChangementJour,
