@@ -312,7 +312,9 @@ def test_verdict_hors_liste_rejete(services):
         '{"verdict": "parfait", "explication": "x"}',
         '{"verdict": "proche", "explication": "' + "y" * 300 + '"}',
     ]
-    evaluation = asyncio.run(ai_exercise.evaluer(services.ollama, "p", "I am happy", "I am so happy"))
+    evaluation = asyncio.run(
+        ai_exercise.evaluer(services.ollama, "p", "I am happy", "I am so happy")
+    )
     assert evaluation.verdict == "proche" and len(evaluation.explication) == 200
 
 

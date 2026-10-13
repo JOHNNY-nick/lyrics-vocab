@@ -26,7 +26,8 @@ _MENTIONS = re.compile(
 
 def _titre_propre(titre: str, artiste: str) -> str:
     """Titre sans préfixe d'artiste ni mention « [Official Audio] »."""
-    propre = _MENTIONS.sub("", _sans_prefixe_artiste(titre, artiste)).strip()
+    propre = _MENTIONS.sub("", _sans_prefixe_artiste(titre, artiste))
+    propre = re.sub(r"\s*(\[\s*\]|\(\s*\))", "", propre).strip()
     return propre or titre
 
 

@@ -65,9 +65,9 @@ class DeezerClient(ClientExterne):
         nom_artiste = artiste.split(",")[0].strip()
 
         async def appel() -> list[dict]:
+            # La recherche avancée artist:"…" track:"…" renvoie souvent vide : recherche simple.
             reponse = await self.http.get(
-                f"{self.adresse}/search/track",
-                params={"q": f'artist:"{nom_artiste}" track:"{titre}"', "limit": 5},
+                f"{self.adresse}/search", params={"q": f"{nom_artiste} {titre}", "limit": 10}
             )
             verifier_statut_http(reponse)
             reponse.raise_for_status()
@@ -80,7 +80,13 @@ class DeezerClient(ClientExterne):
         if not resultats:
             return None
         cible = nom_artiste.casefold()
-        for r in resultats:
-            if cible in ((r.get("artist") or {}).get("name") or "").casefold() and r.get("link"):
+        titre_cible = titre.casefold().split(" (")[0].split(" ft")[0].strip()
+        du_bon_artiste = [
+            r
+            for r in resultats
+            if cible in ((r.get("artist") or {}).get("name") or "").casefold() and r.get("link")
+        ]
+        for r in du_bon_artiste:
+            if (r.get("title") or "").casefold().startswith(titre_cible):
                 return r["link"]
-        return resultats[0].get("link")
+        return du_bon_artiste[0]["link"] if du_bon_artiste else None

@@ -103,6 +103,7 @@ def test_titre_sans_prefixe_et_casse():
     from app.services.lrclib_client import _titre_propre
 
     assert _titre_propre("Eraser [Official Audio]", "Ed Sheeran") == "Eraser"
+    assert _titre_propre("Happier []", "Ed Sheeran") == "Happier"
     assert _titre_propre("Ed Sheeran - Perfect (Official Video)", "Ed Sheeran") == "Perfect"
     assert _titre_propre("Lose Yourself (Remix)", "Eminem") == "Lose Yourself (Remix)"
     assert accorder_casse("Cœur", "heart") == "cœur"
@@ -148,14 +149,27 @@ def test_enrichissement_sans_aucune_cle(fabrique, services):
 
 def test_deezer_lien_morceau():
     def repondre(requete: httpx.Request) -> httpx.Response:
-        assert requete.url.path == "/search/track"
-        assert 'artist:"Ed Sheeran"' in requete.url.params["q"]
+        assert requete.url.path == "/search"
+        assert requete.url.params["q"] == "Ed Sheeran Perfect"
         return httpx.Response(
             200,
             json={
                 "data": [
-                    {"link": "https://www.deezer.com/track/1", "artist": {"name": "Autre"}},
-                    {"link": "https://www.deezer.com/track/2", "artist": {"name": "Ed Sheeran"}},
+                    {
+                        "title": "Perfect",
+                        "link": "https://www.deezer.com/track/1",
+                        "artist": {"name": "Autre"},
+                    },
+                    {
+                        "title": "Shape of You",
+                        "link": "https://www.deezer.com/track/3",
+                        "artist": {"name": "Ed Sheeran"},
+                    },
+                    {
+                        "title": "Perfect",
+                        "link": "https://www.deezer.com/track/2",
+                        "artist": {"name": "Ed Sheeran"},
+                    },
                 ]
             },
         )
