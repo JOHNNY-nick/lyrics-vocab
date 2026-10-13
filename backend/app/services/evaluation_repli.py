@@ -14,6 +14,88 @@ def _mots(texte: str) -> list[str]:
     return [m for m in propre.split() if m]
 
 
+MOTS_OUTILS = {
+    "a",
+    "an",
+    "the",
+    "is",
+    "are",
+    "was",
+    "were",
+    "be",
+    "been",
+    "am",
+    "i",
+    "you",
+    "he",
+    "she",
+    "it",
+    "we",
+    "they",
+    "my",
+    "your",
+    "his",
+    "her",
+    "its",
+    "our",
+    "their",
+    "me",
+    "him",
+    "us",
+    "them",
+    "to",
+    "of",
+    "in",
+    "on",
+    "at",
+    "for",
+    "with",
+    "and",
+    "or",
+    "but",
+    "so",
+    "that",
+    "this",
+    "these",
+    "those",
+    "do",
+    "does",
+    "did",
+    "have",
+    "has",
+    "had",
+    "will",
+    "would",
+    "can",
+    "could",
+    "not",
+    "very",
+    "i'm",
+    "it's",
+    "don't",
+    "s",
+}
+PREFIXE_COMMUN = 5
+
+
+def _meme_mot(a: str, b: str) -> bool:
+    """Égalité ou même racine (« perfect » et « perfectly »)."""
+    if a == b:
+        return True
+    n = min(len(a), len(b))
+    return n >= PREFIXE_COMMUN and a[:PREFIXE_COMMUN] == b[:PREFIXE_COMMUN]
+
+
+def part_commune(reference: str, reponse: str) -> float:
+    """Part des mots porteurs de sens de la référence retrouvés dans la réponse (0 à 1)."""
+    porteurs = [m for m in _mots(reference) if m not in MOTS_OUTILS] or _mots(reference)
+    if not porteurs:
+        return 0.0
+    mots_reponse = _mots(reponse)
+    trouves = sum(1 for m in porteurs if any(_meme_mot(m, r) for r in mots_reponse))
+    return trouves / len(porteurs)
+
+
 def verdict_par_mots_cles(reference: str, reponse: str) -> str:
     """Part des mots de la référence présents dans la réponse : ≥70 % correct, ≥40 % proche."""
     mots_reference = _mots(reference)

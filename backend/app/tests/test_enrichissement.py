@@ -312,7 +312,7 @@ def test_verdict_hors_liste_rejete(services):
         '{"verdict": "parfait", "explication": "x"}',
         '{"verdict": "proche", "explication": "' + "y" * 300 + '"}',
     ]
-    evaluation = asyncio.run(ai_exercise.evaluer(services.ollama, "p", "I am happy", "I am"))
+    evaluation = asyncio.run(ai_exercise.evaluer(services.ollama, "p", "I am happy", "I am so happy"))
     assert evaluation.verdict == "proche" and len(evaluation.explication) == 200
 
 
@@ -332,3 +332,28 @@ def test_phrase_exercice(services):
         == "Il sourit discrètement."
     )
     assert ai_exercise.mot_principal("discrètement ; plutôt") == "discrètement"
+
+
+def test_garde_fou_reponse_hors_sujet(services):
+    """Un « correct » du modèle pour une réponse sans rapport est corrigé."""
+    reference = "The cake was perfectly cooked, it was golden and fluffy."
+    services.ollama.reponses = ['{"verdict": "correct", "explication": "Bien."}']
+    hors_sujet = asyncio.run(
+        ai_exercise.evaluer(
+            services.ollama,
+            "Le gâteau était parfaitement cuit.",
+            reference,
+            "This plan is perfect for us.",
+        )
+    )
+    assert hors_sujet.verdict == "incorrect"
+    services.ollama.reponses = ['{"verdict": "correct", "explication": "Bien."}']
+    paraphrase = asyncio.run(
+        ai_exercise.evaluer(
+            services.ollama,
+            "Le gâteau était parfaitement cuit.",
+            reference,
+            "The cake was perfectly baked, golden and soft.",
+        )
+    )
+    assert paraphrase.verdict == "correct"

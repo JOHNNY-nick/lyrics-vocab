@@ -8,7 +8,7 @@ from app.core.errors import ErreurApi, IaIndisponible
 from app.core.logging import journaliser
 from app.services.ai_explainer import charger_prompts
 from app.services.deepl_client import DeeplClient
-from app.services.evaluation_repli import verdict_par_mots_cles
+from app.services.evaluation_repli import part_commune, verdict_par_mots_cles
 from app.services.normalisation import sans_accents
 from app.services.ollama_client import OllamaClient
 
@@ -123,6 +123,27 @@ def analyser_json(brut: str) -> tuple[str, str] | None:
     return verdict, explication[:LONGUEUR_MAX_EXPLICATION_VERDICT]
 
 
+SEUIL_HORS_SUJET = 0.25
+SEUIL_CORRECT_MIN = 0.5
+EXPLICATION_HORS_SUJET = (
+    "Ta phrase ne traduit pas celle qui était proposée : compare avec la traduction attendue."
+)
+
+
+def garde_fou(evaluation: Evaluation, reference: str, reponse: str) -> Evaluation:
+    """Corrige un verdict trop généreux du modèle quand la réponse s'éloigne de la référence.
+
+    Moins d'un quart des mots porteurs de sens retrouvés : incorrect. Moins de la moitié : au
+    mieux « proche ». Le modèle reste seul juge au-delà (paraphrases, synonymes).
+    """
+    part = part_commune(reference, reponse)
+    if part < SEUIL_HORS_SUJET and evaluation.verdict != "incorrect":
+        return Evaluation("incorrect", EXPLICATION_HORS_SUJET, evaluation.verdict_repli)
+    if part < SEUIL_CORRECT_MIN and evaluation.verdict == "correct":
+        return Evaluation("proche", evaluation.explication, evaluation.verdict_repli)
+    return evaluation
+
+
 def contient_consigne(reponse: str) -> bool:
     """Détecte une tentative de consigne dans la réponse de l'utilisateur (IA-20)."""
     return bool(MOTIF_INJECTION.search(reponse))
@@ -158,7 +179,7 @@ async def evaluer(ollama: OllamaClient, phrase_fr: str, reference: str, reponse:
             break
         analyse = analyser_json(brut)
         if analyse is not None:
-            return Evaluation(analyse[0], analyse[1], False)
+            return garde_fou(Evaluation(analyse[0], analyse[1], False), reference, reponse)
         journaliser(
             "ia_sortie_invalide",
             "avertissement",
