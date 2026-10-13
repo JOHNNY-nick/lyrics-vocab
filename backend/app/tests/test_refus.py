@@ -16,6 +16,8 @@ def test_traduction_refusee():
         nettoyer_traduction("Je suis désolé, mais je ne peux pas répondre à cette demande") is None
     )
     assert nettoyer_traduction("putain") == "putain"
+    assert nettoyer_traduction("foutu ; foutu") == "foutu"
+    assert nettoyer_traduction("discrètement ; plutôt") == "discrètement ; plutôt"
 
 
 def test_secours_mots_grossiers(services):

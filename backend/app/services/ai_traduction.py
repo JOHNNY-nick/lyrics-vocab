@@ -26,7 +26,9 @@ def nettoyer_traduction(brut: str) -> str | None:
         return None
     if est_refus(texte):
         return None
-    return texte
+    # Sens répétés (« foutu ; foutu ») : chacun une seule fois.
+    sens = list(dict.fromkeys(s.strip() for s in texte.split(";") if s.strip()))
+    return " ; ".join(sens)
 
 
 def accorder_casse(traduction: str, mot: str) -> str:
