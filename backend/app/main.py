@@ -15,6 +15,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
+from starlette.requests import Request
 from starlette.types import Scope
 
 from app.core.config import DOSSIER_BACKEND, Parametres, obtenir_parametres
@@ -35,14 +36,10 @@ from app.services.ollama_client import OllamaClient
 from app.services.quotas import CompteurQuotas
 from app.version import VERSION
 
-FICHIERS_SANS_CACHE = (
-    "index.html",
-    "flutter_service_worker.js",
-    "manifest.json",
-    "version.json",
-    "flutter_bootstrap.js",
-)
-CACHE_LONG = "public, max-age=31536000, immutable"
+# Flutter ne met pas d'empreinte dans le nom de ses fichiers (main.dart.js…) : un cache long
+# garderait l'ancienne version de l'application. Tout est revalidé (ETag, réponse 304).
+CACHE_REVALIDE = "no-cache"
+COOKIE_VERSION = "lv_version_pwa"
 TAILLE_MIN_GZIP = 1000
 
 
@@ -67,11 +64,27 @@ class FichiersPwa(StaticFiles):
                 )
             reponse = FileResponse(Path(str(self.directory)) / "index.html")
             path = "index.html"
-        nom = Path(path).name or "index.html"
-        if nom in FICHIERS_SANS_CACHE or path in ("", "."):
-            reponse.headers["Cache-Control"] = "no-cache"
-        else:
-            reponse.headers["Cache-Control"] = CACHE_LONG
+        reponse.headers["Cache-Control"] = CACHE_REVALIDE
+        if Path(path).name in ("", ".", "index.html"):
+            reponse = self._vider_cache_si_nouvelle_version(reponse, scope)
+        return reponse
+
+    def _vider_cache_si_nouvelle_version(self, reponse, scope: Scope):
+        """Première visite d'une nouvelle version : le navigateur vide son cache HTTP, pour ne
+        pas garder les fichiers d'une version précédente servis avec l'ancien cache long."""
+        index = Path(str(self.directory)) / "index.html"
+        try:
+            infos = (Path(str(self.directory)) / "main.dart.js").stat()
+        except OSError:
+            return reponse
+        version = f"{int(infos.st_mtime)}-{infos.st_size}"
+        if Request(scope).cookies.get(COOKIE_VERSION) == version:
+            return reponse
+        reponse = FileResponse(index, headers={"Cache-Control": CACHE_REVALIDE})  # jamais 304
+        reponse.headers["Clear-Site-Data"] = '"cache"'
+        reponse.set_cookie(
+            COOKIE_VERSION, version, max_age=31536000, secure=True, samesite="strict"
+        )
         return reponse
 
 

@@ -57,8 +57,12 @@ def test_en_tetes_cache(client):
     index = client.get("/")
     assert index.status_code == 200 and index.headers["cache-control"] == "no-cache"
     assert client.get("/flutter_service_worker.js").headers["cache-control"] == "no-cache"
-    script = client.get("/main.dart.js")
-    assert "max-age=31536000" in script.headers["cache-control"]
+    # Fichiers Flutter sans empreinte dans leur nom : toujours revalidés.
+    assert client.get("/main.dart.js").headers["cache-control"] == "no-cache"
+    # Nouvelle version : le navigateur vide son cache une seule fois.
+    assert index.headers["clear-site-data"] == '"cache"'
+    client.cookies.set("lv_version_pwa", index.cookies["lv_version_pwa"])
+    assert "clear-site-data" not in client.get("/").headers
     assert client.get("/un/chemin/de/la/pwa").text == "<html>PWA</html>"
     assert client.get("/api/inexistant").status_code == 404
 
