@@ -104,8 +104,21 @@ class SessionNotifier extends StateNotifier<EtatSession> {
   void _prechargerSuivante() {
     final suivant = state.index + 1;
     if (!_exercices || suivant >= state.file.length || !_doitProduire(suivant)) return;
-    final carte = state.file[suivant];
-    _preparees[carte.id] ??= _depot.creerExercice(carte.motId)..ignore();
+    preparer(state.file[suivant]);
+  }
+
+  /// Prépare la phrase d'une carte (accueil des révisions : la première carte est prête au
+  /// moment de « Commencer »). Un échec est oublié pour être retenté au démarrage.
+  void preparer(RevisionDue carte) {
+    if (carte.traductionFr == null || _preparees.containsKey(carte.id)) return;
+    final demande = _depot.creerExercice(carte.motId);
+    _preparees[carte.id] = demande;
+    demande.then<void>(
+      (_) {},
+      onError: (Object _) {
+        if (identical(_preparees[carte.id], demande)) _preparees.remove(carte.id);
+      },
+    );
   }
 
   DepotDonnees get _depot => ref.read(depotProvider);
@@ -114,7 +127,7 @@ class SessionNotifier extends StateNotifier<EtatSession> {
   /// Avec [exercices], toutes les cartes dont le mot est traduit deviennent des exercices.
   Future<void> demarrer(List<RevisionDue> dues, {bool exercices = false}) async {
     _exercices = exercices;
-    _preparees.clear();
+    _preparees.removeWhere((id, _) => !dues.any((d) => d.id == id));
     state = EtatSession(file: List.of(dues));
     await _preparerCarte();
   }

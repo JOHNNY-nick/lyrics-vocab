@@ -218,6 +218,10 @@ class _Accueil extends ConsumerWidget {
             ),
           );
         }
+        // La phrase du premier mot se prépare pendant que l'accueil est affiché.
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => ref.read(sessionRevisionProvider.notifier).preparer(resultat.items.first),
+        );
         final minutes = ((total * secondesParMot) / 60).ceil();
         return _AvecEnTete(
           enTete: enTete,
