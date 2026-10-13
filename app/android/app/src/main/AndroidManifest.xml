@@ -54,6 +54,10 @@
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
+        <!-- Prononciation des mots : moteur de synthèse vocale de l'appareil (flutter_tts). -->
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE"/>
+        </intent>
         <!-- « Écouter la chanson » : ouverture des liens Deezer / YouTube (url_launcher). -->
         <intent>
             <action android:name="android.intent.action.VIEW"/>

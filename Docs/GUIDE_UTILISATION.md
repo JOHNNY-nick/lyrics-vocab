@@ -43,6 +43,7 @@ Si le mot est déjà dans ta bibliothèque, l'application te le dit et propose d
 
 ## 4. La fiche d'un mot
 
+- **Prononciation** : le bouton haut-parleur 🔊 à droite du mot le prononce en anglais. Un **appui long** le prononce lentement. Le même bouton apparaît sur la carte de révision (après « Révéler ») et sur l'écran d'exercice.
 - **Pastilles** sous le mot : « Argot » si c'est de l'argot, et ton niveau (Nouveau, En cours, Acquis).
 - **Extraits** : sous chaque extrait, le titre et l'artiste, puis le lien **« Écouter la chanson »** qui ouvre la chanson sur Deezer (ou une recherche YouTube si elle n'a pas été trouvée). « Artiste hors de ta liste » signale un extrait trouvé chez un autre artiste que les tiens.
 - **Explication** : marquée « Générée automatiquement », car elle est écrite par l'IA.
@@ -117,6 +118,8 @@ L'exercice a besoin du PC (c'est l'IA du PC qui écrit et corrige les phrases) :
 - **Rappels** : une notification « N mots à réviser » arrive à l'heure choisie (19 h par défaut), seulement s'il y a des mots à revoir, avec un extrait dont le mot est masqué. La toucher ouvre les révisions. Elle fonctionne même sans réseau.
 
 ## 10. Bon à savoir
+
+- **Prononciation** : elle utilise la voix anglaise de ton appareil, sans connexion au PC. Sur le PC, Chrome et Edge en ont une par défaut. Sur Android, si rien ne se passe : Paramètres → Gestion globale → Synthèse vocale (ou « Langue et saisie » → Synthèse vocale) → choisis le moteur Google ou Samsung, puis installe la voix **anglais (États-Unis)**.
 
 - Les extraits font au plus 2 lignes : l'application ne garde jamais les paroles complètes.
 - Tout ce qui est marqué « Générée automatiquement » vient de l'IA et peut contenir des erreurs.

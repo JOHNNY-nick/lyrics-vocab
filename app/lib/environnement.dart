@@ -13,6 +13,7 @@ import 'services/depot_api.dart';
 import 'services/depot_local.dart';
 import 'services/local_cache.dart';
 import 'services/notifications_service.dart';
+import 'services/prononciation_service.dart';
 import 'services/plateforme.dart';
 import 'services/sync_service.dart';
 
@@ -52,6 +53,7 @@ Future<Environnement> construireEnvironnement(Magasin prefs) async {
       depot: DepotApi(api),
       connectivite: ConnectiviteNeutre(),
       notifications: NotificationsNeutres(),
+      prononciation: PrononciationAppareil(),
     );
   }
 
@@ -85,5 +87,6 @@ Future<Environnement> construireEnvironnement(Magasin prefs) async {
     connectivite: connectivite,
     notifications: notifications,
     adresseModifiable: true,
+    prononciation: PrononciationAppareil(),
   );
 }

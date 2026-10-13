@@ -12,6 +12,7 @@ import 'package:lyrics_vocab/services/connectivite_service.dart';
 import 'package:lyrics_vocab/services/depot_local.dart';
 import 'package:lyrics_vocab/services/local_cache.dart';
 import 'package:lyrics_vocab/services/notifications_service.dart';
+import 'package:lyrics_vocab/services/prononciation_service.dart';
 import 'package:lyrics_vocab/strings.dart';
 import 'package:lyrics_vocab/widgets/composants.dart';
 
@@ -147,6 +148,12 @@ void main() {
     expect(find.text('Titre — Artiste'), findsOneWidget);
     expect(find.text(S.ecouterChanson), findsOneWidget);
     expect(find.text(S.sEntrainer), findsOneWidget);
+    // Prononciation : appui (vitesse normale) et appui long (lente).
+    final haut = find.bySemanticsLabel(S.prononcer('lowkey'));
+    await tester.tap(haut);
+    await tester.longPress(haut);
+    await tester.pump();
+    expect((banc.env.prononciation as PrononciationNeutre).demandes, [('lowkey', false), ('lowkey', true)]);
     await arreter(tester);
   });
 

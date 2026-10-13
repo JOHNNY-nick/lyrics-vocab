@@ -98,6 +98,9 @@ class Icones {
   static const actualiser = FormeIcone(chemins: ['M20 12a8 8 0 1 1-2.3-5.6M20 4v4h-4']);
   static const etoile = revisions;
   static const progression = FormeIcone(cercles: [(12, 12, 8)], chemins: ['M12 4a8 8 0 0 1 8 8']);
+  static const hautParleur = FormeIcone(
+    chemins: ['M11 5L6 9H3v6h3l5 4V5z', 'M15.5 8.5a5 5 0 0 1 0 7', 'M18.5 5.5a9 9 0 0 1 0 13'],
+  );
   static const nuage = FormeIcone(chemins: ['M7 18h10a4 4 0 0 0 0-8 6 6 0 0 0-11.5 2A3 3 0 0 0 7 18z']);
 }
 

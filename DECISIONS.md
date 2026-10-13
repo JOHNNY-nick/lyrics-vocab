@@ -106,6 +106,12 @@ Demande de l'utilisateur : une version complètement fonctionnelle, en s'autoris
 | Pas de photos d'artistes sur le téléphone | Les suggestions sont toujours demandées au serveur (photos Deezer) ; la liste sans photo ne sert qu'en cas d'échec. | Conséquence du point précédent. |
 | APK « incompatible » | APK universel (arm64-v8a, armeabi-v7a, x86_64, 52 Mo) au lieu de l'APK arm64 seul. | Certains Galaxy A13 ont un Android 32 bits. |
 
+## Prononciation vocale (2026-10-13)
+
+| Question | Choix | Raison |
+| --- | --- | --- |
+| Prononciation des mots (hors périmètre v1 au cahier, demandée par l'utilisateur) | Synthèse vocale de l'appareil via `flutter_tts` : Web Speech API dans la PWA, moteur de synthèse d'Android sur le téléphone ; voix `en-US`, vitesse 0,45 (appui) et 0,25 (appui long). Bouton sur la fiche, sur la carte de révision après révélation, et sur l'écran d'exercice. | Aucun serveur, aucune clé, fonctionne hors ligne si la voix est installée ; le mot n'est jamais prononcé avant la révélation pour ne pas donner la réponse. |
+
 ## Exigences [S] non réalisées (reportées en v2, REC-03)
 
 - NOT-09 : relance 3 heures après la notification.

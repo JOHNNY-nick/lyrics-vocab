@@ -528,6 +528,19 @@ class _CarteRappel extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // Le mot révélé et sa prononciation (jamais avant la révélation).
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(carte.terme, style: Textes.termeListe.copyWith(color: c.encre)),
+                          ),
+                          BoutonPrononciation(
+                            mot: carte.terme,
+                            service: ref.read(environnementProvider).prononciation,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: Espaces.e8),
                       Text(S.traduction, style: Textes.libelleCarte.copyWith(color: c.texteSecondaire)),
                       const SizedBox(height: Espaces.e4),
                       Text(

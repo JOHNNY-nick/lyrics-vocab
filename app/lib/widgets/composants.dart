@@ -6,6 +6,7 @@ import '../models/extrait.dart';
 import '../models/revision.dart';
 import '../services/extraction.dart';
 import '../services/plateforme.dart';
+import '../services/prononciation_service.dart';
 import '../strings.dart';
 import '../theme/jetons.dart';
 import 'icones.dart';
@@ -1303,6 +1304,34 @@ class LienChanson extends StatelessWidget {
         onPressed: () => ouvrirLien(extrait.lienEcoute).then((ok) {
           if (!ok && context.mounted) afficherMessage(context, S.lienImpossible);
         }),
+      ),
+    ),
+  );
+}
+
+/// Bouton haut-parleur : prononce le mot en anglais ; appui long pour une diction lente.
+class BoutonPrononciation extends StatelessWidget {
+  const BoutonPrononciation({super.key, required this.mot, required this.service, this.couleur});
+  final String mot;
+  final ServicePrononciation service;
+  final Color? couleur;
+
+  Future<void> _dire(BuildContext context, {required bool lent}) async {
+    final ok = await service.prononcer(mot, lent: lent);
+    if (!ok && context.mounted) afficherMessage(context, S.prononciationImpossible);
+  }
+
+  @override
+  Widget build(BuildContext context) => Tooltip(
+    message: S.prononciationLente,
+    child: Cliquable(
+      onTap: () => _dire(context, lent: false),
+      onLongPress: () => _dire(context, lent: true),
+      libelle: S.prononcer(mot),
+      rayon: Rayons.etiquetteIA,
+      child: SizedBox.square(
+        dimension: Tailles.zoneTactileMin,
+        child: Center(child: IconeTrace(Icones.hautParleur, couleur: couleur ?? context.couleurs.violet)),
       ),
     ),
   );

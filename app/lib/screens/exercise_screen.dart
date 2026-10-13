@@ -154,9 +154,24 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen> {
                       Text(S.exerciceTitre, style: Textes.date.copyWith(color: c.surViolet)),
                       Padding(
                         padding: const EdgeInsets.only(top: Espaces.e10, bottom: Espaces.e8),
-                        child: Semantics(
-                          header: true,
-                          child: Text(widget.terme, style: Textes.titreEcran.copyWith(color: c.surViolet)),
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: Semantics(
+                                header: true,
+                                child: Text(
+                                  widget.terme,
+                                  style: Textes.titreEcran.copyWith(color: c.surViolet),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: Espaces.e8),
+                            BoutonPrononciation(
+                              mot: widget.terme,
+                              service: ref.read(environnementProvider).prononciation,
+                              couleur: c.surViolet,
+                            ),
+                          ],
                         ),
                       ),
                       Opacity(

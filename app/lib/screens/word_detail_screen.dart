@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../models/mot.dart';
 import '../providers/providers.dart';
 import '../services/api_client.dart';
+import '../services/prononciation_service.dart';
 import '../strings.dart';
 import '../theme/jetons.dart';
 import '../widgets/composants.dart';
@@ -94,6 +95,7 @@ class WordDetailScreen extends ConsumerWidget {
             onSupprimer: () => _supprimer(context, ref),
             onRelancer: () => _relancer(context, ref),
             couleurs: c,
+            prononciation: ref.read(environnementProvider).prononciation,
           );
         },
       ),
@@ -108,8 +110,10 @@ class _Fiche extends StatelessWidget {
     required this.onSupprimer,
     required this.onRelancer,
     required this.couleurs,
+    required this.prononciation,
   });
   final Mot mot;
+  final ServicePrononciation prononciation;
   final bool delaiDepasse;
   final VoidCallback onSupprimer;
   final VoidCallback onRelancer;
@@ -176,9 +180,18 @@ class _Fiche extends StatelessWidget {
           Text(S.ficheDuMot, style: Textes.date.copyWith(color: c.vertTexte)),
           Padding(
             padding: const EdgeInsets.only(top: Espaces.e10, bottom: Espaces.e12),
-            child: Semantics(
-              header: true,
-              child: Text(mot.terme, style: Textes.titreMot.copyWith(color: c.vertTexte)),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Flexible(
+                  child: Semantics(
+                    header: true,
+                    child: Text(mot.terme, style: Textes.titreMot.copyWith(color: c.vertTexte)),
+                  ),
+                ),
+                const SizedBox(width: Espaces.e8),
+                BoutonPrononciation(mot: mot.terme, service: prononciation, couleur: c.vertTexte),
+              ],
             ),
           ),
           Wrap(
