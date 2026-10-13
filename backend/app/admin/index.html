@@ -231,7 +231,7 @@ function rendre() {
     if (u.acces === "code" || u.acces === "retire") {
       actions.push(`<button class="bouton discret" data-action="code" data-i="${i}">Nouveau code</button>`);
     }
-    if (u.acces === "code") actions.push(`<button class="bouton discret" data-action="retirer" data-i="${i}">Retirer l'accès</button>`);
+    if (u.acces === "code" && u.connecte) actions.push(`<button class="bouton discret" data-action="retirer" data-i="${i}">Retirer l'accès</button>`);
     if (u.acces === "tailscale") actions.push(`<button class="bouton discret" data-action="tailscale" data-i="${i}">Retirer l'accès</button>`);
     if (u.acces !== "proprietaire" && (u.connecte || u.acces === "retire")) {
       actions.push(`<button class="bouton danger" data-action="supprimer" data-i="${i}">Supprimer</button>`);
