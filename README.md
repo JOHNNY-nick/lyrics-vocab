@@ -261,6 +261,17 @@ Modifier `OLLAMA_MODEL` ou la clé dans `.env`, redémarrer la tâche du backend
 2. Console Tailscale (https://login.tailscale.com/admin/machines) → appareil **desktop-jd3qf3s** → **⋯ → Share** → inviter l'ami par e-mail ou par lien (gratuit).
 3. Lui envoyer `lyrics-vocab.apk` et le guide `Docs/GUIDE_AMIS.md`.
 
+**Sans Tailscale (tunnel Cloudflare gratuit, déjà en service)** : la tâche planifiée « Lyrics Vocab Tunnel » lance `scripts/tunnel.ps1` à l'ouverture de session ; l'adresse `https://….trycloudflare.com` change à chaque démarrage et est publiée sur la branche `adresse` du dépôt, où l'application la retrouve seule. Chaque ami a besoin d'un code d'invitation :
+
+```powershell
+cd C:\lyrics-vocab\depotackend
+.\.venv\Scripts\python.exe ..\scripts\inviter.py Prénom      # crée un code LV-XXXX-XXXX (sa bibliothèque)
+.\.venv\Scripts\python.exe ..\scripts\inviter.py --liste
+.\.venv\Scripts\python.exe ..\scripts\inviter.py --retirer Prénom
+```
+
+Les codes sont stockés hachés dans `C:/lyrics-vocab/secrets/codes_acces.json` (`CODES_ACCES_FICHIER`). Sans code valide, le tunnel ne donne accès qu'à `/api/health`.
+
 Pour retirer un ami : console Tailscale → Machines → desktop-jd3qf3s → Share → révoquer. Sa base (`lyrics_vocab_u_…`) reste sur le PC ; la supprimer avec `DROP DATABASE` si besoin.
 
 ## Dépannage

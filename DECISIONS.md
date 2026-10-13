@@ -170,6 +170,15 @@ Demande de l'utilisateur : une version complètement fonctionnelle, en s'autoris
 | Sauvegarde | Le script quotidien sauvegarde aussi chaque base d'ami. | Leurs données sont sur ce PC. |
 | Limites | Android seulement ; PC allumé ; une carte graphique de 4 Go pour tous (demandes en file d'attente au-delà de 2 ou 3 personnes simultanées). | Voir `Docs/GUIDE_AMIS.md`. |
 
+## Accès sans Tailscale : tunnel Cloudflare (2026-10-13)
+
+| Sujet | Décision | Raison |
+| --- | --- | --- |
+| Tunnel | `cloudflared tunnel --url` (trycloudflare, gratuit, sans compte) lancé par `scripts/tunnel.ps1` (tâche « Lyrics Vocab Tunnel ») ; l'adresse, qui change à chaque démarrage, est publiée dans `adresse.json` sur la branche `adresse` (API GitHub) ; l'application la lit quand le PC ne répond plus (au plus une fois par minute) et l'enregistre après avoir vérifié qu'elle répond. | Choix de l'utilisateur : les amis n'avaient pas réussi à joindre le PC par Tailscale (réglage DNS de leur téléphone). |
+| Code d'invitation | Toute requête du tunnel (en-tête `Cf-Ray`, ajouté par Cloudflare) doit porter `X-Code-Acces` ; sans code valide : 401 `code_acces_requis`, sauf `/api/health`. Le code désigne le compte (`invite:<prénom>`, ou le propriétaire), donc la base. Codes aléatoires `LV-XXXX-XXXX` (31⁸ possibilités) stockés hachés (SHA-256), créés par `scripts/inviter.py`. | Vérifié : l'en-tête Tailscale-User-Login traverse le tunnel sans contrôle ; il y est donc ignoré. Sans code, un inconnu connaissant l'adresse (publique sur GitHub) atteindrait sinon la base du propriétaire. |
+| Application | Écran « Code d'invitation » avant le choix des artistes quand le tunnel demande un code ; vérification du code limitée aux adresses `*.trycloudflare.com`. | Les appareils joints par Tailscale (propriétaire) ne voient rien de changé. |
+| Limites | trycloudflare n'offre aucune garantie de disponibilité ; l'adresse change à chaque redémarrage du PC (quelques secondes de recherche côté application). | Gratuit, sans nom de domaine. |
+
 ## Exigences [S] non réalisées (reportées en v2, REC-03)
 
 - NOT-09 : relance 3 heures après la notification.
