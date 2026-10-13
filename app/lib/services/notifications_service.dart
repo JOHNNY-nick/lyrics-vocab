@@ -1,6 +1,8 @@
 // Rappels locaux Android (partie J, 40.4) ; version neutre sur le web (NOT-10).
 import 'dart:async';
 
+import 'dart:ui' show Color;
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
@@ -14,6 +16,8 @@ import 'local_cache.dart';
 const joursPlanifies = 3;
 const notificationsMax = 60;
 const canalId = 'mots';
+const iconeNotification = 'ic_notification'; // res/drawable/ic_notification.xml
+const couleurNotification = Color(0xFF6C4DFF);
 const canalNom = 'Un mot de ta bibliothèque';
 const longueurTexteMax = 180;
 const multiplicateurTirage = 2654435761;
@@ -139,7 +143,7 @@ class NotificationsAndroid implements ServiceNotifications {
       tz.setLocalLocation(tz.UTC);
     }
     await _plugin.initialize(
-      const InitializationSettings(android: AndroidInitializationSettings('@mipmap/ic_launcher')),
+      const InitializationSettings(android: AndroidInitializationSettings(iconeNotification)),
       onDidReceiveNotificationResponse: (reponse) {
         if (reponse.payload != null) _appuis.add(reponse.payload!);
       },
@@ -187,6 +191,8 @@ class NotificationsAndroid implements ServiceNotifications {
           importance: Importance.defaultImportance,
           priority: Priority.defaultPriority,
           styleInformation: BigTextStyleInformation(r.corps, contentTitle: r.titre),
+          icon: iconeNotification,
+          color: couleurNotification, // violet du logo, appliqué à la petite icône
         ),
       );
       try {

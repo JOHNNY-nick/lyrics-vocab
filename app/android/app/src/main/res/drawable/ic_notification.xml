@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Petite icône des notifications : micro du logo en silhouette blanche (Android colore
+     lui-même cette icône ; une icône en couleurs s'affiche en carré gris). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M76,58a24,24 0,0 1,48 0v38a24,24 0,0 1,-48 0z" />
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="11"
+        android:strokeLineCap="round"
+        android:pathData="M56,100a44,44 0,0 0,88 0" />
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="11"
+        android:strokeLineCap="round"
+        android:pathData="M100,144V164M76,166H124" />
+</vector>

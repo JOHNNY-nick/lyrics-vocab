@@ -6,14 +6,19 @@ param(
     [string]$Texte = "",
     [Parameter(Mandatory = $true)][string]$MotId,
     [Parameter(Mandatory = $true)][string]$UrlApp,
-    [string]$Icone = "C:/lyrics-vocab/icone/lyrics-vocab.png"
+    [string]$Icone = "C:\lyrics-vocab\icone\lyrics-vocab.png"
 )
 
 $Aumid = "LyricsVocab.Application"
 $Cle = "HKCU:\Software\Classes\AppUserModelId\$Aumid"
 if (-not (Test-Path $Cle)) { New-Item -Path $Cle -Force | Out-Null }
 Set-ItemProperty -Path $Cle -Name DisplayName -Value "Lyrics & Vocab"
-if (Test-Path $Icone) { Set-ItemProperty -Path $Cle -Name IconUri -Value $Icone }
+# Windows n'accepte qu'un chemin complet avec des barres obliques inverses.
+$Icone = [System.IO.Path]::GetFullPath($Icone)
+if (Test-Path $Icone) {
+    Set-ItemProperty -Path $Cle -Name IconUri -Value $Icone
+    Set-ItemProperty -Path $Cle -Name IconBackgroundColor -Value "FF6C4DFF"
+}
 
 # Lien lyricsvocab:// : un petit script ouvre la fiche sans fenêtre de console.
 $Ouvrir = Join-Path $PSScriptRoot "ouvrir_mot.vbs"
@@ -34,6 +39,7 @@ $Lien = "lyricsvocab://mot/$MotId"
 $Xml = @"
 <toast launch="$Lien" activationType="protocol">
   <visual><binding template="ToastGeneric">
+    <image placement="appLogoOverride" hint-crop="circle" src="$(Echapper ([Uri]$Icone).AbsoluteUri)"/>
     <text>$(Echapper $Titre)</text>
     <text>$(Echapper $Texte)</text>
   </binding></visual>
