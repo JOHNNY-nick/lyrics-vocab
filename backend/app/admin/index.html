@@ -1,0 +1,362 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Administration — Lyrics &amp; Vocab</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<style>
+  @font-face { font-family: "Bricolage"; src: url("/assets/assets/fonts/BricolageGrotesque-ExtraBold.ttf"); font-weight: 800; }
+  @font-face { font-family: "Bricolage"; src: url("/assets/assets/fonts/BricolageGrotesque-SemiBold.ttf"); font-weight: 600; }
+  @font-face { font-family: "Jakarta"; src: url("/assets/assets/fonts/PlusJakartaSans-Medium.ttf"); font-weight: 500; }
+  @font-face { font-family: "Jakarta"; src: url("/assets/assets/fonts/PlusJakartaSans-Bold.ttf"); font-weight: 700; }
+
+  :root {
+    --violet: #6C4DFF; --violet-fonce: #4B2FD6; --rose: #FF5C8A; --jaune: #FFC93C; --turquoise: #19C3B1;
+    --encre: #1B1740; --fond: #F6F4FF; --surface: #FFFFFF; --lavande: #EAE5FF; --bordure: #E3DEFA;
+    --secondaire: #5A5680; --sur-accent: #1B1740;
+    --badge-code: #EAE5FF; --badge-code-texte: #4B2FD6;
+    --badge-ts: #BFF1EA; --badge-ts-texte: #0B2B28;
+    --badge-retire: #FFD3E0; --badge-retire-texte: #7A1239;
+    --badge-attente: #FFE9A8; --badge-attente-texte: #1B1740;
+    --ombre: 0 10px 30px rgba(27, 23, 64, .08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --violet-fonce: #B8A9FF; --encre: #F6F4FF; --fond: #14112E; --surface: #1F1B45; --lavande: #2B2561;
+      --bordure: #3A3470; --secondaire: #B8B3E0; --badge-code: #2B2561; --badge-code-texte: #CFC5FF;
+      --ombre: 0 10px 30px rgba(0, 0, 0, .35);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fond); color: var(--encre); font: 500 15px/1.5 "Jakarta", system-ui, sans-serif; }
+  button, input { font: inherit; }
+  .entete { background: var(--violet); color: #fff; padding: 36px 16px 84px; }
+  .entete .contenu, main { max-width: 1040px; margin: 0 auto; }
+  .entete h1 { font: 800 clamp(28px, 5vw, 40px)/1.1 "Bricolage", system-ui; margin: 6px 0 8px; }
+  .entete p { margin: 0; opacity: .85; }
+  .surtitre { font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
+  main { padding: 0 16px 48px; margin-top: -56px; display: grid; gap: 20px; }
+  .carte { background: var(--surface); border-radius: 24px; padding: 24px; box-shadow: var(--ombre); }
+  .carte h2 { font: 800 21px/1.2 "Bricolage", system-ui; margin: 0 0 4px; }
+  .aide { color: var(--secondaire); margin: 0 0 16px; }
+  .ligne-saisie { display: flex; gap: 10px; flex-wrap: wrap; }
+  .ligne-saisie input { flex: 1 1 220px; min-height: 48px; border: 2px solid var(--bordure); border-radius: 14px;
+    padding: 0 16px; background: var(--fond); color: var(--encre); }
+  .ligne-saisie input:focus { outline: none; border-color: var(--violet); }
+  .bouton { min-height: 48px; border: 0; border-radius: 14px; padding: 0 20px; font-weight: 700; cursor: pointer;
+    background: var(--rose); color: var(--sur-accent); }
+  .bouton:disabled { opacity: .5; cursor: default; }
+  .bouton.secondaire { background: var(--lavande); color: var(--violet-fonce); }
+  .bouton.discret { background: transparent; color: var(--violet-fonce); padding: 0 10px; min-height: 40px; }
+  .bouton.danger { background: transparent; color: var(--rose); padding: 0 10px; min-height: 40px; }
+  .bouton:focus-visible, input:focus-visible { outline: 3px solid var(--jaune); outline-offset: 2px; }
+  .resultat { margin-top: 18px; border: 2px dashed var(--violet); border-radius: 18px; padding: 18px; display: none; }
+  .resultat.visible { display: block; }
+  .code { font: 800 32px/1 "Bricolage", system-ui; letter-spacing: .06em; color: var(--violet-fonce); margin: 6px 0 12px; }
+  .message { white-space: pre-wrap; background: var(--fond); border-radius: 14px; padding: 14px; margin: 12px 0; color: var(--secondaire); }
+  .resume { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .tuile { background: var(--lavande); border-radius: 16px; padding: 12px 16px; min-width: 120px; }
+  .tuile b { display: block; font: 800 24px/1.1 "Bricolage", system-ui; color: var(--violet-fonce); }
+  .tuile span { color: var(--secondaire); font-size: 13px; }
+  .entete-liste { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--secondaire);
+    padding: 10px 8px; border-bottom: 2px solid var(--bordure); }
+  td { padding: 12px 8px; border-bottom: 1px solid var(--bordure); vertical-align: middle; }
+  td.nombre, th.nombre { text-align: right; font-variant-numeric: tabular-nums; }
+  .personne { display: flex; align-items: center; gap: 12px; font-weight: 700; }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font: 800 16px "Bricolage", system-ui;
+    flex: none; color: #fff; }
+  .compte { display: block; font-weight: 500; font-size: 12px; color: var(--secondaire); }
+  .badge { display: inline-block; border-radius: 999px; padding: 3px 10px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .b-proprietaire { background: var(--violet); color: #fff; }
+  .b-code { background: var(--badge-code); color: var(--badge-code-texte); }
+  .b-tailscale { background: var(--badge-ts); color: var(--badge-ts-texte); }
+  .b-retire { background: var(--badge-retire); color: var(--badge-retire-texte); }
+  .b-attente { background: var(--badge-attente); color: var(--badge-attente-texte); }
+  .actions { display: flex; gap: 2px; justify-content: flex-end; flex-wrap: wrap; }
+  .vide, .erreur-globale { color: var(--secondaire); padding: 18px 0; }
+  .erreur-globale { color: var(--rose); font-weight: 700; }
+  .pied { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; color: var(--secondaire); }
+  .pied code { background: var(--fond); padding: 6px 10px; border-radius: 10px; color: var(--encre); word-break: break-all; }
+  .bandeau { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(140%); background: var(--encre);
+    color: var(--fond); border-radius: 14px; padding: 12px 18px; font-weight: 700; transition: transform .25s; max-width: calc(100% - 32px); }
+  .bandeau.visible { transform: translateX(-50%) translateY(0); }
+  dialog { border: 0; border-radius: 24px; padding: 24px; max-width: 440px; width: calc(100% - 32px); background: var(--surface); color: var(--encre); }
+  dialog::backdrop { background: rgba(20, 17, 46, .55); }
+  dialog h3 { font: 800 22px/1.2 "Bricolage", system-ui; margin: 0 0 8px; }
+  dialog input { width: 100%; margin: 12px 0 4px; }
+  .boutons-dialogue { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
+  .erreur-champ { color: var(--rose); font-size: 13px; min-height: 18px; }
+
+  @media (max-width: 720px) {
+    thead { display: none; }
+    table, tbody, tr, td { display: block; width: 100%; }
+    tr { border-bottom: 1px solid var(--bordure); padding: 12px 0; display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; }
+    td { border: 0; padding: 0; }
+    td.colonne-personne { grid-column: 1 / -1; }
+    td.nombre { text-align: left; color: var(--secondaire); font-size: 13px; }
+    td.nombre::before { content: attr(data-libelle) " : "; }
+    td.colonne-acces, td.colonne-activite { font-size: 13px; color: var(--secondaire); }
+    td.actions-cellule { grid-column: 1 / -1; }
+    .actions { justify-content: flex-start; }
+  }
+</style>
+</head>
+<body>
+<header class="entete">
+  <div class="contenu">
+    <div class="surtitre">Lyrics &amp; Vocab · Administration</div>
+    <h1>Utilisateurs</h1>
+    <p>Les amis invités sur ce PC, leurs codes et leur activité. Page visible par toi seul.</p>
+  </div>
+</header>
+
+<main>
+  <section class="carte" aria-labelledby="titre-inviter">
+    <h2 id="titre-inviter">Inviter un ami</h2>
+    <p class="aide">Crée un code d'invitation : il ouvre la bibliothèque de cet ami, sans expiration, jusqu'à ce que tu le retires.</p>
+    <form class="ligne-saisie" id="formulaire-invitation">
+      <label for="prenom" class="visually-hidden" hidden>Prénom</label>
+      <input id="prenom" name="prenom" placeholder="Prénom (ex. Sarah)" maxlength="40" autocomplete="off" required>
+      <button class="bouton" type="submit" id="bouton-inviter">Créer le code</button>
+    </form>
+    <div class="resultat" id="resultat" aria-live="polite">
+      <div>Code d'invitation pour <b id="resultat-prenom"></b> :</div>
+      <div class="code" id="resultat-code"></div>
+      <button class="bouton secondaire" type="button" id="copier-code">Copier le code</button>
+      <div class="message" id="resultat-message"></div>
+      <button class="bouton secondaire" type="button" id="copier-message">Copier le message à envoyer</button>
+      <p class="aide" style="margin:12px 0 0">Le code n'est affiché qu'une fois. Perdu ? Crée-en un nouveau avec le même prénom : il ouvrira la même bibliothèque.</p>
+    </div>
+  </section>
+
+  <section class="carte" aria-labelledby="titre-liste">
+    <div class="entete-liste">
+      <h2 id="titre-liste">Tous les utilisateurs</h2>
+      <button class="bouton discret" type="button" id="actualiser">Actualiser</button>
+    </div>
+    <div class="resume" id="resume"></div>
+    <div id="zone-liste"><p class="vide">Chargement…</p></div>
+  </section>
+
+  <section class="carte" aria-labelledby="titre-acces">
+    <h2 id="titre-acces">Adresse du PC pour les amis</h2>
+    <p class="aide">Elle change à chaque redémarrage du tunnel ; l'application la retrouve seule.</p>
+    <div class="pied" id="pied">…</div>
+  </section>
+</main>
+
+<dialog id="dialogue-suppression" aria-labelledby="titre-suppression">
+  <form method="dialog" id="formulaire-suppression">
+    <h3 id="titre-suppression">Supprimer <span id="sup-nom"></span> ?</h3>
+    <p class="aide">Son accès est bloqué et <b>toute sa bibliothèque est effacée</b> (<span id="sup-mots"></span>). Les sauvegardes des 14 derniers jours la contiennent encore.</p>
+    <label for="sup-confirmation">Tape <b id="sup-attendu"></b> pour confirmer :</label>
+    <div class="ligne-saisie"><input id="sup-confirmation" autocomplete="off"></div>
+    <div class="erreur-champ" id="sup-erreur" role="alert"></div>
+    <div class="boutons-dialogue">
+      <button class="bouton secondaire" value="annuler" formnovalidate>Annuler</button>
+      <button class="bouton" id="sup-valider" value="valider">Supprimer définitivement</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="bandeau" id="bandeau" role="status"></div>
+
+<script>
+const COULEURS = ["#6C4DFF", "#FF5C8A", "#19C3B1", "#FFC93C", "#FF8A4C", "#4B2FD6"];
+const ACCES = {
+  proprietaire: ["Propriétaire", "b-proprietaire"],
+  code: ["Code d'invitation", "b-code"],
+  tailscale: ["Tailscale", "b-tailscale"],
+  retire: ["Accès retiré", "b-retire"],
+  inconnu: ["Inconnu", "b-retire"],
+};
+let etat = { utilisateurs: [], apk: null, tunnel: null };
+
+const $ = (id) => document.getElementById(id);
+const echapper = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function bandeau(texte) {
+  const b = $("bandeau");
+  b.textContent = texte;
+  b.classList.add("visible");
+  clearTimeout(bandeau.minuterie);
+  bandeau.minuterie = setTimeout(() => b.classList.remove("visible"), 3500);
+}
+
+async function api(chemin, corps) {
+  const reponse = await fetch(chemin, corps === undefined ? {} : {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(corps),
+  });
+  const donnees = await reponse.json().catch(() => ({}));
+  if (!reponse.ok) throw new Error(donnees.message || `Erreur ${reponse.status}`);
+  return donnees;
+}
+
+function relatif(iso) {
+  if (!iso) return "—";
+  const date = new Date(iso);
+  const minutes = Math.round((Date.now() - date) / 60000);
+  if (minutes < 2) return "à l'instant";
+  if (minutes < 60) return `il y a ${minutes} min`;
+  const heures = Math.round(minutes / 60);
+  if (heures < 24) return `il y a ${heures} h`;
+  const jours = Math.round(heures / 24);
+  if (jours < 30) return jours === 1 ? "hier" : `il y a ${jours} jours`;
+  return date.toLocaleDateString("fr-FR");
+}
+
+function avatar(nom, i) {
+  const initiale = (nom || "?").replace(/^invite:/, "").charAt(0).toUpperCase();
+  const fond = COULEURS[i % COULEURS.length];
+  const texte = fond === "#FFC93C" || fond === "#19C3B1" || fond === "#FF8A4C" ? "#1B1740" : "#fff";
+  return `<span class="avatar" style="background:${fond};color:${texte}" aria-hidden="true">${echapper(initiale)}</span>`;
+}
+
+function rendre() {
+  const liste = etat.utilisateurs;
+  const amis = liste.filter((u) => u.acces !== "proprietaire");
+  const actifs = amis.filter((u) => u.derniere_activite && Date.now() - new Date(u.derniere_activite) < 7 * 864e5);
+  $("resume").innerHTML = `
+    <div class="tuile"><b>${amis.length}</b><span>ami${amis.length > 1 ? "s" : ""} invité${amis.length > 1 ? "s" : ""}</span></div>
+    <div class="tuile"><b>${actifs.length}</b><span>actif${actifs.length > 1 ? "s" : ""} cette semaine</span></div>
+    <div class="tuile"><b>${amis.reduce((s, u) => s + u.mots, 0)}</b><span>mots chez les amis</span></div>`;
+  if (!liste.length) { $("zone-liste").innerHTML = '<p class="vide">Aucun utilisateur.</p>'; return; }
+  const lignes = liste.map((u, i) => {
+    const [libelle, classe] = !u.connecte ? ["Pas encore connecté", "b-attente"] : ACCES[u.acces] || ACCES.inconnu;
+    const actions = [];
+    if (u.acces === "code" || u.acces === "retire") {
+      actions.push(`<button class="bouton discret" data-action="code" data-i="${i}">Nouveau code</button>`);
+    }
+    if (u.acces === "code") actions.push(`<button class="bouton discret" data-action="retirer" data-i="${i}">Retirer l'accès</button>`);
+    if (u.acces === "tailscale") actions.push(`<button class="bouton discret" data-action="tailscale" data-i="${i}">Retirer l'accès</button>`);
+    if (u.acces !== "proprietaire" && (u.connecte || u.acces === "retire")) {
+      actions.push(`<button class="bouton danger" data-action="supprimer" data-i="${i}">Supprimer</button>`);
+    } else if (u.acces === "code" && !u.connecte) {
+      actions.push(`<button class="bouton danger" data-action="retirer" data-i="${i}">Annuler l'invitation</button>`);
+    }
+    const sousTitre = u.acces === "tailscale" ? `<span class="compte">${echapper(u.compte)}</span>` : "";
+    return `<tr>
+      <td class="colonne-personne"><div class="personne">${avatar(u.nom, i)}<div>${echapper(u.nom)}${sousTitre}</div></div></td>
+      <td class="colonne-acces"><span class="badge ${classe}">${libelle}</span></td>
+      <td class="nombre" data-libelle="Mots">${u.mots}</td>
+      <td class="nombre" data-libelle="Révisions">${u.revisions}</td>
+      <td class="colonne-activite" title="${echapper(u.derniere_activite ? new Date(u.derniere_activite).toLocaleString("fr-FR") : "")}">${relatif(u.derniere_activite)}</td>
+      <td class="actions-cellule"><div class="actions">${actions.join("")}</div></td>
+    </tr>`;
+  }).join("");
+  $("zone-liste").innerHTML = `<table>
+    <thead><tr><th>Utilisateur</th><th>Accès</th><th class="nombre">Mots</th><th class="nombre">Révisions</th><th>Dernière activité</th><th><span hidden>Actions</span></th></tr></thead>
+    <tbody>${lignes}</tbody></table>`;
+  $("pied").innerHTML = etat.tunnel
+    ? `<code>${echapper(etat.tunnel)}</code><button class="bouton discret" id="copier-adresse">Copier</button>
+       <span>· Application : <a href="${echapper(etat.apk)}">lyrics-vocab.apk</a></span>`
+    : "Le tunnel n'est pas lancé (tâche « Lyrics Vocab Tunnel »).";
+  const copier = $("copier-adresse");
+  if (copier) copier.onclick = () => copierTexte(etat.tunnel, "Adresse copiée.");
+}
+
+async function charger() {
+  try {
+    etat = await api("/api/admin/utilisateurs");
+    rendre();
+  } catch (e) {
+    $("zone-liste").innerHTML = `<p class="erreur-globale">${echapper(e.message)}</p>`;
+  }
+}
+
+async function copierTexte(texte, confirmation) {
+  try { await navigator.clipboard.writeText(texte); bandeau(confirmation); }
+  catch { bandeau("Copie impossible : sélectionne le texte à la main."); }
+}
+
+function messageInvitation(prenom, code) {
+  return `Salut ${prenom} ! Voici l'appli Lyrics & Vocab pour apprendre l'anglais avec tes chansons.\n\n` +
+    `1. Installe le fichier lyrics-vocab.apk (autorise l'installation si Android le demande).\n` +
+    `2. Ouvre Lyrics & Vocab et attends quelques secondes : l'écran « Code d'invitation » apparaît.\n` +
+    `3. Tape ton code : ${code} puis Valider.\n` +
+    `4. Choisis tes artistes et ajoute tes mots.\n\nGarde ton code pour toi, il ouvre ta bibliothèque.`;
+}
+
+async function creerCode(prenom) {
+  const bouton = $("bouton-inviter");
+  bouton.disabled = true;
+  try {
+    const r = await api("/api/admin/invitations", { prenom });
+    $("resultat-prenom").textContent = r.prenom;
+    $("resultat-code").textContent = r.code;
+    $("resultat-message").textContent = messageInvitation(r.prenom, r.code);
+    $("resultat").classList.add("visible");
+    $("resultat").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    $("prenom").value = "";
+    await charger();
+  } catch (e) {
+    bandeau(e.message);
+  } finally {
+    bouton.disabled = false;
+  }
+}
+
+$("formulaire-invitation").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const prenom = $("prenom").value.trim();
+  if (prenom) creerCode(prenom);
+});
+$("copier-code").onclick = () => copierTexte($("resultat-code").textContent, "Code copié.");
+$("copier-message").onclick = () => copierTexte($("resultat-message").textContent, "Message copié.");
+$("actualiser").onclick = charger;
+
+let cible = null;
+$("zone-liste").addEventListener("click", async (e) => {
+  const bouton = e.target.closest("button[data-action]");
+  if (!bouton) return;
+  const u = etat.utilisateurs[Number(bouton.dataset.i)];
+  const action = bouton.dataset.action;
+  if (action === "code") return creerCode(u.nom);
+  if (action === "tailscale") {
+    return bandeau("Ami venu par Tailscale : révoque le partage dans la console Tailscale (Machines → desktop-jd3qf3s → Share).");
+  }
+  if (action === "retirer") {
+    if (!confirm(`Bloquer l'accès de ${u.nom} ? Ses mots restent sur le PC ; un nouveau code les lui rendra.`)) return;
+    try { await api("/api/admin/retraits", { compte: u.compte }); bandeau(`Accès de ${u.nom} retiré.`); await charger(); }
+    catch (err) { bandeau(err.message); }
+    return;
+  }
+  if (action === "supprimer") {
+    cible = u;
+    $("sup-nom").textContent = u.nom;
+    $("sup-attendu").textContent = u.nom;
+    $("sup-mots").textContent = `${u.mots} mot${u.mots > 1 ? "s" : ""}, ${u.revisions} révision${u.revisions > 1 ? "s" : ""}`;
+    $("sup-confirmation").value = "";
+    $("sup-erreur").textContent = "";
+    $("dialogue-suppression").showModal();
+  }
+});
+
+$("formulaire-suppression").addEventListener("submit", async (e) => {
+  if (e.submitter?.value !== "valider") return;
+  e.preventDefault();
+  const confirmation = $("sup-confirmation").value.trim();
+  if (confirmation.toLowerCase() !== cible.nom.toLowerCase()) {
+    $("sup-erreur").textContent = "Le nom tapé ne correspond pas.";
+    return;
+  }
+  $("sup-valider").disabled = true;
+  try {
+    await api("/api/admin/suppressions", { compte: cible.compte, confirmation });
+    $("dialogue-suppression").close();
+    bandeau(`Bibliothèque de ${cible.nom} supprimée.`);
+    await charger();
+  } catch (err) {
+    $("sup-erreur").textContent = err.message;
+  } finally {
+    $("sup-valider").disabled = false;
+  }
+});
+
+charger();
+</script>
+</body>
+</html>

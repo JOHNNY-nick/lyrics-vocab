@@ -27,7 +27,7 @@ from app.core.locataires import Locataire, Locataires
 from app.core.logging import configurer_journaux, journaliser
 from app.core.middleware import CorrelationMiddleware, LimiteDebitMiddleware, TailleCorpsMiddleware
 from app.core.resilience import Disjoncteur
-from app.routers import artistes, mots, revisions, sante, sync
+from app.routers import admin, artistes, mots, revisions, sante, sync
 from app.services import exercices_prets, notifications_mots, reglages
 from app.services.deepl_client import DeeplClient
 from app.services.deezer_client import DeezerClient
@@ -221,7 +221,14 @@ def creer_app(
         openapi_url="/openapi.json",
     )
     installer_gestionnaires(app)
-    for routeur in (sante.routeur, mots.routeur, revisions.routeur, artistes.routeur, sync.routeur):
+    for routeur in (
+        sante.routeur,
+        mots.routeur,
+        revisions.routeur,
+        artistes.routeur,
+        sync.routeur,
+        admin.routeur,
+    ):
         app.include_router(routeur)
 
     app.add_middleware(GZipMiddleware, minimum_size=TAILLE_MIN_GZIP)
