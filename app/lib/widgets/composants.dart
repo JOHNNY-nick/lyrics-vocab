@@ -1,11 +1,11 @@
 // Composants de référence (21.2, 43.5, 43.9) construits uniquement avec les jetons (DES-02).
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/link.dart';
 
 import '../models/extrait.dart';
 import '../models/revision.dart';
 import '../services/extraction.dart';
+import '../services/plateforme.dart';
 import '../strings.dart';
 import '../theme/jetons.dart';
 import 'icones.dart';
@@ -1295,12 +1295,15 @@ class LienChanson extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Align(
     alignment: Alignment.centerLeft,
-    // Link crée un vrai lien (<a target="_blank"> sur le web) : le navigateur ouvre un nouvel
-    // onglet sans le bloquer ; sur Android, l'application Deezer ou YouTube, ou le navigateur.
-    child: Link(
-      uri: Uri.parse(extrait.lienEcoute),
-      target: LinkTarget.blank,
-      builder: (context, suivre) => BoutonLien(libelle: S.ecouterChanson, onPressed: suivre),
+    child: Semantics(
+      link: true,
+      child: BoutonLien(
+        libelle: S.ecouterChanson,
+        // Ouverture synchrone dans le geste : nouvel onglet sur le web, application sur Android.
+        onPressed: () => ouvrirLien(extrait.lienEcoute).then((ok) {
+          if (!ok && context.mounted) afficherMessage(context, S.lienImpossible);
+        }),
+      ),
     ),
   );
 }
