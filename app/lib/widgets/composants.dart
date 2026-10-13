@@ -1,7 +1,7 @@
 // Composants de référence (21.2, 43.5, 43.9) construits uniquement avec les jetons (DES-02).
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:url_launcher/link.dart';
 
 import '../models/extrait.dart';
 import '../models/revision.dart';
@@ -1295,15 +1295,12 @@ class LienChanson extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Align(
     alignment: Alignment.centerLeft,
-    child: Semantics(
-      link: true,
-      child: BoutonLien(
-        libelle: S.ecouterChanson,
-        onPressed: () async {
-          final ok = await launchUrl(Uri.parse(extrait.lienEcoute), mode: LaunchMode.externalApplication);
-          if (!ok && context.mounted) afficherMessage(context, S.lienImpossible);
-        },
-      ),
+    // Link crée un vrai lien (<a target="_blank"> sur le web) : le navigateur ouvre un nouvel
+    // onglet sans le bloquer ; sur Android, l'application Deezer ou YouTube, ou le navigateur.
+    child: Link(
+      uri: Uri.parse(extrait.lienEcoute),
+      target: LinkTarget.blank,
+      builder: (context, suivre) => BoutonLien(libelle: S.ecouterChanson, onPressed: suivre),
     ),
   );
 }
