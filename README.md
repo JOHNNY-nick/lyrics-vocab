@@ -264,10 +264,11 @@ Modifier `OLLAMA_MODEL` ou la clé dans `.env`, redémarrer la tâche du backend
 **Sans Tailscale (tunnel Cloudflare gratuit, déjà en service)** : la tâche planifiée « Lyrics Vocab Tunnel » lance `scripts/tunnel.ps1` à l'ouverture de session ; l'adresse `https://….trycloudflare.com` change à chaque démarrage et est publiée sur la branche `adresse` du dépôt, où l'application la retrouve seule. Chaque ami a besoin d'un code d'invitation :
 
 ```powershell
-cd C:\lyrics-vocab\depotackend
-.\.venv\Scripts\python.exe ..\scripts\inviter.py Prénom      # crée un code LV-XXXX-XXXX (sa bibliothèque)
-.\.venv\Scripts\python.exe ..\scripts\inviter.py --liste
-.\.venv\Scripts\python.exe ..\scripts\inviter.py --retirer Prénom
+cd C:\lyrics-vocab\depot\backend
+.\.venv\Scripts\python.exe ..\scripts\utilisateurs.py liste              # utilisateurs, mots, dernière activité
+.\.venv\Scripts\python.exe ..\scripts\utilisateurs.py inviter Prénom     # code LV-XXXX-XXXX (sans expiration)
+.\.venv\Scripts\python.exe ..\scripts\utilisateurs.py retirer Prénom     # bloque l'accès, garde ses mots
+.\.venv\Scripts\python.exe ..\scripts\utilisateurs.py supprimer Prénom   # bloque l'accès et efface sa bibliothèque
 ```
 
 Les codes sont stockés hachés dans `C:/lyrics-vocab/secrets/codes_acces.json` (`CODES_ACCES_FICHIER`). Sans code valide, le tunnel ne donne accès qu'à `/api/health`.
