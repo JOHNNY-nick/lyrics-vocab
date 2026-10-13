@@ -71,5 +71,5 @@ void Function()? dicterNavigateur({
   reconnaissance.onerror = ((JSObject _) {}).toJS; // « onend » suit toujours une erreur
   reconnaissance.onend = ((JSObject _) => surFin()).toJS;
   reconnaissance.start();
-  return reconnaissance.stop;
+  return () => reconnaissance.stop();
 }
