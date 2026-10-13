@@ -65,6 +65,8 @@ class ExerciceDemande(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
     mot_id: UUID
+    # Vrai pour « Nouvelle phrase » : ne pas resservir la phrase préparée à l'avance.
+    nouvelle: bool = False
 
 
 class ExerciceSortie(BaseModel):

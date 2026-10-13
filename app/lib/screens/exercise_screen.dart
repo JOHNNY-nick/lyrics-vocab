@@ -31,7 +31,7 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen> {
   @override
   void initState() {
     super.initState();
-    _nouvellePhrase();
+    _nouvellePhrase(premiere: true);
   }
 
   @override
@@ -47,7 +47,7 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen> {
     _ => S.exerciceIndisponible,
   };
 
-  Future<void> _nouvellePhrase() async {
+  Future<void> _nouvellePhrase({bool premiere = false}) async {
     setState(() {
       _chargement = true;
       _erreur = null;
@@ -55,7 +55,8 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen> {
       _reponse.clear();
     });
     try {
-      final exercice = await ref.read(depotProvider).creerExercice(widget.motId);
+      // La première phrase peut être celle préparée à l'avance ; les suivantes sont nouvelles.
+      final exercice = await ref.read(depotProvider).creerExercice(widget.motId, nouvelle: !premiere);
       if (mounted) setState(() => _exercice = exercice);
     } catch (e) {
       if (mounted) setState(() => _erreur = _message(e));

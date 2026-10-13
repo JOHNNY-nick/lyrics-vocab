@@ -31,7 +31,9 @@ abstract class DepotDonnees {
 
   Future<RevisionsDues> revisionsDues();
   Future<void> repondre(RevisionDue revision, ReponseCarte reponse);
-  Future<Exercice> creerExercice(String motId);
+
+  /// [nouvelle] : une autre phrase que celle préparée à l'avance (« Nouvelle phrase »).
+  Future<Exercice> creerExercice(String motId, {bool nouvelle = false});
   Future<Verdict> evaluerExercice(String id, String reponse);
 
   Future<List<Artiste>> artistesPreferes();

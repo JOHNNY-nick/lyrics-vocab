@@ -249,8 +249,8 @@ class DepotLocal implements DepotDonnees {
   }
 
   @override
-  Future<Exercice> creerExercice(String motId) {
-    return _enLigne(() => api.creerExercice(motId));
+  Future<Exercice> creerExercice(String motId, {bool nouvelle = false}) {
+    return _enLigne(() => api.creerExercice(motId, nouvelle: nouvelle));
   }
 
   @override

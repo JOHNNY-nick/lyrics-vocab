@@ -268,7 +268,7 @@ def test_exercice_et_evaluation(client, creer_mot, base_vide, services):
         '```json\n{"verdict": "correct", "explication": "Bonne ' 'traduction."}\n```'
     ]
     evaluation = client.post(
-        f"/api/exercices/{corps['id']}/evaluer", json={"reponse": "I'm lowkey happy to see you."}
+        f"/api/exercices/{corps['id']}/evaluer", json={"reponse": "I am lowkey happy to see you."}
     ).json()
     assert evaluation == {
         "verdict": "correct",

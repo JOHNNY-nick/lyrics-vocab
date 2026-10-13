@@ -63,7 +63,8 @@ class DepotApi implements DepotDonnees {
   }
 
   @override
-  Future<Exercice> creerExercice(String motId) => api.creerExercice(motId);
+  Future<Exercice> creerExercice(String motId, {bool nouvelle = false}) =>
+      api.creerExercice(motId, nouvelle: nouvelle);
 
   @override
   Future<Verdict> evaluerExercice(String id, String reponse) => api.evaluerExercice(id, reponse);

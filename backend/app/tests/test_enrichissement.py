@@ -276,7 +276,7 @@ def test_ia_json_invalide(services):
     """IA-T03 : sortie invalide deux fois : repli par mots-clés."""
     services.ollama.reponses = ["pas du json", "{toujours pas}"]
     evaluation = asyncio.run(
-        ai_exercise.evaluer(services.ollama, "Je suis content.", "I am happy.", "I am happy.")
+        ai_exercise.evaluer(services.ollama, "Je suis content.", "I am happy.", "I am so happy.")
     )
     assert evaluation.verdict == "correct" and evaluation.verdict_repli
 

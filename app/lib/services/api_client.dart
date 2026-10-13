@@ -215,8 +215,9 @@ class ApiClient {
     return ResultatReponse.fromJson(_carte(r));
   }
 
-  Future<Exercice> creerExercice(String motId) async =>
-      Exercice.fromJson(_carte(await _requete('POST', '/exercices', corps: {'mot_id': motId})));
+  Future<Exercice> creerExercice(String motId, {bool nouvelle = false}) async => Exercice.fromJson(
+    _carte(await _requete('POST', '/exercices', corps: {'mot_id': motId, if (nouvelle) 'nouvelle': true})),
+  );
 
   Future<Verdict> evaluerExercice(String id, String reponse) async =>
       Verdict.fromJson(_carte(await _requete('POST', '/exercices/$id/evaluer', corps: {'reponse': reponse})));

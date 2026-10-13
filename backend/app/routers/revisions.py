@@ -19,7 +19,7 @@ from app.schemas.revisions import (
     ResultatReponse,
     RevisionsDues,
 )
-from app.services import ai_exercise, mots, reglages, revisions, sm2
+from app.services import ai_exercise, exercices_prets, mots, reglages, revisions, sm2
 from app.services.calendrier import borner_instant, jour_local
 from app.services.enrichissement import Services
 
@@ -123,7 +123,14 @@ async def creer_exercice(
     revision = revisions.revision_planifiee(session, mot.id)
     if revision is None:
         raise MotIntrouvable("Aucune révision planifiée pour ce mot.")
-    if not mot.traduction_fr or not await conteneur.ollama.disponible():
+    if not mot.traduction_fr:
+        raise IaIndisponible()
+    if exercices_prets.phrase_prete(revision) and not entree.nouvelle:
+        # Phrase préparée à l'avance par la tâche de fond : réponse immédiate.
+        revision.mode = "production"
+        session.commit()
+        return {"id": revision.id, "phrase_fr": revision.phrase_source, "generee": True}
+    if not await conteneur.ollama.disponible():
         raise IaIndisponible()
     deja_vues = [e["en"] for e in (mot.exemples or [])]
     if revision.reference_en:

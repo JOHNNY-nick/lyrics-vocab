@@ -10,7 +10,7 @@ from app.core.errors import IaIndisponible
 from app.core.logging import journaliser
 from app.services.quotas import Compteur
 
-CONSERVATION_MODELE = "10m"
+CONSERVATION_MODELE = "60m"  # pas de rechargement après une pause
 TEMPERATURE = 0.2
 DELAI_SANTE_S = 2
 CACHE_SANTE_S = 60

@@ -16,7 +16,7 @@ from app.services.ollama_client import OllamaClient
 LONGUEUR_MAX_PHRASE = 120
 LONGUEUR_MAX_EXPLICATION_VERDICT = 200
 JETONS_PHRASE = 60
-JETONS_EVALUATION = 120
+JETONS_EVALUATION = 90
 JETONS_EXERCICE = 120
 ESSAIS_EXERCICE = 2
 # Mots qui ne portent pas le sens d'une traduction (« avoir tendance à » → « tendance »).
@@ -218,6 +218,25 @@ EXPLICATION_HORS_SUJET = (
 )
 
 
+EXPLICATION_IDENTIQUE = "Parfait : c'est exactement la traduction attendue."
+
+
+def _mots_comparables(texte: str) -> list[str]:
+    return re.findall(r"[a-z0-9']+", _comparable(texte))
+
+
+def verdict_immediat(reference: str, reponse: str, terme: str | None) -> Evaluation | None:
+    """Cas évidents jugés sans l'IA (5 à 10 s de gagnés) : réponse identique à la traduction
+    attendue (ponctuation et majuscules mises à part), ou sans rapport avec la phrase."""
+    if _mots_comparables(reponse) == _mots_comparables(reference) and (
+        not terme or emploie_terme(reponse, terme)
+    ):
+        return Evaluation("correct", EXPLICATION_IDENTIQUE, False)
+    if part_commune(reference, reponse) < SEUIL_HORS_SUJET:
+        return Evaluation("incorrect", EXPLICATION_HORS_SUJET, False)
+    return None
+
+
 def explication_sans_terme(terme: str) -> str:
     return f"Le sens y est, mais il fallait employer ton mot « {terme} »."
 
@@ -266,6 +285,9 @@ async def evaluer(
             raison="consigne_dans_reponse",
         )
         return garde_fou(evaluation_repli(reference, reponse), reference, reponse, terme)
+    immediat = verdict_immediat(reference, reponse, terme)
+    if immediat is not None:
+        return immediat
     prompts = charger_prompts()["evaluation"]
     reponse_brute = reponse.replace("<", " ").replace(">", " ")
     mot_attendu = prompts["mot_attendu"].format(mot=terme) if terme else ""
