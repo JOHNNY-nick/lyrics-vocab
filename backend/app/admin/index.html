@@ -80,9 +80,10 @@
   .erreur-globale { color: var(--rose); font-weight: 700; }
   .pied { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; color: var(--secondaire); }
   .pied code { background: var(--fond); padding: 6px 10px; border-radius: 10px; color: var(--encre); word-break: break-all; }
-  .bandeau { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(140%); background: var(--encre);
-    color: var(--fond); border-radius: 14px; padding: 12px 18px; font-weight: 700; transition: transform .25s; max-width: calc(100% - 32px); }
-  .bandeau.visible { transform: translateX(-50%) translateY(0); }
+  .bandeau { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(16px); background: var(--encre);
+    color: var(--fond); border-radius: 14px; padding: 12px 18px; font-weight: 700; max-width: calc(100% - 32px);
+    opacity: 0; visibility: hidden; transition: opacity .2s, transform .2s, visibility .2s; }
+  .bandeau.visible { transform: translateX(-50%) translateY(0); opacity: 1; visibility: visible; }
   dialog { border: 0; border-radius: 24px; padding: 24px; max-width: 440px; width: calc(100% - 32px); background: var(--surface); color: var(--encre); }
   dialog::backdrop { background: rgba(20, 17, 46, .55); }
   dialog h3 { font: 800 22px/1.2 "Bricolage", system-ui; margin: 0 0 8px; }
