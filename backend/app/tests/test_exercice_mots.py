@@ -19,10 +19,21 @@ def test_paire_rejetee_si_le_mot_anglais_manque_ou_est_dans_la_phrase_francaise(
     services.ollama.reponses = [
         '{"en": "She quietly loves jazz.", "fr": "Elle aime discrètement le jazz."}',
         '{"en": "She lowkey loves jazz.", "fr": "Elle aime lowkey le jazz."}',
+    ]
+    try:
+        asyncio.run(ai_exercise.generer_exercice(services.ollama, "lowkey", "discrètement"))
+        raise AssertionError("aucune paire valide")
+    except ai_exercise.IaIndisponible:
+        pass
+
+
+def test_synonyme_francais_accepte_en_secours(services):
+    services.ollama.reponses = [
+        '{"en": "I gave up smoking.", "fr": "J\'ai arrêté de fumer."}',
         '{"en": "I gave up smoking.", "fr": "J\'ai arrêté de fumer."}',
     ]
     fr, en = asyncio.run(ai_exercise.generer_exercice(services.ollama, "give up", "abandonner"))
-    # Troisième essai : « gave up » est une forme de « give up » ; synonyme accepté en secours.
+    # « gave up » est une forme de « give up » ; le synonyme français est accepté en secours.
     assert (fr, en) == ("J'ai arrêté de fumer.", "I gave up smoking.")
 
 
@@ -32,6 +43,15 @@ def test_phrases_deja_vues_evitees(services):
         ai_exercise.generer_exercice(services.ollama, "hello", "bonjour", ["Hello, how are you?"])
     )
     assert "Hello, how are you?" in services.ollama.prompts[-1]
+
+
+def test_sens_present_conjugue_ou_derive():
+    assert ai_exercise.sens_present("Elle a tendance à être en retard.", "avoir tendance à")
+    assert ai_exercise.sens_present(
+        "J'ai surpris ma sœur en train d'écouter clandestinement.", "écoute clandestine"
+    )
+    assert ai_exercise.sens_present("Le gouvernement contraindra la société.", "contraindre")
+    assert not ai_exercise.sens_present("J'adore ma famille.", "amour")
 
 
 def test_reponse_sans_le_mot_au_mieux_proche():

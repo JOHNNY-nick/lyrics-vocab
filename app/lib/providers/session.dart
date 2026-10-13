@@ -94,12 +94,27 @@ class SessionNotifier extends StateNotifier<EtatSession> {
   /// Session d'exercices : chaque mot traduit passe par l'exercice de production (US-06).
   bool _exercices = false;
 
+  /// Phrases préparées à l'avance (par identifiant de révision) : la phrase de la carte
+  /// suivante est générée pendant que l'utilisateur répond, pour ne pas attendre l'IA.
+  final _preparees = <String, Future<Exercice>>{};
+
+  Future<Exercice> _exercicePour(RevisionDue carte) =>
+      _preparees.remove(carte.id) ?? _depot.creerExercice(carte.motId);
+
+  void _prechargerSuivante() {
+    final suivant = state.index + 1;
+    if (!_exercices || suivant >= state.file.length || !_doitProduire(suivant)) return;
+    final carte = state.file[suivant];
+    _preparees[carte.id] ??= _depot.creerExercice(carte.motId)..ignore();
+  }
+
   DepotDonnees get _depot => ref.read(depotProvider);
 
   /// Démarre une session de mots_par_session mots au plus, du plus en retard au moins (REV-11).
   /// Avec [exercices], toutes les cartes dont le mot est traduit deviennent des exercices.
   Future<void> demarrer(List<RevisionDue> dues, {bool exercices = false}) async {
     _exercices = exercices;
+    _preparees.clear();
     state = EtatSession(file: List.of(dues));
     await _preparerCarte();
   }
@@ -120,8 +135,10 @@ class SessionNotifier extends StateNotifier<EtatSession> {
     final carte = state.carte;
     if (carte == null || !_doitProduire(state.index)) return;
     state = state.copyWith(phase: PhaseExercice.chargement);
+    final enCours = _exercicePour(carte);
+    _prechargerSuivante();
     try {
-      final exercice = await _depot.creerExercice(carte.motId);
+      final exercice = await enCours;
       if (!mounted || state.carte?.id != carte.id) return;
       state = state.copyWith(phase: PhaseExercice.saisie, exercice: exercice);
     } catch (e) {

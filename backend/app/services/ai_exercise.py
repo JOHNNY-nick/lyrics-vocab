@@ -18,7 +18,9 @@ LONGUEUR_MAX_EXPLICATION_VERDICT = 200
 JETONS_PHRASE = 60
 JETONS_EVALUATION = 120
 JETONS_EXERCICE = 120
-ESSAIS_EXERCICE = 3
+ESSAIS_EXERCICE = 2
+# Mots qui ne portent pas le sens d'une traduction (« avoir tendance à » → « tendance »).
+MOTS_VIDES_FR = {"avoir", "etre", "faire", "quelque", "chose", "quelqu'un", "sans", "pour", "dans"}
 VERDICTS = ("correct", "proche", "incorrect")
 EXPLICATION_REPLI = "Évaluation simplifiée : comparaison des mots avec la traduction attendue."
 MOTIF_INJECTION = re.compile(
@@ -86,6 +88,20 @@ async def generer_phrase(ollama: OllamaClient, mot_fr: str) -> str:
     raise IaIndisponible()
 
 
+def sens_present(phrase: str, mot_fr: str) -> bool:
+    """La phrase française contient chaque mot porteur de sens de la traduction, conjugué ou
+    dérivé (« écoute clandestine » → « écouter clandestinement »)."""
+    phrase_comparable = _comparable(phrase)
+    porteurs = [
+        m
+        for m in re.findall(r"[\w']+", _comparable(mot_fr))
+        if len(m) >= 4 and m not in MOTS_VIDES_FR
+    ]
+    if not porteurs:
+        return phrase_valide(phrase, mot_fr)
+    return all(m[: max(4, len(m) - 3)] in phrase_comparable for m in porteurs)
+
+
 def emploie_terme(phrase: str, terme: str) -> bool:
     """La phrase contient le mot ou une de ses formes (lowkey, gave up…)."""
     terme_normalise = normaliser(terme)
@@ -140,7 +156,7 @@ async def generer_exercice(
         if paire is not None:
             fr, en = paire
             if emploie_terme(en, terme) and not emploie_terme(fr, terme):
-                if phrase_valide(fr, mot_fr):
+                if sens_present(fr, mot_fr):
                     return fr, en
                 secours = secours or paire
         journaliser(
