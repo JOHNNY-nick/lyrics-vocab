@@ -1359,20 +1359,38 @@ class LienChanson extends StatelessWidget {
   const LienChanson({super.key, required this.extrait});
   final Extrait extrait;
 
+  void _ouvrir(BuildContext context, String lien) {
+    // Ouverture synchrone dans le geste : nouvel onglet sur le web, application sur Android.
+    ouvrirLien(lien).then((ok) {
+      if (!ok && context.mounted) afficherMessage(context, S.lienImpossible);
+    });
+  }
+
   @override
-  Widget build(BuildContext context) => Align(
-    alignment: Alignment.centerLeft,
-    child: Semantics(
-      link: true,
-      child: BoutonLien(
-        libelle: S.ecouterChanson,
-        // Ouverture synchrone dans le geste : nouvel onglet sur le web, application sur Android.
-        onPressed: () => ouvrirLien(extrait.lienEcoute).then((ok) {
-          if (!ok && context.mounted) afficherMessage(context, S.lienImpossible);
-        }),
+  Widget build(BuildContext context) {
+    final deezer = extrait.lienDeezer;
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: Espaces.e4,
+        children: [
+          Semantics(
+            link: true,
+            child: BoutonLien(
+              libelle: S.ecouterChanson,
+              onPressed: () => _ouvrir(context, extrait.lienEcoute),
+            ),
+          ),
+          if (deezer != null)
+            Semantics(
+              link: true,
+              child: BoutonLien(libelle: S.ecouterDeezer, onPressed: () => _ouvrir(context, deezer)),
+            ),
+        ],
       ),
-    ),
-  );
+    );
+  }
 }
 
 /// Bouton haut-parleur : prononce le mot en anglais ; appui long pour une diction lente.

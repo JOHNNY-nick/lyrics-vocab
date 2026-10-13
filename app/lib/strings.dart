@@ -217,11 +217,14 @@ class S {
   static const enregistre = 'Enregistré.';
   static const batterie = 'Optimisation de batterie';
   static const actualiserPage = 'Actualiser';
-  static const ecouterChanson = 'Écouter la chanson';
+  static const ecouterChanson = 'Écouter sur YouTube';
+  static const ecouterDeezer = 'ou sur Deezer';
   static String prononcer(String mot) => 'Écouter la prononciation de « $mot »';
   static const prononciationLente = 'Appui long : prononciation lente';
+  static const voixAnglaise = 'Voix anglaise';
+  static const testerVoix = 'Tester la voix';
   static const prononciationImpossible =
-      "Prononciation indisponible : installe une voix anglaise dans les réglages de synthèse vocale de l'appareil.";
+      "Prononciation indisponible : dans les réglages d'Android, Synthèse vocale → moteur Google, puis installe la voix anglais (États-Unis).";
   static const lienImpossible = "Impossible d'ouvrir le lien.";
   // Exercice d'utilisation du mot
   static const sEntrainer = "S'entraîner avec ce mot";

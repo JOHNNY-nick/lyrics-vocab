@@ -28,8 +28,12 @@ class Extrait {
   final String? url;
 
   /// Lien à ouvrir : celui du serveur, sinon une recherche YouTube de la chanson.
+  /// Lien principal (préférence de l'utilisateur) : la chanson sur YouTube.
   String get lienEcoute =>
-      url ?? 'https://www.youtube.com/results?search_query=${Uri.encodeQueryComponent('$artiste $titre')}';
+      'https://www.youtube.com/results?search_query=${Uri.encodeQueryComponent('$artiste $titre')}';
+
+  /// Lien secondaire : la chanson sur Deezer, quand elle y a été trouvée.
+  String? get lienDeezer => url;
   final DateTime? deletedAt;
 
   /// Lit la forme de la fiche (morceau imbriqué) ou celle du pull (titre et artiste à plat).

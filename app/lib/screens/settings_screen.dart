@@ -671,6 +671,20 @@ class _SectionInformations extends ConsumerWidget {
             libelle: S.version,
             controle: Text(versionApplication, style: style),
           ),
+          // Dépannage de la prononciation : lit « Hello » et affiche l'état du moteur.
+          _Ligne(
+            libelle: S.voixAnglaise,
+            controle: BoutonLien(
+              libelle: S.testerVoix,
+              onPressed: () async {
+                final ok = await env.prononciation.prononcer('Hello');
+                final etat = await env.prononciation.diagnostic();
+                if (context.mounted) {
+                  afficherMessage(context, ok ? etat : '${S.prononciationImpossible} ($etat)');
+                }
+              },
+            ),
+          ),
           if (sante != null) ...[
             _Ligne(
               libelle: '${S.version} (PC)',

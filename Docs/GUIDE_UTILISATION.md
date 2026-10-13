@@ -45,7 +45,7 @@ Si le mot est déjà dans ta bibliothèque, l'application te le dit et propose d
 
 - **Prononciation** : le bouton haut-parleur 🔊 à droite du mot le prononce en anglais. Un **appui long** le prononce lentement. Le même bouton apparaît sur la carte de révision (après « Révéler ») et sur l'écran d'exercice.
 - **Pastilles** sous le mot : « Argot » si c'est de l'argot, et ton niveau (Nouveau, En cours, Acquis).
-- **Extraits** : sous chaque extrait, le titre et l'artiste, puis le lien **« Écouter la chanson »** qui ouvre la chanson sur Deezer (ou une recherche YouTube si elle n'a pas été trouvée). « Artiste hors de ta liste » signale un extrait trouvé chez un autre artiste que les tiens.
+- **Extraits** : sous chaque extrait, le titre et l'artiste, puis le lien **« Écouter sur YouTube »** qui ouvre la chanson sur YouTube, et **« ou sur Deezer »** quand elle y a été trouvée. « Artiste hors de ta liste » signale un extrait trouvé chez un autre artiste que les tiens.
 - **Explication** : marquée « Générée automatiquement », car elle est écrite par l'IA.
 - **« S'entraîner avec ce mot »** : ouvre l'exercice d'utilisation (voir 6).
 - **Phrases pour l'employer** : deux phrases anglaises de la vie courante qui utilisent le mot, avec leur traduction. Elles sont écrites par l'IA pendant le remplissage de la fiche.
@@ -136,7 +136,7 @@ L'exercice a besoin du PC (c'est l'IA du PC qui écrit et corrige les phrases) :
 ## 10. Bon à savoir
 
 - **Réponse à voix haute** : elle utilise la reconnaissance vocale de l'appareil (celle de Chrome/Edge sur le PC, celle de Google sur Android) ; elle a besoin d'Internet et d'un micro autorisé. Si un mot est mal compris, corrige le texte dans le champ et touche **Valider**… avant la fin des 3 secondes de silence, ou refais un essai avec « Nouvelle phrase ».
-- **Prononciation** : seul le mot est prononcé (bouton 🔊). Elle utilise la voix anglaise de ton appareil, sans connexion au PC. Sur le PC, Chrome et Edge en ont une par défaut. Sur Android, si rien ne se passe : Paramètres → Gestion globale → Synthèse vocale (ou « Langue et saisie » → Synthèse vocale) → choisis le moteur Google ou Samsung, puis installe la voix **anglais (États-Unis)**.
+- **Prononciation** : seul le mot est prononcé (bouton 🔊). Elle utilise la voix anglaise de ton appareil, sans connexion au PC. Sur le PC, Chrome et Edge en ont une par défaut. Sur Android, si rien ne se passe : **Réglages → Informations → Tester la voix** lit « Hello » et indique l'état du moteur (moteur utilisé, voix anglaise disponible, à télécharger ou absente). Pour corriger : Paramètres → Gestion globale → Synthèse vocale (ou « Langue et saisie » → Synthèse vocale) → choisis le moteur Google ou Samsung, puis installe la voix **anglais (États-Unis)**.
 
 - Les extraits font au plus 2 lignes : l'application ne garde jamais les paroles complètes.
 - Tout ce qui est marqué « Générée automatiquement » vient de l'IA et peut contenir des erreurs.
