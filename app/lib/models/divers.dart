@@ -221,7 +221,7 @@ class OperationSync {
 }
 
 /// États de la connexion (19.3).
-enum EtatConnexion { horsLigne, aVerifier, pcInjoignable, enLigne, synchronisation }
+enum EtatConnexion { horsLigne, aVerifier, pcInjoignable, enLigne, synchronisation, codeAccesRequis }
 
 /// État du serveur renvoyé par /api/health.
 class Sante {

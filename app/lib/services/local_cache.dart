@@ -28,6 +28,7 @@ class Meta {
   static const curseur = 'curseur';
   static const appareilId = 'appareil_id';
   static const adresseServeur = 'adresse_serveur';
+  static const codeAcces = 'code_acces';
   static const derniereSync = 'derniere_sync';
   static const versionSchema = 'version_schema_local';
   static const onboardingFait = 'onboarding_fait';

@@ -20,6 +20,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session, sessionmaker
 
+from app.core.codes_acces import EN_TETE_CODE, EN_TETE_TUNNEL
 from app.core.config import DOSSIER_BACKEND, Parametres
 from app.core.database import creer_fabrique, creer_moteur
 from app.core.logging import journaliser
@@ -27,6 +28,7 @@ from app.services.enrichissement import GestionnaireEnrichissement, Services
 
 EN_TETE_COMPTE = "tailscale-user-login"
 SUFFIXE = "_u_"
+COMPTE_ANONYME = "tunnel:anonyme"
 CONNEXIONS_AMI = 1
 CONNEXIONS_AMI_SUP = 4
 
@@ -42,7 +44,13 @@ class Locataire:
 
 
 def compte(request: Request) -> str | None:
-    """Compte Tailscale de la requête (minuscules), ou None (requête locale)."""
+    """Compte de la requête (minuscules) : celui du code d'invitation pour le tunnel
+    Cloudflare (l'en-tête Tailscale y est ignoré, il n'est pas fiable), sinon le compte
+    Tailscale ; None pour une requête locale."""
+    if EN_TETE_TUNNEL in request.headers:
+        codes = getattr(request.app.state, "codes_acces", None)
+        trouve = codes.compte(request.headers.get(EN_TETE_CODE)) if codes else None
+        return trouve.strip().lower() if trouve else COMPTE_ANONYME
     valeur = request.headers.get(EN_TETE_COMPTE)
     return valeur.strip().lower()[:320] if valeur and valeur.strip() else None
 
@@ -101,7 +109,11 @@ class Locataires:
         return self._locataires[base]
 
     def depuis_requete(self, request: Request) -> Locataire:
-        return self.pour(compte(request))
+        login = compte(request)
+        if login == COMPTE_ANONYME:
+            # Tunnel sans code : seul /api/health passe le filtre ; aucune base créée.
+            return self.principal
+        return self.pour(login)
 
     def tous(self) -> list[Locataire]:
         """Le propriétaire et tous les utilisateurs déjà créés (tâches de fond)."""

@@ -68,7 +68,28 @@ Future<Environnement> construireEnvironnement(Magasin prefs) async {
   final cache = LocalCache(ouvrirMagasinHive);
   await cache.ouvrir();
   String adresse() => (cache.meta(Meta.adresseServeur) as String?) ?? adresseCompilee;
-  final api = ApiClient(Dio(), adresse, fuseau: () => fuseau, appareilId: () => appareilId);
+  final api = ApiClient(
+    Dio(),
+    adresse,
+    fuseau: () => fuseau,
+    appareilId: () => appareilId,
+    codeAcces: () => cache.meta(Meta.codeAcces) as String?,
+  );
+  DateTime? derniereRecherche;
+  Future<bool> decouvrir() async {
+    // Au plus une recherche par minute (l'adresse est lue sur GitHub).
+    final maintenant = DateTime.now();
+    if (derniereRecherche != null && maintenant.difference(derniereRecherche!) < const Duration(minutes: 1)) {
+      return false;
+    }
+    derniereRecherche = maintenant;
+    final publiee = await api.adressePubliee();
+    if (publiee == null || publiee == adresse()) return false;
+    if (await api.sante(adresseTest: publiee) == null) return false;
+    await cache.fixerMeta(Meta.adresseServeur, publiee);
+    return true;
+  }
+
   final connectivite = ConnectiviteAndroid();
   final notifications = NotificationsAndroid(fuseau);
   final sync = SyncService(
@@ -76,6 +97,7 @@ Future<Environnement> construireEnvironnement(Magasin prefs) async {
     cache: cache,
     appareilId: () => appareilId,
     typeReseau: connectivite.type,
+    decouvrir: decouvrir,
   );
   final depot = DepotLocal(
     cache: cache,

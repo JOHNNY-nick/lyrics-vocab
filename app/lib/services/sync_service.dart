@@ -48,6 +48,7 @@ class SyncService {
     required this.typeReseau,
     this.apresSync,
     this.surEtat,
+    this.decouvrir,
     Random? aleatoire,
   }) : _aleatoire = aleatoire ?? Random();
 
@@ -68,6 +69,9 @@ class SyncService {
   Timer? _reessai;
   EtatConnexion etat = EtatConnexion.aVerifier;
   Sante? derniereSante;
+
+  /// Cherche l'adresse publiée du PC ; vrai si une nouvelle adresse a été enregistrée.
+  final Future<bool> Function()? decouvrir;
 
   bool get enCours => _verrou;
 
@@ -90,7 +94,8 @@ class SyncService {
         return ResultatSync.wifiSeulement; // SYN-09
       }
       _changer(EtatConnexion.synchronisation);
-      final sante = await api.sante();
+      var sante = await api.sante();
+      if (sante == null && decouvrir != null && await decouvrir!()) sante = await api.sante();
       if (sante == null) {
         _planifierReessai();
         _changer(EtatConnexion.pcInjoignable, ResultatSync.pcInjoignable);
@@ -100,6 +105,10 @@ class SyncService {
       if (comparerVersions(versionApplication, sante.versionClientMin) < 0) {
         _changer(EtatConnexion.enLigne, ResultatSync.clientTropAncien);
         return ResultatSync.clientTropAncien;
+      }
+      if (await api.codeRefuse()) {
+        _changer(EtatConnexion.codeAccesRequis, ResultatSync.erreur);
+        return ResultatSync.erreur;
       }
       await _envoyer();
       await _recevoir();

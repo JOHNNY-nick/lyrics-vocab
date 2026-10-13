@@ -1,5 +1,8 @@
 // Cache local, dépôt hors-ligne et synchronisation client (41.5, SYN-T01, CLI-01 à CLI-05).
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lyrics_vocab/models/divers.dart';
+import 'package:lyrics_vocab/services/api_client.dart';
 import 'package:lyrics_vocab/models/revision.dart';
 import 'package:lyrics_vocab/services/depot_donnees.dart';
 import 'package:lyrics_vocab/services/depot_local.dart';
@@ -329,5 +332,52 @@ void main() {
     expect(rouvert.tousMots(), isEmpty);
     expect(rouvert.file().length, 1);
     expect(rouvert.reinitialise, isTrue);
+  });
+
+  test("tunnel : code d'invitation demandé, puis accepté ; adresse retrouvée", () async {
+    final cache = LocalCache(ouvrirMagasinMemoire);
+    await cache.ouvrir();
+    var adresse = 'https://ancienne.test/api';
+    String? code;
+    final codesVus = <String?>[];
+    final serveur = FauxServeur((r, corps) {
+      if (r.uri.host == 'api.github.com') return (200, {'adresse': 'https://nouvelle.trycloudflare.com'});
+      if (r.uri.host == 'ancienne.test') return (502, null); // ancien tunnel fermé
+      codesVus.add(r.headers['X-Code-Acces'] as String?);
+      if (r.path.endsWith('/health')) return (200, santeOk());
+      if (r.headers['X-Code-Acces'] != 'LV-AAAA-BBBB') {
+        return (401, {'code': 'code_acces_requis', 'message': 'x', 'details': {}});
+      }
+      return serveurAccusant()(r, corps);
+    });
+    final api = ApiClient(
+      Dio()..httpClientAdapter = serveur,
+      () => adresse,
+      fuseau: () => 'Europe/Paris',
+      appareilId: () => 'android-test',
+      codeAcces: () => code,
+    );
+    final etats = <EtatConnexion>[];
+    final sync = SyncService(
+      api: api,
+      cache: cache,
+      appareilId: () => 'android-test',
+      typeReseau: () async => TypeReseau.wifi,
+      surEtat: (e, _) => etats.add(e),
+      decouvrir: () async {
+        final publiee = await api.adressePubliee();
+        if (publiee == null || publiee == adresse) return false;
+        adresse = '$publiee/api';
+        return true;
+      },
+    );
+    await sync.synchroniser();
+    expect(adresse, 'https://nouvelle.trycloudflare.com/api');
+    expect(etats.last, EtatConnexion.codeAccesRequis);
+    code = 'LV-AAAA-BBBB';
+    expect(await sync.synchroniser(), ResultatSync.termine);
+    expect(etats.last, EtatConnexion.enLigne);
+    expect(codesVus.last, 'LV-AAAA-BBBB');
+    sync.annulerReessai();
   });
 }

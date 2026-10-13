@@ -203,6 +203,13 @@ class S {
   static const rienAExaminer = 'Rien à examiner.';
   static const abandonner = 'Abandonner';
   static const adresseServeur = 'Adresse du serveur';
+  static const codeAccesTitre = "Code d'invitation";
+  static const codeAccesTexte =
+      "Entre le code que t'a donné la personne qui t'a invité (par exemple LV-ABCD-EFGH). Il ouvre ta propre bibliothèque.";
+  static const codeAccesChamp = 'Code';
+  static const codeAccesInvalide =
+      "Ce code n'est pas valide. Vérifie-le auprès de la personne qui t'a invité.";
+  static const codeAccesInjoignable = "Le PC ne répond pas pour l'instant. Réessaie dans un moment.";
   static const tester = 'Tester';
   static const adresseInvalide = 'Saisis une adresse https:// avec un nom de machine.';
   static const adresseOk = 'Serveur joignable, adresse enregistrée.';

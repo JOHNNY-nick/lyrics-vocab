@@ -19,6 +19,7 @@ from sqlalchemy.engine import make_url
 from starlette.requests import Request
 from starlette.types import Scope
 
+from app.core.codes_acces import AccesTunnelMiddleware, CodesAcces
 from app.core.config import DOSSIER_BACKEND, Parametres, obtenir_parametres
 from app.core.database import attendre_base, creer_fabrique, creer_moteur
 from app.core.errors import installer_gestionnaires
@@ -237,6 +238,9 @@ def creer_app(
             allow_methods=["*"],
             allow_headers=["*"],
         )
+    codes = CodesAcces(parametres.codes_acces_fichier)
+    app.state.codes_acces = codes
+    app.add_middleware(AccesTunnelMiddleware, codes=codes)
     app.add_middleware(CorrelationMiddleware)
 
     if parametres.apk_dir and Path(parametres.apk_dir).is_dir():

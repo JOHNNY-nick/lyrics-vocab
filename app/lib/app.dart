@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'models/divers.dart';
 import 'providers/providers.dart';
+import 'screens/code_acces_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/shell.dart';
 import 'services/local_cache.dart';
@@ -196,6 +197,8 @@ class _RacineState extends ConsumerState<Racine> {
       enfant = const Scaffold(body: SizedBox.shrink());
     } else if (!env.mobile && connexion.etat == EtatConnexion.pcInjoignable) {
       enfant = const _ServeurMuet();
+    } else if (env.mobile && connexion.etat == EtatConnexion.codeAccesRequis) {
+      enfant = const CodeAccesScreen();
     } else if (!_onboardingFait) {
       enfant = OnboardingScreen(onTermine: _terminerOnboarding);
     } else {

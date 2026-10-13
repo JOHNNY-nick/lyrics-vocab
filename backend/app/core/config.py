@@ -42,6 +42,8 @@ class Parametres(BaseSettings):
     # Compte Tailscale du propriétaire : s'il est renseigné, chaque autre compte Tailscale
     # (amis avec qui le PC est partagé) a sa propre base (voir app/core/locataires.py).
     proprietaire_login: str = ""
+    # Codes d'invitation des amis passant par le tunnel Cloudflare (scripts/inviter.py).
+    codes_acces_fichier: str | None = None
     url_application: str = ""
     mode: str = "production"
 

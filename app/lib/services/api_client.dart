@@ -1,4 +1,5 @@
 // Client HTTP unique (dio) avec intercepteurs et erreurs typées (FLU-02, 40.2).
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:uuid/uuid.dart';
 
@@ -14,6 +15,16 @@ const delaiSante = Duration(seconds: 10);
 
 /// Adresse de l'API lue à la compilation (PWA-03) : --dart-define=API_BASE_URL=…
 const adresseCompilee = String.fromEnvironment('API_BASE_URL');
+
+/// Adresse actuelle du PC publiée par scripts/tunnel.ps1 (tunnel Cloudflare, qui change à
+/// chaque démarrage) ; lue quand le PC ne répond plus à l'adresse connue.
+const adresseDecouverte = String.fromEnvironment(
+  'ADRESSE_DECOUVERTE',
+  defaultValue: 'https://api.github.com/repos/JOHNNY-nick/lyrics-vocab/contents/adresse.json?ref=adresse',
+);
+
+/// Le serveur demande un code d'invitation (accès par le tunnel).
+const codeAccesRequis = 'code_acces_requis';
 
 /// Ajoute /api si l'adresse ne le contient pas (« http://localhost:8000 » ou « …/api »).
 String normaliserAdresse(String adresse) {
@@ -57,7 +68,7 @@ class HorsLigneException implements Exception {
 }
 
 class ApiClient {
-  ApiClient(this.dio, this.adresse, {required this.fuseau, required this.appareilId}) {
+  ApiClient(this.dio, this.adresse, {required this.fuseau, required this.appareilId, this.codeAcces}) {
     dio.options
       ..connectTimeout = delaiRequete
       ..receiveTimeout = delaiRequete
@@ -71,6 +82,8 @@ class ApiClient {
           if (nomFuseau.isNotEmpty) options.headers['X-Fuseau'] = nomFuseau;
           final appareil = appareilId();
           if (appareil.isNotEmpty) options.headers['X-Appareil-Id'] = appareil;
+          final code = codeAcces?.call();
+          if (code != null && code.isNotEmpty) options.headers['X-Code-Acces'] = code;
           gestionnaire.next(options);
         },
       ),
@@ -83,6 +96,43 @@ class ApiClient {
   final String Function() adresse;
   final String Function() fuseau;
   final String Function() appareilId;
+
+  /// Code d'invitation (amis passant par le tunnel), null s'il n'y en a pas.
+  final String? Function()? codeAcces;
+
+  /// Adresse publiée du PC (https), ou null si elle est introuvable.
+  Future<String?> adressePubliee() async {
+    try {
+      final reponse = await dio.get<dynamic>(
+        adresseDecouverte,
+        options: Options(
+          headers: {'Accept': 'application/vnd.github.raw+json'},
+          responseType: ResponseType.plain,
+          sendTimeout: delaiSante,
+          receiveTimeout: delaiSante,
+        ),
+      );
+      final donnees = jsonDecode(reponse.data as String);
+      final adresse = donnees is Map ? donnees['adresse'] : null;
+      if (adresse is String && adresse.startsWith('https://') && adresse.length < 200) return adresse;
+    } catch (_) {}
+    return null;
+  }
+
+  /// Vrai si l'adresse demande un code d'invitation que l'on n'a pas (ou un code faux).
+  Future<bool> codeRefuse() async {
+    // Seul le tunnel Cloudflare demande un code (Tailscale identifie déjà l'appareil).
+    if (!(Uri.tryParse(normaliserAdresse(adresse()))?.host.endsWith('.trycloudflare.com') ?? false)) {
+      return false;
+    }
+    try {
+      await dio.get<dynamic>(_url('/reglages'));
+      return false;
+    } on DioException catch (erreur) {
+      final corps = erreur.response?.data;
+      return erreur.response?.statusCode == 401 && corps is Map && corps['code'] == codeAccesRequis;
+    }
+  }
 
   String _url(String chemin) => '${normaliserAdresse(adresse())}$chemin';
 
