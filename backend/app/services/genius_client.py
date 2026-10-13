@@ -74,6 +74,11 @@ class GeniusClient(ClientExterne):
                 break
         return artistes
 
+    async def lien_morceau(self, titre: str, artiste: str) -> str | None:
+        """Lien Genius de la chanson, ou None."""
+        meta = await self.metadonnees_morceau(titre, artiste)
+        return meta.url if meta else None
+
     async def metadonnees_morceau(self, titre: str, artiste: str) -> MetaMorceau | None:
         """Identifiant, adresse et pochette d'un morceau (S)."""
         for resultat in await self._rechercher(f"{titre} {artiste}"):

@@ -81,7 +81,7 @@ class DepotApi implements DepotDonnees {
   Future<List<Artiste>> suggestions() async {
     try {
       return await api.suggestions();
-    } on Exception {
+    } catch (_) {
       return artistesSecours; // liste de secours embarquée (H.3, écran 1)
     }
   }

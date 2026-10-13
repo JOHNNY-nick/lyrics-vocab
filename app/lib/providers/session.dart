@@ -91,15 +91,21 @@ class SessionNotifier extends StateNotifier<EtatSession> {
   Timer? _minuterie;
   _ReponseEnAttente? _attente;
 
+  /// Session d'exercices : chaque mot traduit passe par l'exercice de production (US-06).
+  bool _exercices = false;
+
   DepotDonnees get _depot => ref.read(depotProvider);
 
   /// Démarre une session de mots_par_session mots au plus, du plus en retard au moins (REV-11).
-  Future<void> demarrer(List<RevisionDue> dues) async {
+  /// Avec [exercices], toutes les cartes dont le mot est traduit deviennent des exercices.
+  Future<void> demarrer(List<RevisionDue> dues, {bool exercices = false}) async {
+    _exercices = exercices;
     state = EtatSession(file: List.of(dues));
     await _preparerCarte();
   }
 
   bool _doitProduire(int index) {
+    if (_exercices) return state.file[index].traductionFr != null;
     final reglages = ref.read(reglagesProvider).valueOrNull;
     if (reglages?.modeRevision != 'melange') return false;
     final carte = state.file[index];

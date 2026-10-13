@@ -58,6 +58,7 @@ class Trouvaille:
     morceau: MorceauExterne
     artiste_id: uuid.UUID | None
     hors_liste: bool
+    lien: str | None = None
 
 
 @dataclass
@@ -220,15 +221,19 @@ def _enregistrer_extraits(session: Session, mot: Mot, recherche: Recherche) -> i
                 artiste_id=artiste_id,
                 titre=trouvaille.morceau.titre or "Titre inconnu",
                 musixmatch_track_id=trouvaille.morceau.musixmatch_track_id,
+                url_genius=trouvaille.lien,
             )
             .on_conflict_do_nothing(constraint="morceau_artiste_id_musixmatch_track_id_key")
         )
-        morceau_id = session.scalar(
-            select(Morceau.id).where(
+        morceau = session.scalar(
+            select(Morceau).where(
                 Morceau.artiste_id == artiste_id,
                 Morceau.musixmatch_track_id == trouvaille.morceau.musixmatch_track_id,
             )
         )
+        if morceau is not None and trouvaille.lien and not morceau.url_genius:
+            morceau.url_genius = trouvaille.lien
+        morceau_id = morceau.id if morceau is not None else None
         if morceau_id is None or morceau_id in existants:
             continue
         existants.add(morceau_id)
@@ -245,6 +250,19 @@ def _enregistrer_extraits(session: Session, mot: Mot, recherche: Recherche) -> i
         )
         ajoutes += 1
     return ajoutes
+
+
+async def _ajouter_liens(services: Services, recherche: Recherche) -> None:
+    """Lien vers chaque chanson (Deezer ou Genius) ; une panne laisse le lien vide."""
+    for trouvaille in recherche.trouvailles[:EXTRAITS_MAX]:
+        try:
+            trouvaille.lien = await services.genius.lien_morceau(
+                trouvaille.morceau.titre, trouvaille.morceau.artiste_nom
+            )
+        except ErreurApi:
+            trouvaille.lien = None
+        except Exception:  # FIA-02 : le lien est facultatif
+            trouvaille.lien = None
 
 
 def _premier_extrait(session: Session, mot_id: uuid.UUID) -> str | None:
@@ -288,6 +306,7 @@ async def enrichir(
     resultat_recherche, resultat_traduction = await asyncio.gather(*taches, return_exceptions=True)
 
     if isinstance(resultat_recherche, Recherche) and resultat_recherche.trouvailles:
+        await _ajouter_liens(services, resultat_recherche)
         with services.fabrique() as session:
             mot = session.get(Mot, mot_id)
             if mot is None or mot.deleted_at is not None:

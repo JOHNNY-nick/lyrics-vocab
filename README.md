@@ -2,6 +2,7 @@
 
 Application personnelle pour retenir le vocabulaire anglais des chansons : on saisit un mot, l'application trouve un court extrait chez ses artistes préférés, le traduit, l'explique et planifie des révisions espacées (SM-2). Deux clients partagent la même base : une PWA installée sur le PC et une application Android hors-ligne.
 
+- **Guide d'utilisation (toutes les fonctionnalités) : [Docs/GUIDE_UTILISATION.md](Docs/GUIDE_UTILISATION.md)**
 - Cahier des charges : [Docs/Cahier des charges — Lyrics & Vocab.md](Docs/Cahier%20des%20charges%20—%20Lyrics%20&%20Vocab.md) (fait foi)
 - Décisions et écarts : [DECISIONS.md](DECISIONS.md)
 - Recette à remplir : [Docs/RECETTE.md](Docs/RECETTE.md) · Notes de version : [Docs/NOTES_DE_VERSION.md](Docs/NOTES_DE_VERSION.md) · Secrets : [Docs/SECRETS.md](Docs/SECRETS.md)
@@ -28,10 +29,10 @@ Le système est installé et tourne sur ce PC depuis le 2026-10-12 :
 | Paroles, artistes, traduction | sans aucune clé : LRCLIB, Deezer, IA locale (les clés Musixmatch, Genius, DeepL restent possibles dans `.env`) |
 | Sauvegardes | tâche « Lyrics Vocab Sauvegarde » chaque jour à 21:00, copie dans `OneDrive/lyrics-vocab-sauvegardes`, restauration testée |
 | Secrets | `C:/lyrics-vocab/secrets` : mot de passe PostgreSQL, `pgpass.conf`, clé de signature de l'APK et son mot de passe. **À copier sur une clé USB ou dans un coffre** : sans la clé de signature, les mises à jour de l'APK seront refusées. |
-| APK | `C:/lyrics-vocab/apk/lyrics-vocab.apk` (18 Mo, arm64, signé) |
+| APK | `C:/lyrics-vocab/apk/lyrics-vocab.apk` (universel, 52 Mo, signé ; une copie dans `C:/Users/HP/Downloads`) |
 
 **Installer l'application sur le téléphone (seule étape restante)** :
-1. Sur le Galaxy A13, ouvrir l'application Tailscale et se connecter (le téléphone est hors ligne dans le tailnet depuis 4 jours).
+1. Sur le Galaxy A13, ouvrir l'application Tailscale et se connecter. **Sans Tailscale connecté sur le téléphone, l'application affiche « PC injoignable »** : le PC n'est pas accessible autrement. Activer « VPN toujours actif » et exclure Tailscale de l'optimisation de batterie.
 2. Dans Chrome sur le téléphone : https://desktop-jd3qf3s.tail971f32.ts.net/apk/lyrics-vocab.apk
 3. Ouvrir le fichier téléchargé, autoriser l'installation depuis Chrome, confirmer (l'avertissement d'Android est normal).
 4. Au premier lancement : choisir ses artistes, autoriser les notifications.

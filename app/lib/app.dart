@@ -25,6 +25,29 @@ const intervalleVersion = Duration(minutes: 5);
 /// Préférences locales (premier lancement, appareil_id), Hive sur toutes les plateformes.
 final prefsProvider = Provider<Magasin>((ref) => throw UnimplementedError());
 
+const clePrefTheme = 'theme';
+
+/// Thème choisi dans les Réglages : clair par défaut, comme le design (voir DECISIONS.md).
+final themeProvider = StateProvider<ThemeMode>((ref) {
+  final valeur = ref.watch(prefsProvider).lire(clePrefTheme)?['v'];
+  return switch (valeur) {
+    'sombre' => ThemeMode.dark,
+    'systeme' => ThemeMode.system,
+    _ => ThemeMode.light,
+  };
+});
+
+/// Enregistre le thème choisi.
+Future<void> choisirTheme(WidgetRef ref, ThemeMode mode) async {
+  ref.read(themeProvider.notifier).state = mode;
+  final valeur = switch (mode) {
+    ThemeMode.dark => 'sombre',
+    ThemeMode.system => 'systeme',
+    ThemeMode.light => 'clair',
+  };
+  await ref.read(prefsProvider).ecrire(clePrefTheme, {'v': valeur});
+}
+
 class Application extends ConsumerStatefulWidget {
   const Application({super.key});
 
@@ -127,7 +150,7 @@ class _ApplicationState extends ConsumerState<Application> {
       scaffoldMessengerKey: _messager,
       theme: construireTheme(Couleurs.clair, Brightness.light),
       darkTheme: construireTheme(Couleurs.sombre, Brightness.dark),
-      themeMode: ThemeMode.system,
+      themeMode: ref.watch(themeProvider),
       locale: const Locale('fr', 'FR'),
       supportedLocales: const [Locale('fr', 'FR')],
       localizationsDelegates: const [

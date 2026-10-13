@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../app.dart';
 import '../models/divers.dart';
 import '../providers/providers.dart';
 import '../services/api_client.dart';
@@ -94,6 +95,7 @@ class SettingsScreen extends ConsumerWidget {
       if (env.mobile) _SectionSync(reglages: r, modifier: modifier),
       if (env.adresseModifiable) const _SectionServeur(),
       const _SectionInformations(),
+      const _SectionApparence(),
       const _SectionDonnees(),
     ];
     return [
@@ -691,6 +693,35 @@ class _SectionInformations extends ConsumerWidget {
                 ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+class _SectionApparence extends ConsumerWidget {
+  const _SectionApparence();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mode = ref.watch(themeProvider);
+    final valeur = switch (mode) {
+      ThemeMode.dark => 'sombre',
+      ThemeMode.system => 'systeme',
+      ThemeMode.light => 'clair',
+    };
+    return CarteFiche(
+      libelle: S.sectionApparence,
+      child: _Ligne(
+        libelle: S.theme,
+        controle: _Choix(
+          options: const {'clair': S.themeClair, 'sombre': S.themeSombre, 'systeme': S.themeSysteme},
+          valeur: valeur,
+          onChanged: (v) => choisirTheme(ref, switch (v) {
+            'sombre' => ThemeMode.dark,
+            'systeme' => ThemeMode.system,
+            _ => ThemeMode.light,
+          }),
+        ),
       ),
     );
   }

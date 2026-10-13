@@ -52,6 +52,9 @@ def test_enrichissement_complet(fabrique, services):
     )
     assert (extraits[0].surbrillance_debut, extraits[0].surbrillance_fin) == (2, 8)
     assert extraits[0].hors_liste is False and mot.enrichi_le is not None
+    with fabrique() as session:
+        detail = mots.detail(session, session.get(Mot, mot_id))
+    assert detail["extraits"][0]["morceau"]["url_genius"] == "https://lien.test/Chanson"
     assert "lowkey" in services.ollama.prompts[0]
 
 

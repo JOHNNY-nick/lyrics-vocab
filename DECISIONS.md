@@ -95,6 +95,17 @@ Demande de l'utilisateur : une version complètement fonctionnelle, en s'autoris
 | Fuseau du PC | `Africa/Casablanca` (fuseau Windows « Morocco Standard Time »). | ALG-15. |
 | Titres renvoyés par LRCLIB | Préfixe « Artiste - » et mentions « [Official Audio] », « (Official Video) »… retirés. | Affichage propre de la ligne « Titre — Artiste ». |
 
+## Retours de l'utilisateur (2026-10-13)
+
+| Demande | Choix | Raison |
+| --- | --- | --- |
+| Lien vers chaque chanson | Pendant l'enrichissement, le lien Deezer de la chanson (Genius si un jeton est configuré) est cherché et stocké dans `morceau.url_genius` ; l'application affiche « Écouter la chanson », avec une recherche YouTube si aucun lien n'a été trouvé. | Demande explicite ; le champ existait déjà dans le contrat (18.2). |
+| Exercice d'utilisation visible | Écran d'exercice dédié ouvert depuis la fiche (« S'entraîner avec ce mot », entraînement libre sans effet sur SM-2) et « Session d'exercices » sur l'accueil des révisions (chaque mot traduit devient un exercice, le verdict alimente SM-2). Le mode Mélange (REV-12) reste disponible. | L'exercice n'apparaissait qu'en mode Mélange, désactivé par défaut. |
+| Thème trop sombre | Thème clair par défaut, choix Clair, Sombre ou Système dans Réglages → Apparence (enregistré par appareil). | UI-06 suivait le système, réglé en sombre sur ce PC ; le design est clair. |
+| « PC injoignable » sur le téléphone | Le téléphone n'était pas connecté à Tailscale (aucune requête reçue). Côté application : délai du test de joignabilité porté de 3 s à 10 s (SYN-06), et les fonctions qui exigent le PC tentent toujours l'appel au lieu de se fier à l'état de connexion. | Relais Tailscale sur réseau mobile ; état de connexion pas encore connu au premier écran. |
+| Pas de photos d'artistes sur le téléphone | Les suggestions sont toujours demandées au serveur (photos Deezer) ; la liste sans photo ne sert qu'en cas d'échec. | Conséquence du point précédent. |
+| APK « incompatible » | APK universel (arm64-v8a, armeabi-v7a, x86_64, 52 Mo) au lieu de l'APK arm64 seul. | Certains Galaxy A13 ont un Android 32 bits. |
+
 ## Exigences [S] non réalisées (reportées en v2, REC-03)
 
 - NOT-09 : relance 3 heures après la notification.

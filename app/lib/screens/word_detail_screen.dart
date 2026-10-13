@@ -10,6 +10,7 @@ import '../strings.dart';
 import '../theme/jetons.dart';
 import '../widgets/composants.dart';
 import '../widgets/icones.dart';
+import 'exercise_screen.dart';
 
 class WordDetailScreen extends ConsumerWidget {
   const WordDetailScreen({super.key, required this.motId});
@@ -232,6 +233,7 @@ class _Fiche extends StatelessWidget {
                     style: Textes.legende.copyWith(color: c.texteSecondaire),
                   ),
                 ),
+                LienChanson(extrait: e),
                 if (e.horsListe)
                   Padding(
                     padding: const EdgeInsets.only(top: Espaces.e8),
@@ -292,7 +294,19 @@ class _Fiche extends StatelessWidget {
       ],
     );
 
+    final entrainement = mot.traductionFr == null
+        ? Text(S.exerciceSansTraduction, style: Textes.legende.copyWith(color: c.texteSecondaire))
+        : BoutonPrincipal(
+            libelle: S.sEntrainer,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => ExerciseScreen(motId: mot.id, terme: mot.terme),
+              ),
+            ),
+          );
+
     final messages = <Widget>[
+      entrainement,
       if (_enCours)
         Semantics(
           liveRegion: true,

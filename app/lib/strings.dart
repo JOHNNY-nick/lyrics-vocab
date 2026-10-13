@@ -204,6 +204,23 @@ class S {
   static const enregistre = 'Enregistré.';
   static const batterie = 'Optimisation de batterie';
   static const actualiserPage = 'Actualiser';
+  static const ecouterChanson = 'Écouter la chanson';
+  static const lienImpossible = "Impossible d'ouvrir le lien.";
+  // Exercice d'utilisation du mot
+  static const sEntrainer = "S'entraîner avec ce mot";
+  static const exerciceTitre = 'Exercice';
+  static const exerciceSousTitre = 'Traduis la phrase en anglais en utilisant le mot.';
+  static const sessionExercices = "Session d'exercices";
+  static const sessionExercicesTexte = 'Traduis des phrases avec tes mots du jour.';
+  static const nouvellePhrase = 'Nouvelle phrase';
+  static const exerciceSansTraduction =
+      "L'exercice sera possible quand la traduction du mot sera disponible.";
+  // Apparence
+  static const sectionApparence = 'APPARENCE';
+  static const theme = 'Thème';
+  static const themeClair = 'Clair';
+  static const themeSombre = 'Sombre';
+  static const themeSysteme = 'Système';
   static const sauvegarde = 'Dernière sauvegarde';
   static const sauvegardeEchec = 'La sauvegarde quotidienne n\'a pas abouti : vérifie le PC.';
   static const batterieTexte =

@@ -144,3 +144,24 @@ def test_enrichissement_sans_aucune_cle(fabrique, services):
         assert extraits[0].texte == "I lowkey miss you\nBut I'm never saying that"
         assert extraits[0].hors_liste is False
     assert services.compteur.appels["lrclib"] == 1  # une seule recherche, paroles comprises
+
+
+def test_deezer_lien_morceau():
+    def repondre(requete: httpx.Request) -> httpx.Response:
+        assert requete.url.path == "/search/track"
+        assert 'artist:"Ed Sheeran"' in requete.url.params["q"]
+        return httpx.Response(
+            200,
+            json={
+                "data": [
+                    {"link": "https://www.deezer.com/track/1", "artist": {"name": "Autre"}},
+                    {"link": "https://www.deezer.com/track/2", "artist": {"name": "Ed Sheeran"}},
+                ]
+            },
+        )
+
+    client = DeezerClient(
+        _http(repondre), CompteurMemoire(), Disjoncteur("deezer", 5, 5), dormir=_sans_pause
+    )
+    lien = asyncio.run(client.lien_morceau("Perfect", "Ed Sheeran, Beyoncé"))
+    assert lien == "https://www.deezer.com/track/2"

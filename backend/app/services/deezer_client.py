@@ -60,6 +60,27 @@ class DeezerClient(ClientExterne):
             for c in tries[:limite]
         ]
 
-    async def metadonnees_morceau(self, titre: str, artiste: str) -> None:
-        """Non fourni par Deezer dans cette application."""
-        return None
+    async def lien_morceau(self, titre: str, artiste: str) -> str | None:
+        """Lien Deezer de la chanson, ou None si elle n'est pas trouvée."""
+        nom_artiste = artiste.split(",")[0].strip()
+
+        async def appel() -> list[dict]:
+            reponse = await self.http.get(
+                f"{self.adresse}/search/track",
+                params={"q": f'artist:"{nom_artiste}" track:"{titre}"', "limit": 5},
+            )
+            verifier_statut_http(reponse)
+            reponse.raise_for_status()
+            corps = reponse.json()
+            if "error" in corps:
+                raise ValueError(str(corps["error"]))
+            return corps.get("data", [])
+
+        resultats = await self.appeler("search_track", appel)
+        if not resultats:
+            return None
+        cible = nom_artiste.casefold()
+        for r in resultats:
+            if cible in ((r.get("artist") or {}).get("name") or "").casefold() and r.get("link"):
+                return r["link"]
+        return resultats[0].get("link")

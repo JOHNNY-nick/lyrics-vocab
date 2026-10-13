@@ -97,6 +97,11 @@ class FauxGenius:
     panne: bool = False
     configure: bool = True
 
+    async def lien_morceau(self, titre: str, artiste: str) -> str | None:
+        if self.panne:
+            raise ServiceIndisponible(details={"service": "genius"})
+        return f"https://lien.test/{titre}"
+
     async def rechercher_artistes(self, q: str, limite: int = 10) -> list[ArtisteExterne]:
         if self.panne:
             raise ServiceIndisponible(details={"service": "genius"})

@@ -50,8 +50,14 @@ class DepotLocal implements DepotDonnees {
     OperationSync(opId: _uuid.v4(), type: type, donnees: donnees, creeLe: _horloge().toUtc()),
   );
 
-  void _exigerServeur() {
-    if (!serveurJoignable()) throw const HorsLigneException();
+  /// Fonction qui exige le PC : on tente toujours l'appel (l'état de connexion peut ne pas être
+  /// encore connu) ; une erreur réseau devient HorsLigneException (AND-11).
+  Future<T> _enLigne<T>(Future<T> Function() appel) async {
+    try {
+      return await appel();
+    } on ReseauException {
+      throw const HorsLigneException();
+    }
   }
 
   @override
@@ -109,8 +115,7 @@ class DepotLocal implements DepotDonnees {
 
   @override
   Future<void> relancerEnrichissement(String id) async {
-    _exigerServeur();
-    await api.rechercherExtraits(id);
+    await _enLigne(() => api.rechercherExtraits(id));
     declencherSync();
   }
 
@@ -244,14 +249,12 @@ class DepotLocal implements DepotDonnees {
 
   @override
   Future<Exercice> creerExercice(String motId) {
-    _exigerServeur();
-    return api.creerExercice(motId);
+    return _enLigne(() => api.creerExercice(motId));
   }
 
   @override
   Future<Verdict> evaluerExercice(String id, String reponse) {
-    _exigerServeur();
-    return api.evaluerExercice(id, reponse);
+    return _enLigne(() => api.evaluerExercice(id, reponse));
   }
 
   @override
@@ -266,16 +269,14 @@ class DepotLocal implements DepotDonnees {
 
   @override
   Future<List<Artiste>> rechercherArtistes(String q) {
-    _exigerServeur();
-    return api.rechercherArtistes(q);
+    return _enLigne(() => api.rechercherArtistes(q));
   }
 
   @override
   Future<List<Artiste>> suggestions() async {
-    if (!serveurJoignable()) return artistesSecours;
     try {
       return await api.suggestions();
-    } on Exception {
+    } catch (_) {
       return artistesSecours;
     }
   }

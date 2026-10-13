@@ -1,8 +1,10 @@
 // Composants de référence (21.2, 43.5, 43.9) construits uniquement avec les jetons (DES-02).
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../models/extrait.dart';
+import '../models/revision.dart';
 import '../services/extraction.dart';
 import '../strings.dart';
 import '../theme/jetons.dart';
@@ -1237,6 +1239,71 @@ void afficherMessage(
       content: Text(message),
       duration: duree,
       action: action == null ? null : SnackBarAction(label: action, onPressed: onAction ?? () {}),
+    ),
+  );
+}
+
+/// Verdict d'un exercice (43.9) : couleur, libellé, explication et étiquette IA.
+class BlocVerdict extends StatelessWidget {
+  const BlocVerdict({super.key, required this.verdict});
+  final Verdict verdict;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.couleurs;
+    final (fond, texte, libelle) = switch (verdict.verdict) {
+      'correct' => (c.acquisFond, c.vertTexte, S.correct),
+      'proche' => (c.nouveauFond, c.surAccent, S.presque),
+      _ => (c.enCoursFond, c.erreurTexte, S.incorrect),
+    };
+    return Semantics(
+      liveRegion: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: Espaces.e20, vertical: Espaces.e18),
+        decoration: BoxDecoration(color: fond, borderRadius: BorderRadius.circular(Rayons.carte)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: Espaces.e8,
+              runSpacing: Espaces.e6,
+              children: [
+                Text(libelle, style: Textes.titreCarte.copyWith(color: texte)),
+                const EtiquetteIA(),
+              ],
+            ),
+            const SizedBox(height: Espaces.e8),
+            Text(verdict.explication, style: Textes.corps.copyWith(color: texte)),
+            if (verdict.verdictRepli) ...[
+              const SizedBox(height: Espaces.e6),
+              Text(S.evaluationSimplifiee, style: Textes.legende.copyWith(color: texte)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Lien « Écouter la chanson » d'un extrait (Deezer, Genius, sinon recherche YouTube).
+class LienChanson extends StatelessWidget {
+  const LienChanson({super.key, required this.extrait});
+  final Extrait extrait;
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.centerLeft,
+    child: Semantics(
+      link: true,
+      child: BoutonLien(
+        libelle: S.ecouterChanson,
+        onPressed: () async {
+          final ok = await launchUrl(Uri.parse(extrait.lienEcoute), mode: LaunchMode.externalApplication);
+          if (!ok && context.mounted) afficherMessage(context, S.lienImpossible);
+        },
+      ),
     ),
   );
 }

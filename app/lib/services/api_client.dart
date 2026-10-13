@@ -7,7 +7,10 @@ import '../models/mot.dart';
 import '../models/revision.dart';
 
 const delaiRequete = Duration(seconds: 15);
-const delaiSante = Duration(seconds: 3);
+
+/// Test de joignabilité du PC (SYN-06). 10 s plutôt que 3 : à travers un relais Tailscale sur
+/// réseau mobile, la première connexion TLS dépasse souvent 3 s (voir DECISIONS.md).
+const delaiSante = Duration(seconds: 10);
 
 /// Adresse de l'API lue à la compilation (PWA-03) : --dart-define=API_BASE_URL=…
 const adresseCompilee = String.fromEnvironment('API_BASE_URL');

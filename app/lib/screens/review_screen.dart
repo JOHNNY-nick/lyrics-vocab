@@ -252,6 +252,13 @@ class _Accueil extends ConsumerWidget {
                   autofocus: context.estPc,
                   onPressed: () => ref.read(sessionRevisionProvider.notifier).demarrer(resultat.items),
                 ),
+                const SizedBox(height: Espaces.e6),
+                // US-06 : session où chaque mot est travaillé par une phrase à traduire.
+                BoutonLien(
+                  libelle: S.sessionExercices,
+                  onPressed: () =>
+                      ref.read(sessionRevisionProvider.notifier).demarrer(resultat.items, exercices: true),
+                ),
               ],
             ),
           ),
@@ -505,6 +512,7 @@ class _CarteRappel extends StatelessWidget {
                           '${revele ? ' — ${extrait.titre}, ${extrait.artiste}' : ''}',
                 style: Textes.legende.copyWith(color: c.texteSecondaire),
               ),
+              if (revele && extrait != null) LienChanson(extrait: extrait),
               if (message != null) ...[
                 const SizedBox(height: Espaces.e8),
                 Text(message!, style: Textes.legende.copyWith(color: c.texteSecondaire)),
@@ -586,7 +594,7 @@ class _CarteExercice extends ConsumerWidget {
                   : () => notifier.evaluer(controleur.text),
             ),
           ] else ...[
-            _BlocVerdict(verdict: verdict),
+            BlocVerdict(verdict: verdict),
             if (verdict.referenceEn != null) ...[
               const SizedBox(height: Espaces.e12),
               Text(S.attendu, style: Textes.libelleCarte.copyWith(color: c.texteSecondaire)),
@@ -603,49 +611,6 @@ class _CarteExercice extends ConsumerWidget {
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-class _BlocVerdict extends StatelessWidget {
-  const _BlocVerdict({required this.verdict});
-  final Verdict verdict;
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.couleurs;
-    final (fond, texte, libelle) = switch (verdict.verdict) {
-      'correct' => (c.acquisFond, c.vertTexte, S.correct),
-      'proche' => (c.nouveauFond, c.surAccent, S.presque),
-      _ => (c.enCoursFond, c.erreurTexte, S.incorrect),
-    };
-    return Semantics(
-      liveRegion: true,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: Espaces.e20, vertical: Espaces.e18),
-        decoration: BoxDecoration(color: fond, borderRadius: BorderRadius.circular(Rayons.carte)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: Espaces.e8,
-              runSpacing: Espaces.e6,
-              children: [
-                Text(libelle, style: Textes.titreCarte.copyWith(color: texte)),
-                const EtiquetteIA(),
-              ],
-            ),
-            const SizedBox(height: Espaces.e8),
-            Text(verdict.explication, style: Textes.corps.copyWith(color: texte)),
-            if (verdict.verdictRepli) ...[
-              const SizedBox(height: Espaces.e6),
-              Text(S.evaluationSimplifiee, style: Textes.legende.copyWith(color: texte)),
-            ],
-          ],
-        ),
       ),
     );
   }

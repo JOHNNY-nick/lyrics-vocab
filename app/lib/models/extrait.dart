@@ -11,6 +11,7 @@ class Extrait {
     required this.horsListe,
     required this.titre,
     required this.artiste,
+    this.url,
     this.deletedAt,
   });
 
@@ -22,6 +23,13 @@ class Extrait {
   final bool horsListe;
   final String titre;
   final String artiste;
+
+  /// Lien vers la chanson (Deezer ou Genius) fourni par le serveur, s'il a été trouvé.
+  final String? url;
+
+  /// Lien à ouvrir : celui du serveur, sinon une recherche YouTube de la chanson.
+  String get lienEcoute =>
+      url ?? 'https://www.youtube.com/results?search_query=${Uri.encodeQueryComponent('$artiste $titre')}';
   final DateTime? deletedAt;
 
   /// Lit la forme de la fiche (morceau imbriqué) ou celle du pull (titre et artiste à plat).
@@ -36,6 +44,7 @@ class Extrait {
       horsListe: json['hors_liste'] as bool? ?? false,
       titre: (morceau?['titre'] ?? json['titre'] ?? '') as String,
       artiste: (morceau?['artiste'] ?? json['artiste'] ?? '') as String,
+      url: (morceau?['url_genius'] ?? json['url_genius']) as String?,
       deletedAt: lireInstant(json['deleted_at']),
     );
   }
@@ -49,6 +58,7 @@ class Extrait {
     'hors_liste': horsListe,
     'titre': titre,
     'artiste': artiste,
+    'url_genius': url,
     'deleted_at': ecrireInstant(deletedAt),
   };
 
@@ -61,6 +71,7 @@ class Extrait {
     horsListe: horsListe,
     titre: titre,
     artiste: artiste,
+    url: url,
     deletedAt: deletedAt,
   );
 }

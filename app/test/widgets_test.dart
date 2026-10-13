@@ -145,6 +145,8 @@ void main() {
     expect(find.text(S.horsListe), findsOneWidget);
     expect(find.text(S.argot), findsOneWidget);
     expect(find.text('Titre — Artiste'), findsOneWidget);
+    expect(find.text(S.ecouterChanson), findsOneWidget);
+    expect(find.text(S.sEntrainer), findsOneWidget);
     await arreter(tester);
   });
 
