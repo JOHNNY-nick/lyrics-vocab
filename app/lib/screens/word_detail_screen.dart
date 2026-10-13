@@ -306,7 +306,6 @@ class _Fiche extends StatelessWidget {
           );
 
     final messages = <Widget>[
-      entrainement,
       if (_enCours)
         Semantics(
           liveRegion: true,
@@ -333,6 +332,7 @@ class _Fiche extends StatelessWidget {
     final gauche = [
       _apparition(context, traduction, cle: 't${mot.traductionFr}$_enCours'),
       _apparition(context, explication, cle: 'e${mot.explication}$_enCours'),
+      entrainement, // juste sous l'explication
     ];
     final droite = [
       _apparition(context, colonne(extraits), cle: 'x${mot.extraits.length}$_enCours'),
@@ -349,7 +349,7 @@ class _Fiche extends StatelessWidget {
               Expanded(child: colonne(droite)),
             ],
           )
-        : colonne([gauche.first, droite.first, gauche.last, ...droite.skip(1)]);
+        : colonne([gauche[0], droite.first, gauche[1], gauche[2], ...droite.skip(1)]);
 
     return SingleChildScrollView(
       child: ContenuCentre(
