@@ -159,6 +159,17 @@ Demande de l'utilisateur : une version complètement fonctionnelle, en s'autoris
 | PC | Le backend (toujours lancé dans la session de l'utilisateur) affiche une notification Windows (`scripts/notifier.ps1`, identité « Lyrics & Vocab » enregistrée dans le registre de l'utilisateur) ; le clic ouvre `lyricsvocab://mot/<id>`, protocole qui lance `scripts/ouvrir_mot.vbs` puis `chrome --app=<adresse>?mot=<id>` ; la PWA ouvre la fiche demandée. Activé par `NOTIFICATIONS_PC=true` et `URL_APPLICATION`. | Une notification web exigerait que la page reste ouverte (ou un service de push) ; le backend tourne déjà en permanence sur ce PC. |
 | Téléphone | Notifications locales programmées pour 3 jours (60 au plus), reprogrammées à chaque ouverture ou synchronisation ; texte long affiché en entier. | Fonctionne sans réseau, comme les rappels précédents. |
 
+## Plusieurs utilisateurs pour les tests entre amis (2026-10-13)
+
+| Sujet | Décision | Raison |
+| --- | --- | --- |
+| Accès | Le PC est partagé avec chaque ami par le partage d'appareil de Tailscale (gratuit) ; l'APK leur est envoyé directement. Pas d'adresse publique. | Choix de l'utilisateur ; aucune exposition du serveur sur Internet. |
+| Identification | En-tête `Tailscale-User-Login` ajouté par `tailscale serve` (vérifié : une valeur envoyée par le client est remplacée par le vrai compte) ; le backend n'écoute que 127.0.0.1. Pas de mot de passe. | Fiable sans écran de connexion : le compte Tailscale de l'ami sert d'identité. |
+| Séparation des données | Une base PostgreSQL par compte (`lyrics_vocab_u_<empreinte du compte>`), créée et migrée à la première requête ; le propriétaire (`PROPRIETAIRE_LOGIN`) et les requêtes locales sans en-tête gardent la base d'origine. Sans `PROPRIETAIRE_LOGIN`, une seule base (fonctionnement d'origine). | Isolation complète et aucun changement des requêtes, de la synchronisation ni des tâches de fond : seule la base change (`app/core/locataires.py`). |
+| Tâches de fond | Enrichissement, phrases préparées : par utilisateur ; notifications Windows : propriétaire seulement ; quotas des API : communs. Les bases des amis suivent les migrations au démarrage. | Le PC n'affiche que les notifications de son propriétaire. |
+| Sauvegarde | Le script quotidien sauvegarde aussi chaque base d'ami. | Leurs données sont sur ce PC. |
+| Limites | Android seulement ; PC allumé ; une carte graphique de 4 Go pour tous (demandes en file d'attente au-delà de 2 ou 3 personnes simultanées). | Voir `Docs/GUIDE_AMIS.md`. |
+
 ## Exigences [S] non réalisées (reportées en v2, REC-03)
 
 - NOT-09 : relance 3 heures après la notification.

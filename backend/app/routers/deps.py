@@ -24,13 +24,19 @@ class ContexteTemps:
 
 
 def services(request: Request) -> Services:
-    """Conteneur des services externes."""
-    return request.app.state.services
+    """Conteneur des services externes, avec la base de l'utilisateur de la requête."""
+    locataires = getattr(request.app.state, "locataires", None)
+    if locataires is None:
+        return request.app.state.services
+    return locataires.depuis_requete(request).services
 
 
 def gestionnaire(request: Request) -> GestionnaireEnrichissement:
-    """Gestionnaire des tâches d'enrichissement."""
-    return request.app.state.gestionnaire
+    """Gestionnaire des tâches d'enrichissement de l'utilisateur de la requête."""
+    locataires = getattr(request.app.state, "locataires", None)
+    if locataires is None:
+        return request.app.state.gestionnaire
+    return locataires.depuis_requete(request).gestionnaire
 
 
 def contexte_temps(request: Request, session: Session = Depends(obtenir_session)) -> ContexteTemps:

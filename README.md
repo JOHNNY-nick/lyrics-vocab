@@ -255,6 +255,14 @@ Modifier `OLLAMA_MODEL` ou la clé dans `.env`, redémarrer la tâche du backend
 2. Vérifier les appareils restants ; changer le mot de passe du compte Tailscale si besoin.
 3. Installer l'APK sur le nouveau téléphone : une synchronisation complète restaure les données.
 
+## Faire tester l'application à des amis
+
+1. Dans `backend/.env`, renseigner `PROPRIETAIRE_LOGIN=<ton compte Tailscale>` puis redémarrer le backend : chaque autre compte Tailscale aura sa propre base, créée à sa première connexion.
+2. Console Tailscale (https://login.tailscale.com/admin/machines) → appareil **desktop-jd3qf3s** → **⋯ → Share** → inviter l'ami par e-mail ou par lien (gratuit).
+3. Lui envoyer `lyrics-vocab.apk` et le guide `Docs/GUIDE_AMIS.md`.
+
+Pour retirer un ami : console Tailscale → Machines → desktop-jd3qf3s → Share → révoquer. Sa base (`lyrics_vocab_u_…`) reste sur le PC ; la supprimer avec `DROP DATABASE` si besoin.
+
 ## Dépannage
 
 | Symptôme | Vérifications |

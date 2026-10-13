@@ -32,15 +32,25 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "pg_dump a échoué (code $LASTEXITCODE)" }
     $Taille = (Get-Item $Cible).Length
     if ($Taille -lt 1024) { throw "fichier de sauvegarde anormalement petit ($Taille octets)" }
+    # Bases des amis (une par compte Tailscale, voir backend/app/core/locataires.py).
+    $Fichiers = @($Cible)
+    $Amis = & psql -U $Utilisateur -h 127.0.0.1 -d postgres -Atc "SELECT datname FROM pg_database WHERE datname LIKE '${Base}_u_%'"
+    if ($LASTEXITCODE -ne 0) { throw "liste des bases impossible (code $LASTEXITCODE)" }
+    foreach ($Ami in @($Amis | Where-Object { $_ })) {
+        $CibleAmi = "$Dossier/${Ami}_$Date.dump"
+        & pg_dump -Fc -U $Utilisateur -h 127.0.0.1 -f $CibleAmi $Ami
+        if ($LASTEXITCODE -ne 0) { throw "pg_dump de $Ami a échoué (code $LASTEXITCODE)" }
+        $Fichiers += $CibleAmi
+    }
     if (Test-Path (Split-Path $Copie -Qualifier)) {
         New-Item -ItemType Directory -Force $Copie | Out-Null
-        Copy-Item $Cible $Copie -Force
+        foreach ($Fichier in $Fichiers) { Copy-Item $Fichier $Copie -Force }
     } else {
         Ecrire-Journal "AVERTISSEMENT" "copie impossible : $Copie absent"
     }
     Get-ChildItem $Dossier -Filter *.dump |
         Where-Object { $_.LastWriteTime -lt (Get-Date).AddDays(-$Retention) } | Remove-Item
-    Ecrire-Journal "OK" "taille=$Taille"
+    Ecrire-Journal "OK" "taille=$Taille bases=$($Fichiers.Count)"
     # Marqueur lu par le script de contrôle : date de la dernière sauvegarde réussie.
     Set-Content -Path "$Dossier/derniere_reussie.txt" -Value $Date -Encoding utf8
 } catch {

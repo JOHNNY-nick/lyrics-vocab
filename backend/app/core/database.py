@@ -56,7 +56,12 @@ def attendre_base(
 
 def obtenir_session(request: Request) -> Iterator[Session]:
     """Dépendance FastAPI : ouvre, yield, commit si aucune erreur, rollback sinon, ferme."""
-    fabrique: sessionmaker[Session] = request.app.state.fabrique_sessions
+    locataires = getattr(request.app.state, "locataires", None)
+    fabrique: sessionmaker[Session] = (
+        locataires.depuis_requete(request).fabrique
+        if locataires is not None
+        else request.app.state.fabrique_sessions
+    )
     session = fabrique()
     try:
         yield session

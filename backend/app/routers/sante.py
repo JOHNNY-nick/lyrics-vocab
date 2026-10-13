@@ -44,7 +44,13 @@ def _sauvegarde(dossier: str) -> tuple[str | None, bool]:
 def sante(request: Request) -> dict:
     """État de la base (obligatoire) et d'Ollama (facultatif), sans appel externe."""
     try:
-        with request.app.state.fabrique_sessions() as session:
+        locataires = getattr(request.app.state, "locataires", None)
+        fabrique = (
+            locataires.depuis_requete(request).fabrique
+            if locataires is not None
+            else request.app.state.fabrique_sessions
+        )
+        with fabrique() as session:
             session.execute(text("SELECT 1"))
             base, curseur = "ok", curseur_serveur(session)
     except Exception:

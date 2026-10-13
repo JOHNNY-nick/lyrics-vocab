@@ -5,6 +5,7 @@ dus aujourd'hui et demain, et POST /api/exercices sert directement la phrase pr�
 """
 
 import asyncio
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import or_, select
@@ -88,12 +89,14 @@ async def preparer(services: Services) -> int:
     return prets
 
 
-async def boucle(services: Services) -> None:
-    """Passage au démarrage puis toutes les 10 minutes ; une erreur ne l'arrête jamais."""
+async def boucle(liste_services: Callable[[], list[Services]]) -> None:
+    """Passage au démarrage puis toutes les 10 minutes, pour chaque utilisateur ; une erreur
+    ne l'arrête jamais."""
     await asyncio.sleep(ATTENTE_DEMARRAGE_S)
     while True:
-        try:
-            await preparer(services)
-        except Exception as exc:
-            journaliser("exercices_prepares_echec", "avertissement", erreur=type(exc).__name__)
+        for services in await asyncio.to_thread(liste_services):
+            try:
+                await preparer(services)
+            except Exception as exc:
+                journaliser("exercices_prepares_echec", "avertissement", erreur=type(exc).__name__)
         await asyncio.sleep(INTERVALLE_S)

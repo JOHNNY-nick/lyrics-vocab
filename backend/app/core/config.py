@@ -39,6 +39,9 @@ class Parametres(BaseSettings):
     # Notifications Windows d'un mot au hasard (PC de l'utilisateur) et adresse de la PWA
     # ouverte au clic (voir scripts/notifier.ps1).
     notifications_pc: bool = False
+    # Compte Tailscale du propriétaire : s'il est renseigné, chaque autre compte Tailscale
+    # (amis avec qui le PC est partagé) a sa propre base (voir app/core/locataires.py).
+    proprietaire_login: str = ""
     url_application: str = ""
     mode: str = "production"
 

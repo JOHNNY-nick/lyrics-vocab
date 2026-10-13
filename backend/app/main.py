@@ -15,12 +15,14 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
+from sqlalchemy.engine import make_url
 from starlette.requests import Request
 from starlette.types import Scope
 
 from app.core.config import DOSSIER_BACKEND, Parametres, obtenir_parametres
 from app.core.database import attendre_base, creer_fabrique, creer_moteur
 from app.core.errors import installer_gestionnaires
+from app.core.locataires import Locataire, Locataires
 from app.core.logging import configurer_journaux, journaliser
 from app.core.middleware import CorrelationMiddleware, LimiteDebitMiddleware, TailleCorpsMiddleware
 from app.core.resilience import Disjoncteur
@@ -175,6 +177,13 @@ def creer_app(
         app.state.fabrique_sessions = fabrique
         app.state.services = conteneur
         app.state.gestionnaire = gestion
+        principal = Locataire(
+            make_url(parametres.database_url).database, fabrique, conteneur, gestion
+        )
+        locataires = Locataires(parametres, principal, demarrer_taches, asyncio.get_running_loop())
+        app.state.locataires = locataires
+        if locataires.actif:
+            await asyncio.to_thread(locataires.migrer_tous)
         journaliser(
             "demarrage",
             version=VERSION,
@@ -185,7 +194,11 @@ def creer_app(
             gestion.demarrer()
             gestion.reprendre(au_demarrage=True)
             asyncio.create_task(conteneur.ollama.disponible())
-            preparation = asyncio.create_task(exercices_prets.boucle(conteneur))
+            preparation = asyncio.create_task(
+                exercices_prets.boucle(lambda: [loc.services for loc in locataires.tous()])
+            )
+            # Bases des utilisateurs existantes : reprise de leurs enrichissements.
+            await asyncio.to_thread(locataires.tous)
             notifications = asyncio.create_task(notifications_mots.boucle(conteneur))
         try:
             yield
@@ -193,7 +206,8 @@ def creer_app(
             if demarrer_taches:
                 preparation.cancel()
                 notifications.cancel()
-            await gestion.arreter()
+            for locataire in app.state.locataires.tous():
+                await locataire.gestionnaire.arreter()
             await http.aclose()
             moteur.dispose()
 
