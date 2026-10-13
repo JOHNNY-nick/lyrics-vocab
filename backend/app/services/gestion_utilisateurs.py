@@ -42,6 +42,7 @@ class Utilisateur:
     revisions: int
     derniere_activite: str | None
     connecte: bool
+    base: str | None = None
 
     def en_dict(self) -> dict:
         return asdict(self)
@@ -134,7 +135,16 @@ class GestionUtilisateurs:
         connus = self._comptes_connus()
         mots, faites, derniere = self._statistiques(self.principale)
         lignes = [
-            Utilisateur("Toi", self.proprietaire, "proprietaire", mots, faites, derniere, True)
+            Utilisateur(
+                "Toi",
+                self.proprietaire,
+                "proprietaire",
+                mots,
+                faites,
+                derniere,
+                True,
+                self.principale,
+            )
         ]
         vues = set()
         for base in self._bases():
@@ -148,7 +158,7 @@ class GestionUtilisateurs:
                 acces = "inconnu"
             mots, faites, derniere = self._statistiques(base)
             nom = nom_affiche(compte) if compte else base
-            lignes.append(Utilisateur(nom, compte, acces, mots, faites, derniere, True))
+            lignes.append(Utilisateur(nom, compte, acces, mots, faites, derniere, True, base))
         for compte in sorted(codes):
             if compte.startswith("invite:") and base_du_compte(self.principale, compte) not in vues:
                 lignes.append(Utilisateur(nom_affiche(compte), compte, "code", 0, 0, None, False))
@@ -191,3 +201,215 @@ class GestionUtilisateurs:
         registre = self.registre()
         if registre.pop(base, None) is not None:
             self._ecrire_registre(registre)
+
+    # --- Fiche détaillée -------------------------------------------------------------------
+
+    def base_de(self, compte: str) -> str:
+        compte = compte.strip().lower()
+        return (
+            self.principale
+            if compte == self.proprietaire
+            else base_du_compte(self.principale, compte)
+        )
+
+    def details(self, compte: str) -> dict:
+        """Toutes les informations connues d'un utilisateur (page /admin)."""
+        compte = compte.strip().lower()
+        base = self.base_de(compte)
+        if base != self.principale and base not in self._bases():
+            raise GestionImpossible("Cet utilisateur ne s'est pas encore connecté.")
+        codes = self.codes()
+        inscription = self.registre().get(base, {})
+        moteur = self._moteur(base)
+
+        def lignes(c, sql: str, **params) -> list[dict]:
+            return [dict(r._mapping) for r in c.execute(text(sql), params)]
+
+        def un(c, sql: str, **params):
+            return c.execute(text(sql), params).scalar()
+
+        try:
+            with moteur.connect() as c:
+                bibliotheque = {
+                    "mots": un(c, "SELECT count(*) FROM mot WHERE deleted_at IS NULL"),
+                    "supprimes": un(c, "SELECT count(*) FROM mot WHERE deleted_at IS NOT NULL"),
+                    "par_niveau": {
+                        r["niveau"]: r["n"]
+                        for r in lignes(
+                            c,
+                            "SELECT niveau, count(*) n FROM mot WHERE deleted_at IS NULL "
+                            "GROUP BY niveau",
+                        )
+                    },
+                    "par_statut": {
+                        r["statut_enrichissement"]: r["n"]
+                        for r in lignes(
+                            c,
+                            "SELECT statut_enrichissement, count(*) n FROM mot "
+                            "WHERE deleted_at IS NULL GROUP BY statut_enrichissement",
+                        )
+                    },
+                    "avec_explication": un(
+                        c,
+                        "SELECT count(*) FROM mot WHERE deleted_at IS NULL "
+                        "AND source_explication = 'ia'",
+                    ),
+                    "avec_exemples": un(
+                        c,
+                        "SELECT count(*) FROM mot WHERE deleted_at IS NULL "
+                        "AND exemples IS NOT NULL AND jsonb_array_length(exemples) > 0",
+                    ),
+                    "extraits": un(c, "SELECT count(*) FROM extrait WHERE deleted_at IS NULL"),
+                    "extraits_hors_liste": un(
+                        c,
+                        "SELECT count(*) FROM extrait WHERE deleted_at IS NULL AND hors_liste",
+                    ),
+                    "premier_ajout": un(c, "SELECT min(created_at) FROM mot"),
+                    "dernier_ajout": un(c, "SELECT max(created_at) FROM mot"),
+                    "derniers_mots": lignes(
+                        c,
+                        "SELECT terme, traduction_fr, niveau, statut_enrichissement, nb_echecs, "
+                        "created_at FROM mot WHERE deleted_at IS NULL "
+                        "ORDER BY created_at DESC LIMIT 30",
+                    ),
+                    "plus_rates": lignes(
+                        c,
+                        "SELECT terme, traduction_fr, nb_echecs FROM mot WHERE deleted_at IS NULL "
+                        "AND nb_echecs > 0 ORDER BY nb_echecs DESC, terme LIMIT 5",
+                    ),
+                }
+                jours_revises = [
+                    r["jour"]
+                    for r in lignes(
+                        c,
+                        "SELECT DISTINCT (repondu_le AT TIME ZONE 'UTC')::date jour FROM revision "
+                        "WHERE statut = 'faite' AND repondu_le IS NOT NULL ORDER BY jour DESC",
+                    )
+                ]
+                revisions = {
+                    "faites": un(c, "SELECT count(*) FROM revision WHERE statut = 'faite'"),
+                    "faites_7_jours": un(
+                        c,
+                        "SELECT count(*) FROM revision WHERE statut = 'faite' "
+                        "AND repondu_le > now() - interval '7 days'",
+                    ),
+                    "reussies": un(
+                        c,
+                        "SELECT count(*) FROM revision WHERE statut = 'faite' AND qualite >= 3",
+                    ),
+                    "dues": un(
+                        c,
+                        "SELECT count(*) FROM revision WHERE statut = 'planifiee' "
+                        "AND deleted_at IS NULL AND date_prevue <= current_date",
+                    ),
+                    "en_retard": un(
+                        c,
+                        "SELECT count(*) FROM revision WHERE statut = 'planifiee' "
+                        "AND deleted_at IS NULL AND date_prevue < current_date",
+                    ),
+                    "prochaine": un(
+                        c,
+                        "SELECT min(date_prevue) FROM revision WHERE statut = 'planifiee' "
+                        "AND deleted_at IS NULL AND date_prevue > current_date",
+                    ),
+                    "par_mode": {
+                        r["mode"]: r["n"]
+                        for r in lignes(
+                            c,
+                            "SELECT mode, count(*) n FROM revision WHERE statut = 'faite' "
+                            "GROUP BY mode",
+                        )
+                    },
+                    "verdicts": {
+                        r["verdict"]: r["n"]
+                        for r in lignes(
+                            c,
+                            "SELECT verdict, count(*) n FROM revision WHERE verdict IS NOT NULL "
+                            "GROUP BY verdict",
+                        )
+                    },
+                    "derniere": un(c, "SELECT max(repondu_le) FROM revision"),
+                    "jours_actifs": len(jours_revises),
+                    "serie": _serie(jours_revises),
+                    "dernieres_reponses": lignes(
+                        c,
+                        "SELECT m.terme, r.mode, r.verdict, r.qualite, r.reponse_utilisateur, "
+                        "r.repondu_le FROM revision r JOIN mot m ON m.id = r.mot_id "
+                        "WHERE r.statut = 'faite' ORDER BY r.repondu_le DESC NULLS LAST LIMIT 10",
+                    ),
+                }
+                reglage = lignes(
+                    c,
+                    "SELECT intervalle_notifications_min, notifications_debut, notifications_fin, "
+                    "mots_par_session, mode_revision, heure_changement_jour, sync_wifi_seulement, "
+                    "updated_at FROM reglage LIMIT 1",
+                )
+                artistes = lignes(
+                    c,
+                    "SELECT nom, rang FROM artiste WHERE est_prefere AND deleted_at IS NULL "
+                    "ORDER BY rang",
+                )
+                appareils = lignes(
+                    c,
+                    "SELECT appareil_id, count(*) operations, max(applique_le) derniere "
+                    "FROM sync_op GROUP BY appareil_id ORDER BY derniere DESC",
+                )
+                taille = un(c, "SELECT pg_database_size(current_database())")
+        finally:
+            moteur.dispose()
+        if compte == self.proprietaire:
+            acces = "proprietaire"
+        elif compte.startswith("invite:"):
+            acces = "code" if compte in codes.values() else "retire"
+        else:
+            acces = "tailscale"
+        return _json(
+            {
+                "nom": "Toi" if acces == "proprietaire" else nom_affiche(compte),
+                "compte": compte,
+                "base": base,
+                "acces": acces,
+                "codes_actifs": sum(1 for v in codes.values() if v == compte),
+                "cree_le": inscription.get("cree_le"),
+                "taille_octets": taille,
+                "bibliotheque": bibliotheque,
+                "revisions": revisions,
+                "reglages": reglage[0] if reglage else {},
+                "artistes": artistes,
+                "appareils_synchronises": appareils,
+            }
+        )
+
+
+def _serie(jours: list) -> int:
+    """Jours consécutifs de révision jusqu'à aujourd'hui (ou hier)."""
+    from datetime import date, timedelta
+
+    if not jours:
+        return 0
+    attendu = date.today()
+    if jours[0] < attendu - timedelta(days=1):
+        return 0
+    if jours[0] == attendu - timedelta(days=1):
+        attendu = jours[0]
+    serie = 0
+    for jour in jours:
+        if jour == attendu:
+            serie += 1
+            attendu -= timedelta(days=1)
+        elif jour < attendu:
+            break
+    return serie
+
+
+def _json(valeur):
+    """Dates et heures en texte ISO (réponse JSON)."""
+    from datetime import date, datetime, time
+
+    if isinstance(valeur, dict):
+        return {k: _json(v) for k, v in valeur.items()}
+    if isinstance(valeur, list):
+        return [_json(v) for v in valeur]
+    if isinstance(valeur, datetime | date | time):
+        return valeur.isoformat()
+    return valeur

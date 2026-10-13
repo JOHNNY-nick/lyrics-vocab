@@ -144,6 +144,16 @@ def verifier_migrations(moteur) -> None:
         )
 
 
+async def _enregistrer_connexions(locataires: Locataires) -> None:
+    """Dernières connexions écrites dans leur fichier toutes les minutes."""
+    while True:
+        await asyncio.sleep(60)
+        try:
+            await asyncio.to_thread(locataires.connexions.enregistrer)
+        except OSError:
+            pass
+
+
 def creer_app(
     parametres: Parametres | None = None,
     services: Services | None = None,
@@ -201,12 +211,15 @@ def creer_app(
             # Bases des utilisateurs existantes : reprise de leurs enrichissements.
             await asyncio.to_thread(locataires.tous)
             notifications = asyncio.create_task(notifications_mots.boucle(conteneur))
+            connexions = asyncio.create_task(_enregistrer_connexions(locataires))
         try:
             yield
         finally:
             if demarrer_taches:
                 preparation.cancel()
                 notifications.cancel()
+                connexions.cancel()
+            app.state.locataires.connexions.enregistrer()
             for locataire in app.state.locataires.tous():
                 await locataire.gestionnaire.arreter()
             await http.aclose()

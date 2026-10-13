@@ -54,6 +54,12 @@ def test_inviter_retirer_supprimer(admin):
     assert client.post("/api/mots", json=mot, headers=entetes).status_code in (200, 201)
     sarah = _ligne(client, "Sarah")
     assert sarah["connecte"] and sarah["mots"] == 1
+    fiche = client.get("/api/admin/utilisateur", params={"compte": "invite:sarah"}).json()
+    assert fiche["bibliotheque"]["mots"] == 1 and fiche["acces"] == "code"
+    assert fiche["bibliotheque"]["derniers_mots"][0]["terme"] == "vibe"
+    assert fiche["connexions"]["voie"] == "tunnel" and fiche["connexions"]["requetes"] >= 1
+    assert fiche["codes_actifs"] == 1 and fiche["revisions"]["dues"] >= 1
+    assert sarah["voie"] is None or isinstance(sarah["voie"], str)
     fichier = app.state.parametres.registre_utilisateurs_fichier
     registre = json.loads(open(fichier, encoding="utf-8").read())
     assert "invite:sarah" in [v["compte"] for v in registre.values()]

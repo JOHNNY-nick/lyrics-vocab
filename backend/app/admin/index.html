@@ -90,6 +90,31 @@
   dialog input { width: 100%; margin: 12px 0 4px; }
   .boutons-dialogue { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
   .erreur-champ { color: var(--rose); font-size: 13px; min-height: 18px; }
+  .lien-nom { background: none; border: 0; padding: 0; color: inherit; font: inherit; font-weight: 700; cursor: pointer; text-align: left; }
+  .lien-nom:hover { color: var(--violet-fonce); text-decoration: underline; }
+  dialog.fiche { max-width: 920px; padding: 0; }
+  .fiche-entete { background: var(--violet); color: #fff; padding: 22px 24px; display: flex; gap: 16px; align-items: center; }
+  .fiche-entete h3 { color: #fff; margin: 0; }
+  .fiche-entete .compte { color: rgba(255,255,255,.8); }
+  .fiche-entete .fermer { margin-left: auto; background: rgba(255,255,255,.18); color: #fff; border: 0; border-radius: 12px;
+    min-width: 44px; min-height: 44px; font-size: 20px; cursor: pointer; }
+  .fiche-corps { padding: 20px 24px 24px; display: grid; gap: 18px; max-height: 75vh; overflow: auto; }
+  .fiche-corps h4 { font: 800 16px/1.2 "Bricolage", system-ui; margin: 0 0 10px; color: var(--violet-fonce); }
+  .grille { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+  .info { background: var(--fond); border-radius: 14px; padding: 10px 12px; }
+  .info span { display: block; font-size: 12px; color: var(--secondaire); }
+  .info b { font-size: 15px; word-break: break-word; }
+  .barres { display: grid; gap: 6px; }
+  .barre { display: grid; grid-template-columns: 110px 1fr 40px; gap: 8px; align-items: center; font-size: 13px; }
+  .barre .piste { height: 10px; border-radius: 99px; background: var(--lavande); overflow: hidden; }
+  .barre .piste i { display: block; height: 100%; border-radius: 99px; }
+  .barre b { text-align: right; font-variant-numeric: tabular-nums; }
+  .liste-fine { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .liste-fine th { font-size: 11px; padding: 6px 6px; }
+  .liste-fine td { padding: 7px 6px; }
+  .puces { display: flex; flex-wrap: wrap; gap: 6px; }
+  .puces .badge { background: var(--lavande); color: var(--violet-fonce); }
+  .chargement { color: var(--secondaire); padding: 24px; }
 
   @media (max-width: 720px) {
     thead { display: none; }
@@ -163,10 +188,24 @@
   </form>
 </dialog>
 
+<dialog class="fiche" id="fiche" aria-labelledby="fiche-nom">
+  <div class="fiche-entete">
+    <span id="fiche-avatar"></span>
+    <div><h3 id="fiche-nom"></h3><span class="compte" id="fiche-compte"></span></div>
+    <button class="fermer" type="button" id="fiche-fermer" aria-label="Fermer">×</button>
+  </div>
+  <div class="fiche-corps" id="fiche-corps"></div>
+</dialog>
+
 <div class="bandeau" id="bandeau" role="status"></div>
 
 <script>
 const COULEURS = ["#6C4DFF", "#FF5C8A", "#19C3B1", "#FFC93C", "#FF8A4C", "#4B2FD6"];
+const VOIES = { tunnel: "par le tunnel", tailscale: "par Tailscale", pc: "sur le PC" };
+const NIVEAUX = { nouveau: ["Nouveau", "#FFC93C"], en_cours: ["En cours", "#FF5C8A"], acquis: ["Acquis", "#19C3B1"] };
+const STATUTS = { ok: "Complète", partiel: "Partielle", echec: "Échec", en_cours: "En cours", en_attente: "En attente" };
+const MODES = { rappel: "Mot masqué", production: "Phrase à traduire" };
+const VERDICTS = { correct: ["Correct", "#19C3B1"], proche: ["Presque", "#FFC93C"], incorrect: ["Incorrect", "#FF5C8A"] };
 const ACCES = {
   proprietaire: ["Propriétaire", "b-proprietaire"],
   code: ["Code d'invitation", "b-code"],
@@ -240,16 +279,17 @@ function rendre() {
     }
     const sousTitre = u.acces === "tailscale" ? `<span class="compte">${echapper(u.compte)}</span>` : "";
     return `<tr>
-      <td class="colonne-personne"><div class="personne">${avatar(u.nom, i)}<div>${echapper(u.nom)}${sousTitre}</div></div></td>
+      <td class="colonne-personne"><div class="personne">${avatar(u.nom, i)}<div>${u.connecte ? `<button class="lien-nom" data-action="fiche" data-i="${i}" title="Voir toutes ses informations">${echapper(u.nom)}</button>` : echapper(u.nom)}${sousTitre}</div></div></td>
       <td class="colonne-acces"><span class="badge ${classe}">${libelle}</span></td>
       <td class="nombre" data-libelle="Mots">${u.mots}</td>
       <td class="nombre" data-libelle="Révisions">${u.revisions}</td>
       <td class="colonne-activite" title="${echapper(u.derniere_activite ? new Date(u.derniere_activite).toLocaleString("fr-FR") : "")}">${relatif(u.derniere_activite)}</td>
+      <td class="colonne-activite" title="${echapper(u.connexion ? new Date(u.connexion).toLocaleString("fr-FR") : "")}">${u.connexion ? `${relatif(u.connexion)}<span class="compte">${VOIES[u.voie] || ""}</span>` : "—"}</td>
       <td class="actions-cellule"><div class="actions">${actions.join("")}</div></td>
     </tr>`;
   }).join("");
   $("zone-liste").innerHTML = `<table>
-    <thead><tr><th>Utilisateur</th><th>Accès</th><th class="nombre">Mots</th><th class="nombre">Révisions</th><th>Dernière activité</th><th><span hidden>Actions</span></th></tr></thead>
+    <thead><tr><th>Utilisateur</th><th>Accès</th><th class="nombre">Mots</th><th class="nombre">Révisions</th><th>Dernière activité</th><th>Dernière connexion</th><th><span hidden>Actions</span></th></tr></thead>
     <tbody>${lignes}</tbody></table>`;
   $("pied").innerHTML = etat.tunnel
     ? `<code>${echapper(etat.tunnel)}</code><button class="bouton discret" id="copier-adresse">Copier</button>
@@ -315,6 +355,7 @@ $("zone-liste").addEventListener("click", async (e) => {
   if (!bouton) return;
   const u = etat.utilisateurs[Number(bouton.dataset.i)];
   const action = bouton.dataset.action;
+  if (action === "fiche") return ouvrirFiche(u, Number(bouton.dataset.i));
   if (action === "code") return creerCode(u.nom);
   if (action === "tailscale") {
     return bandeau("Ami venu par Tailscale : révoque le partage dans la console Tailscale (Machines → desktop-jd3qf3s → Share).");
@@ -356,6 +397,110 @@ $("formulaire-suppression").addEventListener("submit", async (e) => {
     $("sup-valider").disabled = false;
   }
 });
+
+const dateLongue = (iso) => (iso ? new Date(iso).toLocaleString("fr-FR", { dateStyle: "medium", timeStyle: "short" }) : "—");
+const dateCourte = (iso) => (iso ? new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" }) : "—");
+const taille = (o) => (o == null ? "—" : o < 1048576 ? `${Math.round(o / 1024)} Ko` : `${(o / 1048576).toFixed(1)} Mo`);
+const info = (libelle, valeur) => `<div class="info"><span>${libelle}</span><b>${valeur ?? "—"}</b></div>`;
+
+function barres(valeurs, noms) {
+  const total = Object.values(valeurs).reduce((s, n) => s + n, 0) || 1;
+  return `<div class="barres">${Object.entries(noms).map(([cle, [libelle, couleur]]) => {
+    const n = valeurs[cle] || 0;
+    return `<div class="barre"><span>${libelle}</span><div class="piste"><i style="width:${(100 * n) / total}%;background:${couleur}"></i></div><b>${n}</b></div>`;
+  }).join("")}</div>`;
+}
+
+function rendreFiche(f, i) {
+  const b = f.bibliotheque, r = f.revisions, c = f.connexions || {}, g = f.reglages || {};
+  const reussite = r.faites ? `${Math.round((100 * r.reussies) / r.faites)} %` : "—";
+  const jours = Object.entries(c.jours || {}).sort();
+  const sept = jours.filter(([j]) => Date.now() - new Date(j) < 7 * 864e5).reduce((s, [, n]) => s + n, 0);
+  const notif = g.intervalle_notifications_min
+    ? `toutes les ${g.intervalle_notifications_min < 60 ? g.intervalle_notifications_min + " min" : g.intervalle_notifications_min / 60 + " h"}, ${String(g.notifications_debut).slice(0, 5)}–${String(g.notifications_fin).slice(0, 5)}`
+    : "désactivées";
+  const appareilsRequetes = Object.entries(c.appareils || {}).sort((a, z) => z[1].localeCompare(a[1]));
+  $("fiche-avatar").innerHTML = avatar(f.nom, i);
+  $("fiche-nom").textContent = f.nom;
+  $("fiche-compte").textContent = `${(ACCES[f.acces] || ACCES.inconnu)[0]} · ${f.compte}`;
+  $("fiche-corps").innerHTML = `
+    <section><h4>Compte</h4><div class="grille">
+      ${info("Accès", (ACCES[f.acces] || ACCES.inconnu)[0])}
+      ${info("Codes actifs", f.codes_actifs)}
+      ${info("Inscrit le", dateLongue(f.cree_le || c.premiere))}
+      ${info("Taille des données", taille(f.taille_octets))}
+      ${info("Base", `<span style="font-size:12px">${echapper(f.base)}</span>`)}
+    </div></section>
+    <section><h4>Connexions</h4><div class="grille">
+      ${info("Dernière connexion", dateLongue(c.derniere))}
+      ${info("Voie", VOIES[c.voie] || "—")}
+      ${info("Pays", c.pays || "—")}
+      ${info("Adresse IP", c.ip || "—")}
+      ${info("Première connexion vue", dateLongue(c.premiere))}
+      ${info("Requêtes (7 jours)", sept)}
+      ${info("Requêtes au total", c.requetes ?? 0)}
+      ${info("Appareils", appareilsRequetes.length || f.appareils_synchronises.length)}
+    </div>
+    ${appareilsRequetes.length ? `<table class="liste-fine" style="margin-top:10px"><thead><tr><th>Appareil</th><th>Vu pour la dernière fois</th></tr></thead><tbody>${appareilsRequetes.map(([id, d]) => `<tr><td>${echapper(id)}</td><td>${dateLongue(d)}</td></tr>`).join("")}</tbody></table>` : ""}
+    </section>
+    <section><h4>Bibliothèque</h4><div class="grille">
+      ${info("Mots", b.mots)}
+      ${info("Mots supprimés", b.supprimes)}
+      ${info("Avec explication", b.avec_explication)}
+      ${info("Avec phrases d'exemple", b.avec_exemples)}
+      ${info("Extraits de chansons", b.extraits)}
+      ${info("Extraits hors de ses artistes", b.extraits_hors_liste)}
+      ${info("Premier mot ajouté", dateCourte(b.premier_ajout))}
+      ${info("Dernier mot ajouté", dateLongue(b.dernier_ajout))}
+    </div>
+    <div style="margin-top:12px">${barres(b.par_niveau, NIVEAUX)}</div>
+    <div class="puces" style="margin-top:10px">${Object.entries(b.par_statut).map(([s, n]) => `<span class="badge">Fiches ${(STATUTS[s] || s).toLowerCase()} : ${n}</span>`).join("")}</div>
+    ${b.derniers_mots.length ? `<table class="liste-fine" style="margin-top:12px"><thead><tr><th>Mot</th><th>Traduction</th><th>Niveau</th><th class="nombre">Échecs</th><th>Ajouté</th></tr></thead><tbody>${b.derniers_mots.map((m) => `<tr><td><b>${echapper(m.terme)}</b></td><td>${echapper(m.traduction_fr || "—")}</td><td>${(NIVEAUX[m.niveau] || [m.niveau])[0]}</td><td class="nombre">${m.nb_echecs}</td><td>${dateCourte(m.created_at)}</td></tr>`).join("")}</tbody></table>` : ""}
+    </section>
+    <section><h4>Révisions</h4><div class="grille">
+      ${info("Révisions faites", r.faites)}
+      ${info("Cette semaine", r.faites_7_jours)}
+      ${info("Taux de réussite", reussite)}
+      ${info("Série actuelle", `${r.serie} jour${r.serie > 1 ? "s" : ""}`)}
+      ${info("Jours de révision", r.jours_actifs)}
+      ${info("À réviser aujourd'hui", r.dues)}
+      ${info("En retard", r.en_retard)}
+      ${info("Prochaine révision", dateCourte(r.prochaine))}
+      ${info("Dernière révision", dateLongue(r.derniere))}
+      ${info("Mot masqué / phrases", `${r.par_mode.rappel || 0} / ${r.par_mode.production || 0}`)}
+    </div>
+    ${Object.keys(r.verdicts).length ? `<div style="margin-top:12px">${barres(r.verdicts, VERDICTS)}</div>` : ""}
+    ${b.plus_rates.length ? `<p class="aide" style="margin:12px 0 4px">Mots les plus ratés :</p><div class="puces">${b.plus_rates.map((m) => `<span class="badge">${echapper(m.terme)} · ${m.nb_echecs}</span>`).join("")}</div>` : ""}
+    ${r.dernieres_reponses.length ? `<table class="liste-fine" style="margin-top:12px"><thead><tr><th>Mot</th><th>Type</th><th>Résultat</th><th>Sa réponse</th><th>Quand</th></tr></thead><tbody>${r.dernieres_reponses.map((x) => `<tr><td><b>${echapper(x.terme)}</b></td><td>${MODES[x.mode] || x.mode}</td><td>${x.verdict ? (VERDICTS[x.verdict] || [x.verdict])[0] : x.qualite >= 3 ? "Savait" : "Ne savait pas"}</td><td>${echapper(x.reponse_utilisateur || "")}</td><td>${dateLongue(x.repondu_le)}</td></tr>`).join("")}</tbody></table>` : ""}
+    </section>
+    <section><h4>Réglages</h4><div class="grille">
+      ${info("Notifications", notif)}
+      ${info("Mots par session", g.mots_par_session)}
+      ${info("Mode de révision", g.mode_revision === "melange" ? "Mélange" : "Rappel")}
+      ${info("Changement de jour", String(g.heure_changement_jour || "").slice(0, 5) || "—")}
+      ${info("Synchro Wi-Fi seulement", g.sync_wifi_seulement ? "oui" : "non")}
+      ${info("Modifiés le", dateLongue(g.updated_at))}
+    </div></section>
+    <section><h4>Artistes préférés (${f.artistes.length})</h4>
+      ${f.artistes.length ? `<div class="puces">${f.artistes.map((a) => `<span class="badge">${a.rang}. ${echapper(a.nom)}</span>`).join("")}</div>` : '<p class="aide">Aucun artiste choisi.</p>'}
+    </section>
+    ${f.appareils_synchronises.length ? `<section><h4>Synchronisations (téléphone)</h4><table class="liste-fine"><thead><tr><th>Appareil</th><th class="nombre">Opérations</th><th>Dernière</th></tr></thead><tbody>${f.appareils_synchronises.map((a) => `<tr><td>${echapper(a.appareil_id)}</td><td class="nombre">${a.operations}</td><td>${dateLongue(a.derniere)}</td></tr>`).join("")}</tbody></table></section>` : ""}`;
+}
+
+async function ouvrirFiche(u, i) {
+  $("fiche-avatar").innerHTML = avatar(u.nom, i);
+  $("fiche-nom").textContent = u.nom;
+  $("fiche-compte").textContent = u.compte;
+  $("fiche-corps").innerHTML = '<p class="chargement">Chargement…</p>';
+  $("fiche").showModal();
+  try {
+    rendreFiche(await api(`/api/admin/utilisateur?compte=${encodeURIComponent(u.compte)}`), i);
+  } catch (e) {
+    $("fiche-corps").innerHTML = `<p class="erreur-globale">${echapper(e.message)}</p>`;
+  }
+}
+$("fiche-fermer").onclick = () => $("fiche").close();
+$("fiche").addEventListener("click", (e) => { if (e.target === $("fiche")) $("fiche").close(); });
 
 charger();
 </script>

@@ -87,6 +87,75 @@ def config_alembic(url: str) -> Config:
     return config
 
 
+JOURS_GARDES = 30
+
+
+class Connexions:
+    """Dernières connexions par base (page /admin), gardées en mémoire et enregistrées
+    régulièrement dans un fichier JSON : date, voie (tunnel, Tailscale, PC), pays, appareils,
+    nombre de requêtes par jour."""
+
+    def __init__(self, fichier: str | None):
+        self.fichier = Path(fichier) if fichier else None
+        self._verrou = threading.Lock()
+        self._modifie = False
+        self.donnees: dict[str, dict] = {}
+        if self.fichier and self.fichier.exists():
+            try:
+                self.donnees = json.loads(self.fichier.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                self.donnees = {}
+
+    def noter(self, base: str, request: Request) -> None:
+        maintenant = datetime.now(UTC)
+        entetes = request.headers
+        if EN_TETE_TUNNEL in entetes:
+            voie = "tunnel"
+        elif EN_TETE_COMPTE in entetes:
+            voie = "tailscale"
+        else:
+            voie = "pc"
+        appareil = (entetes.get("x-appareil-id") or "")[:64]
+        with self._verrou:
+            fiche = self.donnees.setdefault(
+                base, {"premiere": maintenant.isoformat(timespec="seconds"), "jours": {}}
+            )
+            fiche["derniere"] = maintenant.isoformat(timespec="seconds")
+            fiche["voie"] = voie
+            fiche["pays"] = entetes.get("cf-ipcountry") or fiche.get("pays")
+            fiche["ip"] = request.client.host if request.client else None
+            if appareil:
+                appareils = fiche.setdefault("appareils", {})
+                appareils[appareil] = maintenant.isoformat(timespec="seconds")
+            jour = maintenant.date().isoformat()
+            jours = fiche.setdefault("jours", {})
+            jours[jour] = jours.get(jour, 0) + 1
+            for ancien in sorted(jours)[:-JOURS_GARDES]:
+                del jours[ancien]
+            fiche["requetes"] = fiche.get("requetes", 0) + 1
+            self._modifie = True
+
+    def fiche(self, base: str) -> dict:
+        with self._verrou:
+            return json.loads(json.dumps(self.donnees.get(base, {})))
+
+    def oublier(self, base: str) -> None:
+        with self._verrou:
+            if self.donnees.pop(base, None) is not None:
+                self._modifie = True
+
+    def enregistrer(self) -> None:
+        if not self.fichier:
+            return
+        with self._verrou:
+            if not self._modifie:
+                return
+            contenu = json.dumps(self.donnees, indent=1, ensure_ascii=False)
+            self._modifie = False
+        self.fichier.parent.mkdir(parents=True, exist_ok=True)
+        self.fichier.write_text(contenu, encoding="utf-8")
+
+
 class Locataires:
     """Répartit les requêtes entre la base du propriétaire et celles des autres comptes."""
 
@@ -104,6 +173,7 @@ class Locataires:
         self.url = make_url(parametres.database_url)
         self._locataires: dict[str, Locataire] = {principal.base: principal}
         self._verrou = threading.Lock()
+        self.connexions = Connexions(parametres.connexions_fichier)
 
     @property
     def actif(self) -> bool:
@@ -138,7 +208,12 @@ class Locataires:
         if login == COMPTE_ANONYME:
             # Tunnel sans code : seul /api/health passe le filtre ; aucune base créée.
             return self.principal
-        return self.pour(login)
+        locataire = self.pour(login)
+        # Base cherchée plusieurs fois par requête (session, services) : comptée une fois.
+        if not getattr(request.state, "connexion_notee", False):
+            request.state.connexion_notee = True
+            self.connexions.noter(locataire.base, request)
+        return locataire
 
     def tous(self) -> list[Locataire]:
         """Le propriétaire et tous les utilisateurs déjà créés (tâches de fond)."""
