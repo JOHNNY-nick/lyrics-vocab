@@ -10,8 +10,11 @@ restent donc inchangées : seule la base change.
 
 import asyncio
 import hashlib
+import json
 import threading
 from dataclasses import dataclass, replace
+from datetime import UTC, datetime
+from pathlib import Path
 
 from alembic import command
 from alembic.config import Config
@@ -55,6 +58,28 @@ def compte(request: Request) -> str | None:
     return valeur.strip().lower()[:320] if valeur and valeur.strip() else None
 
 
+def base_du_compte(principale: str, login: str) -> str:
+    """Nom de la base d'un compte (autre que le propriétaire)."""
+    empreinte = hashlib.sha256(login.strip().lower().encode()).hexdigest()[:12]
+    return f"{principale}{SUFFIXE}{empreinte}"
+
+
+def inscrire(fichier: str | None, base: str, login: str) -> None:
+    """Note le compte d'une base dans le registre (les noms de base sont des empreintes)."""
+    if not fichier:
+        return
+    chemin = Path(fichier)
+    try:
+        registre = json.loads(chemin.read_text(encoding="utf-8")) if chemin.exists() else {}
+    except (OSError, ValueError):
+        registre = {}
+    if base in registre:
+        return
+    registre[base] = {"compte": login, "cree_le": datetime.now(UTC).isoformat(timespec="seconds")}
+    chemin.parent.mkdir(parents=True, exist_ok=True)
+    chemin.write_text(json.dumps(registre, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
 def config_alembic(url: str) -> Config:
     config = Config(str(DOSSIER_BACKEND / "alembic.ini"))
     config.set_main_option("script_location", str(DOSSIER_BACKEND / "migrations"))
@@ -92,8 +117,7 @@ class Locataires:
             or login == self.parametres.proprietaire_login.strip().lower()
         ):
             return self.principal.base
-        empreinte = hashlib.sha256(login.encode()).hexdigest()[:12]
-        return f"{self.principal.base}{SUFFIXE}{empreinte}"
+        return base_du_compte(self.principal.base, login)
 
     def pour(self, login: str | None) -> Locataire:
         """Locataire du compte ; crée et migre sa base à la première requête."""
@@ -105,6 +129,7 @@ class Locataires:
             if base not in self._locataires:
                 self._creer_base(base)
                 self._locataires[base] = self._ouvrir(base)
+                inscrire(self.parametres.registre_utilisateurs_fichier, base, login or "")
                 journaliser("utilisateur_nouveau", base=base)
         return self._locataires[base]
 
@@ -118,9 +143,15 @@ class Locataires:
     def tous(self) -> list[Locataire]:
         """Le propriétaire et tous les utilisateurs déjà créés (tâches de fond)."""
         with self._verrou:
-            for base in self._bases_existantes():
+            existantes = self._bases_existantes()
+            for base in existantes:
                 if base not in self._locataires:
                     self._locataires[base] = self._ouvrir(base)
+            # Base supprimée (scripts/utilisateurs.py supprimer) : oubliée ici aussi.
+            for base in [b for b in self._locataires if b != self.principal.base]:
+                if base not in existantes:
+                    oublie = self._locataires.pop(base)
+                    oublie.fabrique.kw["bind"].dispose()
             return list(self._locataires.values())
 
     # --- Bases PostgreSQL ------------------------------------------------------------------

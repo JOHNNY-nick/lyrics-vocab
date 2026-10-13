@@ -44,6 +44,8 @@ class Parametres(BaseSettings):
     proprietaire_login: str = ""
     # Codes d'invitation des amis passant par le tunnel Cloudflare (scripts/inviter.py).
     codes_acces_fichier: str | None = None
+    # Registre {base: compte} des utilisateurs (scripts/utilisateurs.py).
+    registre_utilisateurs_fichier: str | None = None
     url_application: str = ""
     mode: str = "production"
 

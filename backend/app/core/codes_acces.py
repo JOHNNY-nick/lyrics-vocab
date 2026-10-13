@@ -10,6 +10,7 @@ scripts/inviter.py et stockés hachés (SHA-256) dans un fichier JSON hors du d�
 import hashlib
 import json
 import os
+import secrets
 from pathlib import Path
 
 from starlette.types import ASGIApp, Receive, Scope, Send
@@ -23,6 +24,29 @@ PREFIXES_PROTEGES = ("/api/", "/docs", "/openapi.json")
 
 def empreinte(code: str) -> str:
     return hashlib.sha256(code.strip().upper().encode()).hexdigest()
+
+
+ALPHABET_CODES = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"  # sans 0/O, 1/I/L
+
+
+def nouveau_code() -> str:
+    corps = "".join(secrets.choice(ALPHABET_CODES) for _ in range(8))
+    return f"LV-{corps[:4]}-{corps[4:]}"
+
+
+def lire_codes(fichier: str) -> dict[str, str]:
+    chemin = Path(fichier)
+    return json.loads(chemin.read_text(encoding="utf-8")) if chemin.exists() else {}
+
+
+def ecrire_codes(fichier: str, codes: dict[str, str]) -> None:
+    chemin = Path(fichier)
+    chemin.parent.mkdir(parents=True, exist_ok=True)
+    chemin.write_text(json.dumps(codes, indent=2), encoding="utf-8")
+
+
+def compte_invite(prenom: str) -> str:
+    return f"invite:{prenom.strip().lower()}"
 
 
 class CodesAcces:
