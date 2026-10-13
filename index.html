@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#6C4DFF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Lyrics &amp; Vocab">
+<link rel="apple-touch-icon" href="icone.png">
+<link rel="icon" type="image/png" href="icone.png">
+<title>Lyrics &amp; Vocab</title>
+<!-- Page de lancement pour iPhone : l'adresse du tunnel change à chaque démarrage du PC ;
+     cette page, à une adresse fixe, la lit sur la branche « adresse » du dépôt puis ouvre
+     l'application en lui passant le code d'invitation (#code=…, jamais envoyé au serveur). -->
+<style>
+  :root { --fond:#F6F4FF; --encre:#1C1530; --texte:#5B5470; --violet:#6C4DFF; --carte:#FFFFFF; --bord:#DDD7F5; --erreur:#C62D3A; }
+  @media (prefers-color-scheme: dark) {
+    :root { --fond:#120E1F; --encre:#F2EFFF; --texte:#B3ABCB; --violet:#8F78FF; --carte:#1D1730; --bord:#352C52; --erreur:#FF7A85; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:var(--fond); color:var(--encre);
+    font:17px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display:flex; align-items:center; justify-content:center;
+    padding:max(24px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); }
+  main { width:100%; max-width:380px; text-align:center; }
+  img { width:84px; height:84px; border-radius:20px; }
+  h1 { font-size:24px; margin:16px 0 8px; }
+  p { color:var(--texte); margin:0 0 20px; }
+  input { width:100%; font:600 20px/1 ui-monospace, Menlo, monospace; letter-spacing:1px; text-align:center;
+    text-transform:uppercase; padding:14px; border:1.5px solid var(--bord); border-radius:14px;
+    background:var(--carte); color:var(--encre); }
+  input:focus { outline:none; border-color:var(--violet); }
+  button { width:100%; margin-top:12px; padding:15px; border:0; border-radius:14px; background:var(--violet);
+    color:#fff; font:600 17px/1 inherit; font-family:inherit; cursor:pointer; }
+  button.lien { background:none; color:var(--violet); font-weight:500; }
+  .erreur { color:var(--erreur); }
+  .roue { width:32px; height:32px; margin:8px auto 20px; border-radius:50%; border:3px solid var(--bord);
+    border-top-color:var(--violet); animation:tour 0.9s linear infinite; }
+  @keyframes tour { to { transform:rotate(360deg); } }
+  [hidden] { display:none !important; }
+</style>
+</head>
+<body>
+<main>
+  <img src="icone.png" alt="">
+  <h1>Lyrics &amp; Vocab</h1>
+
+  <section id="saisie" hidden>
+    <p>Entre le code d'invitation que tu as reçu (<span style="white-space:nowrap">LV-XXXX-XXXX</span>). Il n'est demandé qu'une fois.</p>
+    <form id="formulaire">
+      <input id="code" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20" placeholder="LV-XXXX-XXXX" aria-label="Code d'invitation">
+      <button type="submit">Valider</button>
+    </form>
+  </section>
+
+  <section id="attente" hidden>
+    <div class="roue" aria-hidden="true"></div>
+    <p>Recherche du PC…</p>
+  </section>
+
+  <section id="echec" hidden>
+    <p class="erreur" id="message"></p>
+    <button id="reessayer">Réessayer</button>
+    <button class="lien" id="changer">Changer de code</button>
+  </section>
+</main>
+<script>
+  var ADRESSE = 'https://api.github.com/repos/JOHNNY-nick/lyrics-vocab/contents/adresse.json?ref=adresse';
+  var CLE = 'lyrics-vocab-code';
+
+  function lire() { try { return localStorage.getItem(CLE); } catch (e) { return null; } }
+  function ecrire(v) { try { v ? localStorage.setItem(CLE, v) : localStorage.removeItem(CLE); } catch (e) {} }
+  function montrer(id) {
+    ['saisie', 'attente', 'echec'].forEach(function (s) { document.getElementById(s).hidden = s !== id; });
+  }
+  function echec(texte) { document.getElementById('message').textContent = texte; montrer('echec'); }
+
+  function delai(promesse, ms) {
+    return Promise.race([promesse, new Promise(function (_, non) { setTimeout(non, ms); })]);
+  }
+
+  async function lancer() {
+    var code = lire();
+    if (!code) { montrer('saisie'); document.getElementById('code').focus(); return; }
+    montrer('attente');
+    var adresse;
+    try {
+      var r = await delai(fetch(ADRESSE, { headers: { Accept: 'application/vnd.github.raw+json' }, cache: 'no-store' }), 10000);
+      var donnees = await r.json();
+      adresse = donnees && donnees.adresse;
+    } catch (e) {}
+    if (typeof adresse !== 'string' || !/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(adresse)) {
+      echec("Adresse du PC introuvable. Vérifie ta connexion Internet.");
+      return;
+    }
+    try {
+      await delai(fetch(adresse + '/api/health', { mode: 'no-cors', cache: 'no-store' }), 10000);
+    } catch (e) {
+      echec("Le PC d'Arthur ne répond pas pour l'instant (il est peut-être éteint). Réessaie dans un moment.");
+      return;
+    }
+    location.replace(adresse + '/#code=' + encodeURIComponent(code));
+  }
+
+  document.getElementById('formulaire').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var code = document.getElementById('code').value.trim().toUpperCase();
+    if (!/^[A-Z0-9-]{4,20}$/.test(code)) return;
+    ecrire(code);
+    lancer();
+  });
+  document.getElementById('reessayer').addEventListener('click', lancer);
+  document.getElementById('changer').addEventListener('click', function () {
+    ecrire(null);
+    document.getElementById('code').value = '';
+    montrer('saisie');
+  });
+  lancer();
+</script>
+</body>
+</html>
