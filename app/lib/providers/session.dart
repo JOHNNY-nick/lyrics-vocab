@@ -135,12 +135,12 @@ class SessionNotifier extends StateNotifier<EtatSession> {
     final carte = state.carte;
     if (carte == null || !_doitProduire(state.index)) return;
     state = state.copyWith(phase: PhaseExercice.chargement);
-    final enCours = _exercicePour(carte);
-    _prechargerSuivante();
     try {
-      final exercice = await enCours;
+      final exercice = await _exercicePour(carte);
       if (!mounted || state.carte?.id != carte.id) return;
       state = state.copyWith(phase: PhaseExercice.saisie, exercice: exercice);
+      // Après la phrase courante seulement : l'IA du PC traite mieux une demande à la fois.
+      _prechargerSuivante();
     } catch (e) {
       if (!mounted) return;
       // Sans connexion au PC, inutile de retenter à chaque carte : le reste de la session
