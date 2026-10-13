@@ -19,7 +19,7 @@ Pour une nouvelle version, installe le nouveau fichier **par-dessus** l'ancien (
 
 **Variante avec Tailscale** (si Arthur t'a partagé son PC sur Tailscale) : installe Tailscale, connecte-toi avec le compte invité, active « Use Tailscale DNS » dans ses paramètres ; l'application n'a alors pas besoin de code.
 
-## 3. Utilisation
+## 2. Utilisation
 
 - **Ajouter** : tape un mot anglais ; sa fiche se remplit en une dizaine de secondes (traduction, extrait, explication, phrases d'exemple).
 - **Révisions** : chaque jour, des phrases à traduire en employant tes mots, à l'écrit ou à voix haute (bouton 🎤).
