@@ -35,31 +35,46 @@ List<RappelPlanifie> planifierRappels({
   required String? Function(String motId) indice,
   bool inclureAujourdhui = true,
 }) {
-  if (reglages.frequenceRappels == 'desactive') return const [];
-  final pas = reglages.frequenceRappels == 'tous_les_2_jours' ? 2 : 1;
-  final (h, m) = lireHeure(reglages.heureRappel);
+  final pas = joursEntreRappels[reglages.frequenceRappels];
+  if (pas == null) return const [];
   final rappels = <RappelPlanifie>[];
   for (var j = 0; j < joursPlanifies; j += pas) {
-    final quand = DateTime(maintenantLocal.year, maintenantLocal.month, maintenantLocal.day + j, h, m);
-    if (!quand.isAfter(maintenantLocal)) continue;
-    if (!inclureAujourdhui && j == 0) continue;
-    final jour = jourLocalDepuisHeureLocale(quand, reglages.heureChangementJour);
-    final dues = planifiees.where((r) => !r.datePrevue.isAfter(jour)).toList()
-      ..sort((a, b) => a.datePrevue.compareTo(b.datePrevue));
-    if (dues.isEmpty) continue;
-    final premier = dues.first;
-    var corps = indice(premier.motId) ?? 'Un mot t\'attend.';
-    if (corps.length > longueurIndiceMax) corps = '${corps.substring(0, longueurIndiceMax)}…';
-    rappels.add(
-      RappelPlanifie(
-        quand: quand,
-        nombre: dues.length,
-        corps: corps.replaceAll('\n', ' / '),
-        motId: dues.length == 1 ? premier.motId : null,
-      ),
-    );
+    // Après une révision, plus de rappel aujourd'hui, sauf si l'utilisateur en a demandé
+    // plusieurs par jour : les suivants restent, s'il reste des mots à réviser.
+    if (!inclureAujourdhui && j == 0 && reglages.heuresRappelSup.isEmpty) continue;
+    for (final heure in reglages.heuresRappel) {
+      final (h, m) = lireHeure(heure);
+      final quand = DateTime(maintenantLocal.year, maintenantLocal.month, maintenantLocal.day + j, h, m);
+      if (!quand.isAfter(maintenantLocal)) continue;
+      final rappel = _rappel(quand, reglages, planifiees, indice);
+      if (rappel != null) rappels.add(rappel);
+    }
   }
   return rappels;
+}
+
+/// Jours entre deux journées de rappel, par fréquence (absente : rappels désactivés).
+const joursEntreRappels = {'quotidien': 1, 'tous_les_2_jours': 2, 'tous_les_3_jours': 3, 'hebdomadaire': 7};
+
+RappelPlanifie? _rappel(
+  DateTime quand,
+  Reglages reglages,
+  List<Revision> planifiees,
+  String? Function(String motId) indice,
+) {
+  final jour = jourLocalDepuisHeureLocale(quand, reglages.heureChangementJour);
+  final dues = planifiees.where((r) => !r.datePrevue.isAfter(jour)).toList()
+    ..sort((a, b) => a.datePrevue.compareTo(b.datePrevue));
+  if (dues.isEmpty) return null;
+  final premier = dues.first;
+  var corps = indice(premier.motId) ?? 'Un mot t\'attend.';
+  if (corps.length > longueurIndiceMax) corps = '${corps.substring(0, longueurIndiceMax)}…';
+  return RappelPlanifie(
+    quand: quand,
+    nombre: dues.length,
+    corps: corps.replaceAll('\n', ' / '),
+    motId: dues.length == 1 ? premier.motId : null,
+  );
 }
 
 String titreRappel(int n) => n == 1 ? '1 mot à réviser' : '$n mots à réviser';

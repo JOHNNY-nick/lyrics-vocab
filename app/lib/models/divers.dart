@@ -69,6 +69,7 @@ class Reglages {
   const Reglages({
     this.frequenceRappels = 'quotidien',
     this.heureRappel = '19:00',
+    this.heuresRappelSup = const [],
     this.motsParSession = 20,
     this.modeRevision = 'rappel',
     this.heureChangementJour = '04:00',
@@ -77,7 +78,13 @@ class Reglages {
 
   final String frequenceRappels;
   final String heureRappel;
+
+  /// Rappels supplémentaires dans la journée (« HH:MM », 2 au plus).
+  final List<String> heuresRappelSup;
   final int motsParSession;
+
+  /// Toutes les heures de rappel de la journée, dans l'ordre.
+  List<String> get heuresRappel => {heureRappel, ...heuresRappelSup}.toList()..sort();
   final String modeRevision;
   final String heureChangementJour;
   final bool syncWifiSeulement;
@@ -85,6 +92,9 @@ class Reglages {
   factory Reglages.fromJson(Map<String, dynamic> json) => Reglages(
     frequenceRappels: json['frequence_rappels'] as String? ?? 'quotidien',
     heureRappel: (json['heure_rappel'] as String? ?? '19:00').substring(0, 5),
+    heuresRappelSup: [
+      for (final h in json['heures_rappel_sup'] as List<dynamic>? ?? const []) (h as String).substring(0, 5),
+    ],
     motsParSession: lireEntier(json['mots_par_session'], 20),
     modeRevision: json['mode_revision'] as String? ?? 'rappel',
     heureChangementJour: (json['heure_changement_jour'] as String? ?? '04:00').substring(0, 5),
@@ -94,6 +104,7 @@ class Reglages {
   Map<String, dynamic> toJson() => {
     'frequence_rappels': frequenceRappels,
     'heure_rappel': heureRappel,
+    'heures_rappel_sup': heuresRappelSup,
     'mots_par_session': motsParSession,
     'mode_revision': modeRevision,
     'heure_changement_jour': heureChangementJour,
@@ -106,13 +117,14 @@ class Reglages {
     final b = autre.toJson();
     return {
       for (final cle in a.keys)
-        if (a[cle] != b[cle]) cle: a[cle],
+        if ('${a[cle]}' != '${b[cle]}') cle: a[cle], // les listes se comparent par contenu
     };
   }
 
   Reglages copyWith({
     String? frequenceRappels,
     String? heureRappel,
+    List<String>? heuresRappelSup,
     int? motsParSession,
     String? modeRevision,
     String? heureChangementJour,
@@ -120,6 +132,7 @@ class Reglages {
   }) => Reglages(
     frequenceRappels: frequenceRappels ?? this.frequenceRappels,
     heureRappel: heureRappel ?? this.heureRappel,
+    heuresRappelSup: heuresRappelSup ?? this.heuresRappelSup,
     motsParSession: motsParSession ?? this.motsParSession,
     modeRevision: modeRevision ?? this.modeRevision,
     heureChangementJour: heureChangementJour ?? this.heureChangementJour,

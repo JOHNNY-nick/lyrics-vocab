@@ -171,5 +171,45 @@ void main() {
       );
       expect(rappels.first.quand.day, 13);
     });
+    test('tous les 3 jours, chaque semaine, plusieurs rappels par jour', () {
+      final dues = [revision('2026-10-12')];
+      List<DateTime> quand(Reglages r, {bool aujourdhui = true}) => planifierRappels(
+        maintenantLocal: DateTime(2026, 10, 12, 10),
+        reglages: r,
+        planifiees: dues,
+        indice: (_) => null,
+        inclureAujourdhui: aujourdhui,
+      ).map((r) => r.quand).toList();
+      expect(quand(const Reglages(frequenceRappels: 'tous_les_3_jours')).map((d) => d.day), [
+        12,
+        15,
+        18,
+        21,
+        24,
+      ]);
+      expect(quand(const Reglages(frequenceRappels: 'hebdomadaire')).map((d) => d.day), [12, 19]);
+      const trois = Reglages(heureRappel: '19:00', heuresRappelSup: ['08:00', '13:30']);
+      // Aujourd'hui, 8 h est passée : 13 h 30 et 19 h ; demain, les trois rappels.
+      expect(quand(trois).take(5), [
+        DateTime(2026, 10, 12, 13, 30),
+        DateTime(2026, 10, 12, 19),
+        DateTime(2026, 10, 13, 8),
+        DateTime(2026, 10, 13, 13, 30),
+        DateTime(2026, 10, 13, 19),
+      ]);
+      // Plusieurs rappels par jour : ceux du reste de la journée sont gardés après une révision.
+      expect(quand(trois, aujourdhui: false).first, DateTime(2026, 10, 12, 13, 30));
+    });
+    test('réglages : rappels supplémentaires lus, écrits et comparés', () {
+      final r = Reglages.fromJson({
+        'heures_rappel_sup': ['08:00:00'],
+      });
+      expect(r.heuresRappelSup, ['08:00']);
+      expect(r.toJson()['heures_rappel_sup'], ['08:00']);
+      expect(r.copyWith(heuresRappelSup: ['08:00']).difference(r), isEmpty);
+      expect(r.copyWith(heuresRappelSup: ['09:00']).difference(r), {
+        'heures_rappel_sup': ['09:00'],
+      });
+    });
   });
 }

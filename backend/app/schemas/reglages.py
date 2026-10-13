@@ -1,6 +1,6 @@
 """Schémas des réglages et des artistes (37, 18.6)."""
 
-from typing import Literal
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -8,14 +8,21 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.schemas.communs import Heure
 
 MAX_ARTISTES = 30
+MAX_RAPPELS_SUP = 2
+
+Frequence = Literal[
+    "quotidien", "tous_les_2_jours", "tous_les_3_jours", "hebdomadaire", "desactive"
+]
+HeureTexte = Annotated[str, Field(pattern=r"^([01][0-9]|2[0-3]):[0-5][0-9]$")]
 
 
 class ReglagesSchema(BaseModel):
     """Réglages complets."""
 
     model_config = ConfigDict(from_attributes=True, extra="forbid")
-    frequence_rappels: Literal["quotidien", "tous_les_2_jours", "desactive"]
+    frequence_rappels: Frequence
     heure_rappel: Heure
+    heures_rappel_sup: list[HeureTexte] = Field(default_factory=list, max_length=MAX_RAPPELS_SUP)
     mots_par_session: int = Field(ge=5, le=100)
     mode_revision: Literal["rappel", "melange"]
     heure_changement_jour: Heure
@@ -26,8 +33,9 @@ class ReglagesPartiels(BaseModel):
     """Champs modifiés (opération reglage.modifier)."""
 
     model_config = ConfigDict(extra="forbid")
-    frequence_rappels: Literal["quotidien", "tous_les_2_jours", "desactive"] | None = None
+    frequence_rappels: Frequence | None = None
     heure_rappel: Heure | None = None
+    heures_rappel_sup: list[HeureTexte] | None = Field(default=None, max_length=MAX_RAPPELS_SUP)
     mots_par_session: int | None = Field(default=None, ge=5, le=100)
     mode_revision: Literal["rappel", "melange"] | None = None
     heure_changement_jour: Heure | None = None

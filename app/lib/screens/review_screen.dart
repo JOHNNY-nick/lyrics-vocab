@@ -230,15 +230,6 @@ class _Accueil extends ConsumerWidget {
                 Text(S.motsAReviser(total), style: Textes.titreCarte.copyWith(color: c.encre)),
                 const SizedBox(height: Espaces.e4),
                 Text(S.dureeEstimee(minutes), style: Textes.corps.copyWith(color: c.texteSecondaire)),
-                const SizedBox(height: Espaces.e14),
-                Wrap(
-                  spacing: Espaces.e8,
-                  runSpacing: Espaces.e8,
-                  children: [
-                    for (final item in resultat.items.take(3))
-                      PastilleSimple(libelle: item.terme, fond: c.lavande, texte: c.violetFonce),
-                  ],
-                ),
                 if (file.enAttente > 0) ...[
                   const SizedBox(height: Espaces.e14),
                   Align(
@@ -247,17 +238,18 @@ class _Accueil extends ConsumerWidget {
                   ),
                 ],
                 const SizedBox(height: Espaces.e20),
+                // Chaque mot du jour est employé dans une phrase à traduire (demande de
+                // l'utilisateur) ; la révision rapide garde la carte « mot masqué ».
                 BoutonPrincipal(
                   libelle: S.commencer,
                   autofocus: context.estPc,
-                  onPressed: () => ref.read(sessionRevisionProvider.notifier).demarrer(resultat.items),
-                ),
-                const SizedBox(height: Espaces.e6),
-                // US-06 : session où chaque mot est travaillé par une phrase à traduire.
-                BoutonLien(
-                  libelle: S.sessionExercices,
                   onPressed: () =>
                       ref.read(sessionRevisionProvider.notifier).demarrer(resultat.items, exercices: true),
+                ),
+                const SizedBox(height: Espaces.e6),
+                BoutonLien(
+                  libelle: S.revisionRapide,
+                  onPressed: () => ref.read(sessionRevisionProvider.notifier).demarrer(resultat.items),
                 ),
               ],
             ),
@@ -605,6 +597,9 @@ class _CarteExercice extends ConsumerWidget {
           Text(session.exercice?.phraseFr ?? '', style: Textes.titreExtrait.copyWith(color: c.encre)),
           const SizedBox(height: Espaces.e16),
           if (verdict == null) ...[
+            // Le mot n'est jamais montré avant le verdict : à l'utilisateur de le retrouver.
+            Text(S.consigneMotCache, style: Textes.legende.copyWith(color: c.texteSecondaire)),
+            const SizedBox(height: Espaces.e12),
             ChampMot(controleur: controleur, aide: S.taReponse, multiligne: true, max: 300, autofocus: true),
             const SizedBox(height: Espaces.e16),
             BoutonPrincipal(
@@ -615,10 +610,33 @@ class _CarteExercice extends ConsumerWidget {
             ),
           ] else ...[
             BlocVerdict(verdict: verdict),
+            const SizedBox(height: Espaces.e14),
+            Text(S.motAEmployer, style: Textes.libelleCarte.copyWith(color: c.texteSecondaire)),
+            Row(
+              children: [
+                Flexible(
+                  child: Text(carte.terme, style: Textes.termeListe.copyWith(color: c.encre)),
+                ),
+                BoutonPrononciation(mot: carte.terme, service: ref.read(environnementProvider).prononciation),
+              ],
+            ),
+            if (carte.traductionFr != null)
+              Text(carte.traductionFr!, style: Textes.corps.copyWith(color: c.texteSecondaire)),
             if (verdict.referenceEn != null) ...[
               const SizedBox(height: Espaces.e12),
               Text(S.attendu, style: Textes.libelleCarte.copyWith(color: c.texteSecondaire)),
-              Text(verdict.referenceEn!, style: Textes.corps.copyWith(color: c.encre)),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(verdict.referenceEn!, style: Textes.corps.copyWith(color: c.encre)),
+                  ),
+                  BoutonPrononciation(
+                    mot: verdict.referenceEn!,
+                    service: ref.read(environnementProvider).prononciation,
+                    libelle: '${S.ecouterPhrase} « ${verdict.referenceEn!} »',
+                  ),
+                ],
+              ),
             ],
             const SizedBox(height: Espaces.e16),
             BoutonPrincipal(
@@ -686,7 +704,7 @@ class _Recapitulatif extends ConsumerWidget {
             if (restants > 0) ...[
               BoutonPrincipal(
                 libelle: S.sessionSuivante,
-                onPressed: () => ref.read(sessionRevisionProvider.notifier).demarrer(dues!.items),
+                onPressed: () => ref.read(sessionRevisionProvider.notifier).continuer(dues!.items),
               ),
               const SizedBox(height: Espaces.e6),
               BoutonLien(

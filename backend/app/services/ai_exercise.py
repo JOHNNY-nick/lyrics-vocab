@@ -9,13 +9,16 @@ from app.core.logging import journaliser
 from app.services.ai_explainer import charger_prompts
 from app.services.deepl_client import DeeplClient
 from app.services.evaluation_repli import part_commune, verdict_par_mots_cles
-from app.services.normalisation import sans_accents
+from app.services.extraction import trouver_occurrences
+from app.services.normalisation import normaliser, sans_accents
 from app.services.ollama_client import OllamaClient
 
 LONGUEUR_MAX_PHRASE = 120
 LONGUEUR_MAX_EXPLICATION_VERDICT = 200
 JETONS_PHRASE = 60
 JETONS_EVALUATION = 120
+JETONS_EXERCICE = 120
+ESSAIS_EXERCICE = 3
 VERDICTS = ("correct", "proche", "incorrect")
 EXPLICATION_REPLI = "Évaluation simplifiée : comparaison des mots avec la traduction attendue."
 MOTIF_INJECTION = re.compile(
@@ -83,6 +86,75 @@ async def generer_phrase(ollama: OllamaClient, mot_fr: str) -> str:
     raise IaIndisponible()
 
 
+def emploie_terme(phrase: str, terme: str) -> bool:
+    """La phrase contient le mot ou une de ses formes (lowkey, gave up…)."""
+    terme_normalise = normaliser(terme)
+    return bool(
+        trouver_occurrences([phrase], terme_normalise, variantes=False)
+        or trouver_occurrences([phrase], terme_normalise, variantes=True)
+    )
+
+
+def analyser_paire(brut: str) -> tuple[str, str] | None:
+    """(phrase française, phrase anglaise) depuis le JSON du modèle ; None si invalide."""
+    texte = _BLOC_CODE.sub("", brut).strip()
+    debut = texte.find("{")
+    fin = texte.find("}", debut)
+    if debut == -1 or fin <= debut:
+        return None
+    try:
+        donnees = json.loads(texte[debut : fin + 1])
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(donnees, dict):
+        return None
+    fr = _nettoyer_phrase(str(donnees.get("fr", "")))
+    en = _nettoyer_phrase(str(donnees.get("en", "")))
+    if not fr or not en or len(fr) > LONGUEUR_MAX_PHRASE or len(en) > LONGUEUR_MAX_PHRASE:
+        return None
+    return fr, en
+
+
+async def generer_exercice(
+    ollama: OllamaClient, terme: str, traduction: str, deja_vues: list[str] | None = None
+) -> tuple[str, str]:
+    """Phrase française contenant le sens du mot, et sa traduction anglaise qui emploie le mot.
+
+    La phrase anglaise doit contenir le mot ; la française doit contenir sa traduction et ne
+    pas citer le mot anglais (sinon la réponse serait donnée). À défaut d'une paire parfaite,
+    une paire dont seule la phrase anglaise est juste est acceptée (synonyme en français).
+    """
+    prompts = charger_prompts()["exercice"]
+    mot_fr = mot_principal(traduction)
+    a_eviter = (
+        prompts["a_eviter"].format(phrases=" ; ".join(f'"{p}"' for p in deja_vues))
+        if deja_vues
+        else ""
+    )
+    prompt = prompts["consigne"].format(
+        mot=terme, traduction=traduction, mot_fr=mot_fr, a_eviter=a_eviter
+    )
+    secours: tuple[str, str] | None = None
+    for tentative in range(1, ESSAIS_EXERCICE + 1):
+        paire = analyser_paire(await ollama.generer(prompt, JETONS_EXERCICE))
+        if paire is not None:
+            fr, en = paire
+            if emploie_terme(en, terme) and not emploie_terme(fr, terme):
+                if phrase_valide(fr, mot_fr):
+                    return fr, en
+                secours = secours or paire
+        journaliser(
+            "ia_sortie_invalide",
+            "avertissement",
+            tache="exercice",
+            tentative=tentative,
+            version_prompt=prompts["version"],
+        )
+    if secours is not None:
+        return secours
+    raise IaIndisponible()
+
+
 async def traduire_reference(
     phrase_fr: str, deepl: DeeplClient | None, ollama: OllamaClient
 ) -> str:
@@ -130,17 +202,26 @@ EXPLICATION_HORS_SUJET = (
 )
 
 
-def garde_fou(evaluation: Evaluation, reference: str, reponse: str) -> Evaluation:
+def explication_sans_terme(terme: str) -> str:
+    return f"Le sens y est, mais il fallait employer ton mot « {terme} »."
+
+
+def garde_fou(
+    evaluation: Evaluation, reference: str, reponse: str, terme: str | None = None
+) -> Evaluation:
     """Corrige un verdict trop généreux du modèle quand la réponse s'éloigne de la référence.
 
     Moins d'un quart des mots porteurs de sens retrouvés : incorrect. Moins de la moitié : au
-    mieux « proche ». Le modèle reste seul juge au-delà (paraphrases, synonymes).
+    mieux « proche ». Le modèle reste seul juge au-delà (paraphrases, synonymes). Le but étant
+    d'employer le mot : une réponse qui ne le contient pas est au mieux « proche ».
     """
     part = part_commune(reference, reponse)
     if part < SEUIL_HORS_SUJET and evaluation.verdict != "incorrect":
         return Evaluation("incorrect", EXPLICATION_HORS_SUJET, evaluation.verdict_repli)
     if part < SEUIL_CORRECT_MIN and evaluation.verdict == "correct":
         return Evaluation("proche", evaluation.explication, evaluation.verdict_repli)
+    if terme and evaluation.verdict == "correct" and not emploie_terme(reponse, terme):
+        return Evaluation("proche", explication_sans_terme(terme), evaluation.verdict_repli)
     return evaluation
 
 
@@ -154,7 +235,9 @@ def evaluation_repli(reference: str, reponse: str) -> Evaluation:
     return Evaluation(verdict_par_mots_cles(reference, reponse), EXPLICATION_REPLI, True)
 
 
-async def evaluer(ollama: OllamaClient, phrase_fr: str, reference: str, reponse: str) -> Evaluation:
+async def evaluer(
+    ollama: OllamaClient, phrase_fr: str, reference: str, reponse: str, terme: str | None = None
+) -> Evaluation:
     """Évaluation par l'IA ; une nouvelle tentative, puis repli par mots-clés (IA-18)."""
     reponse = reponse[:300]
     if contient_consigne(reponse):
@@ -166,11 +249,12 @@ async def evaluer(ollama: OllamaClient, phrase_fr: str, reference: str, reponse:
             repli_utilise=True,
             raison="consigne_dans_reponse",
         )
-        return evaluation_repli(reference, reponse)
+        return garde_fou(evaluation_repli(reference, reponse), reference, reponse, terme)
     prompts = charger_prompts()["evaluation"]
     reponse_brute = reponse.replace("<", " ").replace(">", " ")
+    mot_attendu = prompts["mot_attendu"].format(mot=terme) if terme else ""
     prompt = prompts["consigne"].format(
-        phrase_fr=phrase_fr, ref_en=reference, reponse=reponse_brute
+        phrase_fr=phrase_fr, ref_en=reference, reponse=reponse_brute, mot_attendu=mot_attendu
     )
     for tentative in (1, 2):
         try:
@@ -179,7 +263,7 @@ async def evaluer(ollama: OllamaClient, phrase_fr: str, reference: str, reponse:
             break
         analyse = analyser_json(brut)
         if analyse is not None:
-            return garde_fou(Evaluation(analyse[0], analyse[1], False), reference, reponse)
+            return garde_fou(Evaluation(analyse[0], analyse[1], False), reference, reponse, terme)
         journaliser(
             "ia_sortie_invalide",
             "avertissement",
@@ -188,4 +272,4 @@ async def evaluer(ollama: OllamaClient, phrase_fr: str, reference: str, reponse:
             repli_utilise=tentative == 2,
             version_prompt=prompts["version"],
         )
-    return evaluation_repli(reference, reponse)
+    return garde_fou(evaluation_repli(reference, reponse), reference, reponse, terme)

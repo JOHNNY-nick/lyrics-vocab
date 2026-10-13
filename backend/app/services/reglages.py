@@ -9,6 +9,7 @@ from app.models import ID_REGLAGE, Reglage
 CHAMPS = (
     "frequence_rappels",
     "heure_rappel",
+    "heures_rappel_sup",
     "mots_par_session",
     "mode_revision",
     "heure_changement_jour",

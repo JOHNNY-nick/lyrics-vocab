@@ -104,6 +104,9 @@ class SessionNotifier extends StateNotifier<EtatSession> {
     await _preparerCarte();
   }
 
+  /// « Session suivante » : même mode que la session terminée.
+  Future<void> continuer(List<RevisionDue> dues) => demarrer(dues, exercices: _exercices);
+
   bool _doitProduire(int index) {
     if (_exercices) return state.file[index].traductionFr != null;
     final reglages = ref.read(reglagesProvider).valueOrNull;
@@ -121,8 +124,11 @@ class SessionNotifier extends StateNotifier<EtatSession> {
       final exercice = await _depot.creerExercice(carte.motId);
       if (!mounted || state.carte?.id != carte.id) return;
       state = state.copyWith(phase: PhaseExercice.saisie, exercice: exercice);
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
+      // Sans connexion au PC, inutile de retenter à chaque carte : le reste de la session
+      // passe en mode rappel (mot masqué), qui fonctionne hors ligne.
+      if (e is HorsLigneException || e is ReseauException) _exercices = false;
       // IA-23 : retour discret au mode rappel.
       state = state.copyWith(phase: PhaseExercice.indisponible, exercice: null);
     }

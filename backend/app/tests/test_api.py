@@ -256,10 +256,10 @@ def test_exercice_et_evaluation(client, creer_mot, base_vide, services):
             text("UPDATE mot SET traduction_fr='discrètement ; plutôt' WHERE id=:i"),
             {"i": mot["id"]},
         )
-    services.ollama.reponses = ["Je suis discrètement content de te voir."]
-    services.deepl.traductions["Je suis discrètement content de te voir."] = (
-        "I'm lowkey happy to see you."
-    )
+    services.ollama.reponses = [
+        '{"en": "I\'m lowkey happy to see you.", '
+        '"fr": "Je suis discrètement content de te voir."}'
+    ]
     exercice = client.post("/api/exercices", json={"mot_id": mot["id"]})
     assert exercice.status_code == 200, exercice.text
     corps = exercice.json()
@@ -276,6 +276,12 @@ def test_exercice_et_evaluation(client, creer_mot, base_vide, services):
         "verdict_repli": False,
         "reference_en": "I'm lowkey happy to see you.",
     }
+    # Le mot de l'utilisateur est attendu dans la réponse : sans lui, au mieux « proche ».
+    services.ollama.reponses = ['{"verdict": "correct", "explication": "Bien."}']
+    sans_mot = client.post(
+        f"/api/exercices/{corps['id']}/evaluer", json={"reponse": "I'm quietly happy to see you."}
+    ).json()
+    assert sans_mot["verdict"] == "proche" and "lowkey" in sans_mot["explication"]
     resultat = _repondre(client, corps["id"], None, verdict="correct")
     assert resultat.status_code == 200 and resultat.json()["repetitions"] == 1
     trop_long = client.post(f"/api/exercices/{corps['id']}/evaluer", json={"reponse": "x" * 301})
@@ -325,6 +331,7 @@ def test_reglages(client):
     assert corps == {
         "frequence_rappels": "quotidien",
         "heure_rappel": "19:00",
+        "heures_rappel_sup": [],
         "mots_par_session": 20,
         "mode_revision": "rappel",
         "heure_changement_jour": "04:00",
@@ -334,6 +341,22 @@ def test_reglages(client):
     assert client.put("/api/reglages", json=nouveau).status_code == 204
     assert client.get("/api/reglages").json()["heure_rappel"] == "20:30"
     assert client.put("/api/reglages", json={**corps, "mots_par_session": 200}).status_code == 422
+    # Fréquences ajoutées et rappels supplémentaires dans la journée (2 au plus).
+    plusieurs = {
+        **corps,
+        "frequence_rappels": "hebdomadaire",
+        "heures_rappel_sup": ["08:00", "12:30"],
+    }
+    assert client.put("/api/reglages", json=plusieurs).status_code == 204
+    relu = client.get("/api/reglages").json()
+    assert relu["frequence_rappels"] == "hebdomadaire"
+    assert relu["heures_rappel_sup"] == ["08:00", "12:30"]
+    trois = {**corps, "heures_rappel_sup": ["08:00", "12:00", "15:00"]}
+    assert client.put("/api/reglages", json=trois).status_code == 422
+    assert (
+        client.put("/api/reglages", json={**corps, "heures_rappel_sup": ["25:00"]}).status_code
+        == 422
+    )
 
 
 def test_quotas_et_journaux(client):

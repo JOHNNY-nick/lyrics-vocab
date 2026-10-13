@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.core.database import obtenir_session
 from app.core.errors import IaIndisponible, MotIntrouvable, ReponseInvalide, RevisionIntrouvable
-from app.models import Revision, SyncOp
+from app.models import Mot, Revision, SyncOp
 from app.routers.deps import ContexteTemps, appareil, contexte_temps, services
 from app.schemas.revisions import (
     EvaluationDemande,
@@ -125,9 +125,12 @@ async def creer_exercice(
         raise MotIntrouvable("Aucune révision planifiée pour ce mot.")
     if not mot.traduction_fr or not await conteneur.ollama.disponible():
         raise IaIndisponible()
-    mot_fr = ai_exercise.mot_principal(mot.traduction_fr)
-    phrase = await ai_exercise.generer_phrase(conteneur.ollama, mot_fr)
-    reference = await ai_exercise.traduire_reference(phrase, conteneur.deepl, conteneur.ollama)
+    deja_vues = [e["en"] for e in (mot.exemples or [])]
+    if revision.reference_en:
+        deja_vues.append(revision.reference_en)  # « Nouvelle phrase » : pas la même
+    phrase, reference = await ai_exercise.generer_exercice(
+        conteneur.ollama, mot.terme, mot.traduction_fr, deja_vues
+    )
     revision.mode = "production"
     revision.phrase_source = phrase
     revision.reference_en = reference
@@ -154,8 +157,13 @@ async def evaluer_exercice(
         or not revision.reference_en
     ):
         raise RevisionIntrouvable("Exercice introuvable.")
+    mot = session.get(Mot, revision.mot_id)
     evaluation = await ai_exercise.evaluer(
-        conteneur.ollama, revision.phrase_source, revision.reference_en, entree.reponse
+        conteneur.ollama,
+        revision.phrase_source,
+        revision.reference_en,
+        entree.reponse,
+        terme=mot.terme if mot is not None else None,
     )
     if revision.statut == "planifiee":
         revision.reponse_utilisateur = entree.reponse

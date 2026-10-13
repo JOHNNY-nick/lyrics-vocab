@@ -119,6 +119,23 @@ Demande de l'utilisateur : une version complètement fonctionnelle, en s'autoris
 | Phrases d'exemple (demande de l'utilisateur) | Colonne `mot.exemples` (JSONB, migration 0003) : 2 phrases anglaises courtes et leur traduction, écrites par l'IA locale (prompt `exemples-v1`) pendant l'enrichissement, à partir du sens traduit et du premier extrait. Une phrase n'est gardée que si elle contient le mot ou une de ses formes (≤ 160 caractères). Affichées sur la carte de révision après « Révéler » et sur la fiche, chacune avec son bouton de prononciation. `scripts/completer_exemples.py` complète les mots existants. | Montrer le mot dans des phrases du quotidien, différentes des paroles, pour apprendre à l'employer ; étape facultative qui ne change pas le statut de la fiche ; la colonne part dans la synchronisation, donc les phrases sont aussi disponibles hors ligne sur le téléphone. |
 | Prononciation dans la PWA | Web Speech API appelée directement (`speechSynthesis`), voix anglaise choisie en priorité `en-US`, vitesse 0,9 et 0,55 ; `flutter_tts` reste utilisé sur Android. | `flutter_tts` levait une erreur interne dans Chrome. |
 
+## Révisions du jour : employer ses mots (2026-10-13)
+
+| Sujet | Décision | Raison |
+| --- | --- | --- |
+| Session par défaut | « Commencer » lance une session d'exercices : phrase française contenant le sens d'un mot de l'utilisateur, à traduire en l'employant. La carte « mot masqué » devient la « révision rapide ». L'accueil n'affiche plus les mots dus. | Demande de l'utilisateur : utiliser ses mots plutôt que traduire des phrases quelconques, sans que le mot soit donné. |
+| Génération (prompt `exercice-v1`) | L'IA écrit d'abord la phrase anglaise avec le mot, puis sa traduction française contenant le sens choisi (3 essais). Une paire est rejetée si la phrase anglaise ne contient pas le mot (ou une de ses formes) ou si la française le contient. À défaut de paire parfaite, une traduction française avec un synonyme est acceptée. Les phrases d'exemple et la phrase précédente sont à éviter. | L'ancien procédé (phrase française, puis traduction) donnait souvent une référence sans le mot de l'utilisateur. |
+| Évaluation (`evaluation-v3`) | Le mot attendu est donné à l'IA ; le garde-fou ramène « correct » à « proche » si la réponse n'emploie pas le mot. | L'objectif est d'employer le mot, pas seulement de traduire le sens. |
+| Hors ligne | Si le PC est injoignable, le reste de la session passe en révision rapide (fonctionne hors ligne). | Pas un message d'erreur par carte. |
+
+## Rappels configurables (2026-10-13)
+
+| Sujet | Décision | Raison |
+| --- | --- | --- |
+| Fréquence | Ajout de « tous les 3 jours » et « une fois par semaine » (migration 0004, contrainte élargie). | Demande de l'utilisateur. |
+| Plusieurs rappels par jour | Colonne `reglage.heures_rappel_sup` (JSONB, 2 heures « HH:MM » au plus) en plus de l'heure principale, soit 3 rappels par jour au plus. Avec plusieurs rappels, ceux restant dans la journée sont gardés après une révision, toujours seulement s'il reste des mots dus. | Rester discret (pas plus de 3 notifications par jour) tout en laissant choisir les heures. |
+| Page web | L'application web n'est plus mise en cache un an : tout est revalidé, et un en-tête `Clear-Site-Data` vide le cache du navigateur à la première visite d'une nouvelle version. | Flutter ne met pas d'empreinte dans le nom de `main.dart.js` : l'application installée gardait l'ancienne version. |
+
 ## Exigences [S] non réalisées (reportées en v2, REC-03)
 
 - NOT-09 : relance 3 heures après la notification.

@@ -16,7 +16,8 @@ class Reglage(SynchroMixin, Base):
     __tablename__ = "reglage"
     __table_args__ = (
         CheckConstraint(
-            "frequence_rappels IN ('quotidien','tous_les_2_jours','desactive')",
+            "frequence_rappels IN "
+            "('quotidien','tous_les_2_jours','tous_les_3_jours','hebdomadaire','desactive')",
             name="ck_reglage_frequence",
         ),
         CheckConstraint("mots_par_session BETWEEN 5 AND 100", name="ck_reglage_mots_session"),
@@ -28,6 +29,10 @@ class Reglage(SynchroMixin, Base):
         Text, nullable=False, server_default=text("'quotidien'")
     )
     heure_rappel: Mapped[time] = mapped_column(Time, nullable=False, server_default=text("'19:00'"))
+    # Rappels supplémentaires dans la journée, « HH:MM » (2 au plus, voir DECISIONS.md).
+    heures_rappel_sup: Mapped[list] = mapped_column(
+        JSONB, nullable=False, server_default=text("'[]'::jsonb")
+    )
     mots_par_session: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default=text("20")
     )

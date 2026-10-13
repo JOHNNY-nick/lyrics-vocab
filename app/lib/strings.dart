@@ -171,6 +171,12 @@ class S {
   static const frequence = 'Fréquence';
   static const quotidien = 'Chaque jour';
   static const tousLes2Jours = 'Tous les 2 jours';
+  static const tousLes3Jours = 'Tous les 3 jours';
+  static const hebdomadaire = 'Une fois par semaine';
+  static const autreRappel = 'Autre rappel';
+  static const ajouterRappel = '+ Ajouter un rappel dans la journée';
+  static const retirerRappel = 'Retirer ce rappel';
+  static const sousTitreHeureRappel = 'Seulement s\'il y a des mots à réviser';
   static const desactive = 'Désactivé';
   static const heure = 'Heure';
   static const permissionNotifications = 'Notifications';
@@ -217,6 +223,10 @@ class S {
   static const exerciceTitre = 'Exercice';
   static const exerciceSousTitre = 'Traduis la phrase en anglais en utilisant le mot.';
   static const sessionExercices = "Session d'exercices";
+  static const revisionRapide = 'Révision rapide : retrouver le mot masqué';
+  static const consigneMotCache =
+      "Cette phrase contient le sens d'un de tes mots. Retrouve-le et emploie-le dans ta traduction.";
+  static const motAEmployer = 'TON MOT';
   static const sessionExercicesTexte = 'Traduis des phrases avec tes mots du jour.';
   static const nouvellePhrase = 'Nouvelle phrase';
   static const exerciceSansTraduction =

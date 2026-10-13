@@ -27,10 +27,10 @@ class Banc {
   final Magasin prefs;
 }
 
-Future<Banc> preparerBanc({bool onboardingFait = true}) async {
+Future<Banc> preparerBanc({bool onboardingFait = true, Gestionnaire? serveur}) async {
   final cache = LocalCache(ouvrirMagasinMemoire);
   await cache.ouvrir();
-  final api = apiDeTest(FauxServeur((r, c) => (200, santeOk())));
+  final api = apiDeTest(FauxServeur(serveur ?? (r, c) => (200, santeOk())));
   final depot = DepotLocal(cache: cache, api: api, declencherSync: () {}, serveurJoignable: () => false);
   final env = Environnement(
     mobile: true,
@@ -199,6 +199,45 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text(S.bienJoue), findsOneWidget);
     expect(banc.cache.file().where((o) => o.type == 'revision.repondre').length, 1);
+    await arreter(tester);
+  });
+
+  testWidgets('revision_exercice : phrase sans le mot, mot révélé après le verdict', (tester) async {
+    final banc = await preparerBanc(
+      serveur: (r, c) => switch (r.path) {
+        final p when p.endsWith('/exercices') => (
+          200,
+          {'id': 'ex-1', 'phrase_fr': "J'adore discrètement ce restaurant.", 'generee': true},
+        ),
+        final p when p.endsWith('/evaluer') => (
+          200,
+          {
+            'verdict': 'correct',
+            'explication': 'Bonne traduction.',
+            'verdict_repli': false,
+            'reference_en': 'I lowkey love this restaurant.',
+          },
+        ),
+        _ => (200, santeOk()),
+      },
+    );
+    final mot = (await banc.depot.creerMot('lowkey')).mot;
+    await ajouterExtrait(banc, mot.id);
+    await lancer(tester, banc);
+    expect(find.text('lowkey'), findsNothing); // l'accueil ne donne pas la réponse
+    await tester.tap(find.text(S.commencer));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text("J'adore discrètement ce restaurant."), findsOneWidget);
+    expect(find.text(S.consigneMotCache), findsOneWidget);
+    expect(find.text('lowkey'), findsNothing);
+    await tester.enterText(find.byType(TextField).first, 'I lowkey love this restaurant.');
+    await tester.pump();
+    await tester.ensureVisible(find.text(S.valider));
+    await tester.tap(find.text(S.valider));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text(S.motAEmployer), findsOneWidget);
+    expect(find.text('lowkey'), findsOneWidget);
+    expect(find.text('I lowkey love this restaurant.'), findsWidgets);
     await arreter(tester);
   });
 

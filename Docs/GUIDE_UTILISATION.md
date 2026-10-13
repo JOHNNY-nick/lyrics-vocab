@@ -57,12 +57,25 @@ Si le mot est déjà dans ta bibliothèque, l'application te le dit et propose d
 
 L'onglet **Révisions** montre combien de mots sont à revoir, le temps estimé, et ta **série** de jours consécutifs.
 
-1. **Commencer** lance une session (20 mots au plus, réglable).
-2. La carte montre l'extrait avec le mot **masqué**. Cherche le mot dans ta tête.
-3. **Révéler** affiche le mot, sa traduction, l'explication, le lien vers la chanson et les **phrases pour l'employer** : deux phrases de tous les jours qui utilisent le mot, avec leur traduction et un bouton 🔊 pour les écouter. Lis-les à voix haute, puis essaie d'en inventer une à toi.
-4. Réponds honnêtement : **« Je ne savais pas »** ou **« Je savais »**.
-   - Un bandeau « Réponse enregistrée — **Annuler** » reste 5 secondes si tu t'es trompé de bouton.
-5. À la fin, un récapitulatif affiche le nombre de mots révisés, tes réussites et la prochaine révision.
+L'accueil n'affiche pas les mots du jour, pour ne pas te donner les réponses.
+
+**Commencer** lance une session (20 mots au plus, réglable) où tu **emploies** tes mots :
+
+1. Une phrase en français s'affiche. Elle contient le **sens français d'un de tes mots**, sans te dire lequel.
+2. Retrouve le mot anglais que tu as ajouté et écris la traduction anglaise de toute la phrase **en l'employant**, puis **Valider**.
+3. Le verdict s'affiche : **Correct**, **Presque** ou **Incorrect**. Une traduction juste qui n'emploie pas ton mot (un synonyme, par exemple) compte au mieux comme **Presque**.
+4. Le mot est alors révélé (**TON MOT**, avec 🔊 et sa traduction), suivi de la phrase attendue, que tu peux aussi écouter.
+5. **Suivant** passe au mot suivant ; le verdict compte comme une révision (Correct = tu savais).
+6. Un bandeau « Réponse enregistrée — **Annuler** » reste 5 secondes si tu veux revenir en arrière.
+7. À la fin, un récapitulatif affiche le nombre de mots révisés, tes réussites et la prochaine révision.
+
+Les phrases sont écrites par l'IA du PC. Sans connexion au PC (téléphone hors ligne), ou pour un mot sans traduction, la session passe automatiquement en **révision rapide**.
+
+**« Révision rapide : retrouver le mot masqué »** lance l'ancienne carte :
+
+1. L'extrait de chanson s'affiche avec le mot **masqué**. Cherche-le dans ta tête.
+2. **Révéler** affiche le mot, sa traduction, l'explication, le lien vers la chanson et les **phrases pour l'employer**, avec un bouton 🔊 pour chacune.
+3. Réponds honnêtement : **« Je ne savais pas »** ou **« Je savais »**.
 
 Plus tu sais un mot, plus il revient tard (1 jour, 3 jours, puis de plus en plus espacé). Un mot que tu ne savais pas revient le lendemain. Un mot est **Acquis** quand sa prochaine révision est à plus de 21 jours.
 
@@ -77,8 +90,8 @@ Trois façons d'y accéder :
 | Où | Effet |
 | --- | --- |
 | Fiche d'un mot → **« S'entraîner avec ce mot »** | Entraînement libre, autant de phrases que tu veux (**« Nouvelle phrase »**). Ne change pas tes dates de révision. |
-| Révisions → **« Session d'exercices »** | Chaque mot du jour est travaillé par une phrase à traduire. Le verdict compte comme une révision. |
-| Réglages → Révisions → mode **Mélange** | Pendant les sessions normales, environ un mot sur trois devient un exercice. |
+| Révisions → **Commencer** | Chaque mot du jour est caché dans une phrase à traduire (voir 5). Le verdict compte comme une révision. |
+| Réglages → Révisions → mode **Mélange** | Pendant la révision rapide, environ un mot sur trois devient un exercice. |
 
 Écris ta traduction puis **Valider**. Le verdict s'affiche : **Correct** (vert), **Presque** (jaune) ou **Incorrect** (rose), avec une courte explication et la traduction attendue. « Évaluation simplifiée » signifie que l'IA n'a pas pu répondre et que la réponse a été comparée mot à mot.
 
@@ -100,7 +113,7 @@ L'exercice a besoin du PC (c'est l'IA du PC qui écrit et corrige les phrases) :
 | --- | --- |
 | Artistes | Tes artistes préférés et leur ordre |
 | Révisions | Nombre de mots par session (5 à 100), mode Rappel ou Mélange, heure de changement de jour (avant 4 h du matin, on est encore la veille), option « Facile » |
-| Rappels (téléphone) | Fréquence (chaque jour, tous les 2 jours, désactivé), heure, autorisation des notifications |
+| Rappels (téléphone) | Fréquence (chaque jour, tous les 2 jours, tous les 3 jours, une fois par semaine, désactivé), heure, jusqu'à **3 rappels par jour** (« + Ajouter un rappel dans la journée », ✕ pour en retirer un), autorisation des notifications |
 | Synchronisation (téléphone) | Wi-Fi seulement, « Synchroniser maintenant », dernière synchronisation, actions en attente, liste « À examiner » |
 | Serveur (téléphone) | Adresse du PC, avec le bouton « Tester » |
 | Informations | Versions, état de l'IA, quotas, dernière sauvegarde |
@@ -116,7 +129,7 @@ L'exercice a besoin du PC (c'est l'IA du PC qui écrit et corrige les phrases) :
   - **« Ton PC est injoignable »** : il y a du réseau mais le PC ne répond pas. Vérifie que le PC est allumé (pas en veille) et que **Tailscale est connecté sur le téléphone**. C'est la cause la plus fréquente ;
   - **« Synchronisation terminée »** : tout est à jour ;
   - **« Une action n'a pas pu être envoyée »** : voir Réglages → À examiner, où chaque action peut être réessayée ou abandonnée.
-- **Rappels** : une notification « N mots à réviser » arrive à l'heure choisie (19 h par défaut), seulement s'il y a des mots à revoir, avec un extrait dont le mot est masqué. La toucher ouvre les révisions. Elle fonctionne même sans réseau.
+- **Rappels** : une notification « N mots à réviser » arrive aux heures et à la fréquence choisies (chaque jour à 19 h par défaut), seulement s'il y a des mots à revoir. Avec plusieurs rappels par jour, ceux de l'après-midi ou du soir arrivent même si tu as déjà commencé tes révisions, tant qu'il reste des mots, avec un extrait dont le mot est masqué. La toucher ouvre les révisions. Elle fonctionne même sans réseau.
 
 ## 10. Bon à savoir
 

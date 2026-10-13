@@ -16,6 +16,7 @@ import '../services/sync_service.dart';
 import '../strings.dart';
 import '../theme/jetons.dart';
 import '../widgets/composants.dart';
+import '../widgets/icones.dart';
 import 'onboarding_screen.dart';
 
 /// Informations du serveur (version, Ollama, quotas, erreurs), lues seulement si joignable.
@@ -359,6 +360,9 @@ class _SectionRevisions extends ConsumerWidget {
   }
 }
 
+/// Rappels supplémentaires dans la journée (en plus de l'heure principale).
+const maxRappelsSup = 2;
+
 class _SectionRappels extends ConsumerWidget {
   const _SectionRappels({required this.reglages, required this.modifier});
   final Reglages reglages;
@@ -381,20 +385,65 @@ class _SectionRappels extends ConsumerWidget {
               options: const {
                 'quotidien': S.quotidien,
                 'tous_les_2_jours': S.tousLes2Jours,
+                'tous_les_3_jours': S.tousLes3Jours,
+                'hebdomadaire': S.hebdomadaire,
                 'desactive': S.desactive,
               },
               valeur: reglages.frequenceRappels,
               onChanged: (v) => modifier(reglages.copyWith(frequenceRappels: v)),
             ),
           ),
-          _Ligne(
-            libelle: S.heure,
-            controle: _BoutonHeure(
+          if (reglages.frequenceRappels != 'desactive') ...[
+            _Ligne(
               libelle: S.heure,
-              heure: reglages.heureRappel,
-              onChanged: (v) => modifier(reglages.copyWith(heureRappel: v)),
+              sousTitre: S.sousTitreHeureRappel,
+              controle: _BoutonHeure(
+                libelle: S.heure,
+                heure: reglages.heureRappel,
+                onChanged: (v) => modifier(reglages.copyWith(heureRappel: v)),
+              ),
             ),
-          ),
+            // Jusqu'à 3 rappels par jour : l'heure principale et 2 rappels supplémentaires.
+            for (var i = 0; i < reglages.heuresRappelSup.length; i++)
+              _Ligne(
+                libelle: S.autreRappel,
+                controle: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _BoutonHeure(
+                      libelle: S.autreRappel,
+                      heure: reglages.heuresRappelSup[i],
+                      onChanged: (v) => modifier(
+                        reglages.copyWith(heuresRappelSup: List.of(reglages.heuresRappelSup)..[i] = v),
+                      ),
+                    ),
+                    BoutonIcone(
+                      forme: Icones.fermer,
+                      libelle: S.retirerRappel,
+                      couleur: c.texteSecondaire,
+                      onPressed: () => modifier(
+                        reglages.copyWith(heuresRappelSup: List.of(reglages.heuresRappelSup)..removeAt(i)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (reglages.heuresRappelSup.length < maxRappelsSup)
+              Align(
+                alignment: Alignment.centerLeft,
+                child: BoutonLien(
+                  libelle: S.ajouterRappel,
+                  onPressed: () async {
+                    final choix = await _choisirHeure(context, '12:00');
+                    if (choix != null) {
+                      await modifier(
+                        reglages.copyWith(heuresRappelSup: [...reglages.heuresRappelSup, choix]),
+                      );
+                    }
+                  },
+                ),
+              ),
+          ],
           _Ligne(
             libelle: S.permissionNotifications,
             sousTitre: accordee ? S.autorisees : S.refusees,
