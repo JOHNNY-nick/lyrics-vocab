@@ -137,6 +137,13 @@ Demande de l'utilisateur : une version complètement fonctionnelle, en s'autoris
 | Plusieurs rappels par jour | Colonne `reglage.heures_rappel_sup` (JSONB, 2 heures « HH:MM » au plus) en plus de l'heure principale, soit 3 rappels par jour au plus. Avec plusieurs rappels, ceux restant dans la journée sont gardés après une révision, toujours seulement s'il reste des mots dus. | Rester discret (pas plus de 3 notifications par jour) tout en laissant choisir les heures. |
 | Page web | L'application web n'est plus mise en cache un an : tout est revalidé, et un en-tête `Clear-Site-Data` vide le cache du navigateur à la première visite d'une nouvelle version. | Flutter ne met pas d'empreinte dans le nom de `main.dart.js` : l'application installée gardait l'ancienne version. |
 
+## Réponse à voix haute (2026-10-13)
+
+| Sujet | Décision | Raison |
+| --- | --- | --- |
+| Dictée dans les exercices | `speech_to_text` : Web Speech API (`webkitSpeechRecognition`) dans Chrome/Edge, service de reconnaissance d'Android sur le téléphone ; anglais `en-US`, résultats partiels affichés dans le champ, arrêt après 3 s de silence (30 s au plus), puis vérification automatique. La réponse transcrite est rappelée avec le verdict. | Demande de l'utilisateur ; gratuit, sans clé ; la transcription est faite par le service de l'appareil (Google), le texte seul part vers le PC. Whisper sur le PC a été écarté : la carte graphique (4 Go) est déjà occupée par le modèle d'IA. |
+| Prononciation | Seul le mot se prononce ; les boutons qui lisaient les phrases d'exemple et la traduction attendue sont retirés. | Précision de l'utilisateur. |
+
 ## Exigences [S] non réalisées (reportées en v2, REC-03)
 
 - NOT-09 : relance 3 heures après la notification.

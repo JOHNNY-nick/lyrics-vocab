@@ -117,8 +117,18 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen> {
               ),
               const SizedBox(height: Espaces.e16),
               BoutonPrincipal(libelle: S.valider, onPressed: _evaluation ? null : _valider),
+              const SizedBox(height: Espaces.e10),
+              if (!_evaluation)
+                BoutonDictee(
+                  controleur: _reponse,
+                  service: ref.read(environnementProvider).dictee,
+                  surReponse: (_) => _valider(),
+                ),
             ] else ...[
               BlocVerdict(verdict: _verdict!),
+              const SizedBox(height: Espaces.e12),
+              Text(S.taReponseLabel, style: Textes.libelleCarte.copyWith(color: c.texteSecondaire)),
+              Text(_reponse.text, style: Textes.corps.copyWith(color: c.encre)),
               if (_verdict!.referenceEn != null) ...[
                 const SizedBox(height: Espaces.e12),
                 Text(S.attendu, style: Textes.libelleCarte.copyWith(color: c.texteSecondaire)),

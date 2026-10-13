@@ -549,10 +549,7 @@ class _CarteRappel extends StatelessWidget {
                       ],
                       if (carte.exemples.isNotEmpty) ...[
                         const SizedBox(height: Espaces.e14),
-                        BlocExemples(
-                          exemples: carte.exemples,
-                          prononciation: ref.read(environnementProvider).prononciation,
-                        ),
+                        BlocExemples(exemples: carte.exemples),
                       ],
                     ],
                   ),
@@ -612,9 +609,20 @@ class _CarteExercice extends ConsumerWidget {
                   ? null
                   : () => notifier.evaluer(controleur.text),
             ),
+            const SizedBox(height: Espaces.e10),
+            // Réponse dictée : le texte reconnu remplit le champ puis est vérifié.
+            if (session.phase != PhaseExercice.evaluation)
+              BoutonDictee(
+                controleur: controleur,
+                service: ref.read(environnementProvider).dictee,
+                surReponse: notifier.evaluer,
+              ),
           ] else ...[
             BlocVerdict(verdict: verdict),
             const SizedBox(height: Espaces.e14),
+            Text(S.taReponseLabel, style: Textes.libelleCarte.copyWith(color: c.texteSecondaire)),
+            Text(controleur.text, style: Textes.corps.copyWith(color: c.encre)),
+            const SizedBox(height: Espaces.e12),
             Text(S.motAEmployer, style: Textes.libelleCarte.copyWith(color: c.texteSecondaire)),
             Row(
               children: [
@@ -629,18 +637,7 @@ class _CarteExercice extends ConsumerWidget {
             if (verdict.referenceEn != null) ...[
               const SizedBox(height: Espaces.e12),
               Text(S.attendu, style: Textes.libelleCarte.copyWith(color: c.texteSecondaire)),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(verdict.referenceEn!, style: Textes.corps.copyWith(color: c.encre)),
-                  ),
-                  BoutonPrononciation(
-                    mot: verdict.referenceEn!,
-                    service: ref.read(environnementProvider).prononciation,
-                    libelle: '${S.ecouterPhrase} « ${verdict.referenceEn!} »',
-                  ),
-                ],
-              ),
+              Text(verdict.referenceEn!, style: Textes.corps.copyWith(color: c.encre)),
             ],
             const SizedBox(height: Espaces.e16),
             BoutonPrincipal(

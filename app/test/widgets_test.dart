@@ -11,6 +11,7 @@ import 'package:lyrics_vocab/models/mot.dart';
 import 'package:lyrics_vocab/providers/providers.dart';
 import 'package:lyrics_vocab/services/connectivite_service.dart';
 import 'package:lyrics_vocab/services/depot_local.dart';
+import 'package:lyrics_vocab/services/dictee_service.dart';
 import 'package:lyrics_vocab/services/local_cache.dart';
 import 'package:lyrics_vocab/services/notifications_service.dart';
 import 'package:lyrics_vocab/services/prononciation_service.dart';
@@ -27,7 +28,7 @@ class Banc {
   final Magasin prefs;
 }
 
-Future<Banc> preparerBanc({bool onboardingFait = true, Gestionnaire? serveur}) async {
+Future<Banc> preparerBanc({bool onboardingFait = true, Gestionnaire? serveur, ServiceDictee? dictee}) async {
   final cache = LocalCache(ouvrirMagasinMemoire);
   await cache.ouvrir();
   final api = apiDeTest(FauxServeur(serveur ?? (r, c) => (200, santeOk())));
@@ -39,6 +40,7 @@ Future<Banc> preparerBanc({bool onboardingFait = true, Gestionnaire? serveur}) a
     cache: cache,
     connectivite: ConnectiviteNeutre(),
     notifications: NotificationsNeutres(),
+    dictee: dictee,
   );
   final prefs = MagasinMemoire();
   if (onboardingFait) await prefs.ecrire(Meta.onboardingFait, {'v': true});
@@ -176,14 +178,11 @@ void main() {
     await tester.tap(find.text(S.reveler));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('discrètement'), findsOneWidget);
-    // Phrases pour employer le mot, avec leur prononciation.
+    // Phrases pour employer le mot ; seul le mot se prononce, pas les phrases.
     expect(find.text(S.exemples), findsOneWidget);
     expect(find.text("J'aime un peu cette chanson."), findsOneWidget);
-    final phrase = find.bySemanticsLabel('${S.ecouterPhrase} « I lowkey love this song. »');
-    await tester.ensureVisible(phrase);
-    await tester.tap(phrase);
-    await tester.pump();
-    expect((banc.env.prononciation as PrononciationNeutre).demandes, [('I lowkey love this song.', false)]);
+    expect(find.bySemanticsLabel(S.prononcer('lowkey')), findsOneWidget);
+    expect(find.byType(BoutonPrononciation), findsOneWidget);
     expect(tester.widget<BoutonPrincipal>(savais).onPressed, isNotNull);
     await tester.ensureVisible(savais);
     await tester.tap(savais);
@@ -235,6 +234,49 @@ void main() {
     await tester.ensureVisible(find.text(S.valider));
     await tester.tap(find.text(S.valider));
     await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text(S.motAEmployer), findsOneWidget);
+    expect(find.text('lowkey'), findsOneWidget);
+    expect(find.text('I lowkey love this restaurant.'), findsWidgets);
+    await arreter(tester);
+  });
+
+  testWidgets('revision_dictee : la réponse dite à voix haute est transcrite puis vérifiée', (tester) async {
+    final evaluees = <String>{}; // Set.add renvoie un booléen : utilisable dans le motif
+    final banc = await preparerBanc(
+      dictee: DicteeNeutre(phrase: 'I lowkey love this restaurant'),
+      serveur: (r, c) => switch (r.path) {
+        final p when p.endsWith('/exercices') => (
+          200,
+          {'id': 'ex-1', 'phrase_fr': "J'adore discrètement ce restaurant.", 'generee': true},
+        ),
+        final p when p.endsWith('/evaluer') && evaluees.add('${c?['reponse']}') => (
+          200,
+          {
+            'verdict': 'correct',
+            'explication': 'Bonne traduction.',
+            'verdict_repli': false,
+            'reference_en': 'I lowkey love this restaurant.',
+          },
+        ),
+        _ => (200, santeOk()),
+      },
+    );
+    final mot = (await banc.depot.creerMot('lowkey')).mot;
+    await ajouterExtrait(banc, mot.id);
+    await lancer(tester, banc);
+    expect(find.text('lowkey'), findsNothing); // l'accueil ne donne pas la réponse
+    await tester.tap(find.text(S.commencer));
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(find.text("J'adore discrètement ce restaurant."), findsOneWidget);
+    expect(find.text(S.consigneMotCache), findsOneWidget);
+    expect(find.text('lowkey'), findsNothing);
+    final micro = find.text(S.repondreAVoixHaute);
+    await tester.ensureVisible(micro);
+    await tester.tap(micro);
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(evaluees, {'I lowkey love this restaurant'});
+    expect(find.text(S.taReponseLabel), findsOneWidget);
+    expect(find.text('I lowkey love this restaurant'), findsOneWidget);
     expect(find.text(S.motAEmployer), findsOneWidget);
     expect(find.text('lowkey'), findsOneWidget);
     expect(find.text('I lowkey love this restaurant.'), findsWidgets);

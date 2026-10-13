@@ -346,7 +346,7 @@ class _Fiche extends StatelessWidget {
       _apparition(context, traduction, cle: 't${mot.traductionFr}$_enCours'),
       _apparition(context, explication, cle: 'e${mot.explication}$_enCours'),
       entrainement, // juste sous l'explication
-      if (mot.exemples.isNotEmpty) BlocExemples(exemples: mot.exemples, prononciation: prononciation),
+      if (mot.exemples.isNotEmpty) BlocExemples(exemples: mot.exemples),
     ];
     final droite = [
       _apparition(context, colonne(extraits), cle: 'x${mot.extraits.length}$_enCours'),

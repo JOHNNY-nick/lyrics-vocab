@@ -12,6 +12,7 @@ import '../services/connectivite_service.dart';
 import '../services/depot_donnees.dart';
 import '../services/local_cache.dart';
 import '../services/notifications_service.dart';
+import '../services/dictee_service.dart';
 import '../services/prononciation_service.dart';
 import '../services/sync_service.dart';
 
@@ -27,7 +28,9 @@ class Environnement {
     this.sync,
     this.adresseModifiable = false,
     ServicePrononciation? prononciation,
-  }) : prononciation = prononciation ?? PrononciationNeutre();
+    ServiceDictee? dictee,
+  }) : prononciation = prononciation ?? PrononciationNeutre(),
+       dictee = dictee ?? DicteeNeutre(disponible: false);
 
   final bool mobile;
   final ApiClient api;
@@ -40,6 +43,7 @@ class Environnement {
 
   /// Prononciation vocale des mots (synthèse vocale de l'appareil).
   final ServicePrononciation prononciation;
+  final ServiceDictee dictee;
 }
 
 final environnementProvider = Provider<Environnement>((ref) => throw UnimplementedError());

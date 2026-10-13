@@ -4,6 +4,8 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- Réponses dictées dans les exercices (reconnaissance vocale de l'appareil). -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
         android:label="Lyrics &amp; Vocab"
         android:name="${applicationName}"
@@ -54,6 +56,9 @@
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
     <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService"/>
+        </intent>
         <!-- Prononciation des mots : moteur de synthèse vocale de l'appareil (flutter_tts). -->
         <intent>
             <action android:name="android.intent.action.TTS_SERVICE"/>

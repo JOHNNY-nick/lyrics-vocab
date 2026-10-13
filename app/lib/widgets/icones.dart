@@ -101,6 +101,11 @@ class Icones {
   static const hautParleur = FormeIcone(
     chemins: ['M11 5L6 9H3v6h3l5 4V5z', 'M15.5 8.5a5 5 0 0 1 0 7', 'M18.5 5.5a9 9 0 0 1 0 13'],
   );
+  static const micro = FormeIcone(
+    rectangles: [(9, 3, 6, 11, 3)],
+    chemins: ['M5 11a7 7 0 0 0 14 0', 'M12 18v3M9 21h6'],
+  );
+  static const stop = FormeIcone(rectangles: [(7, 7, 10, 10, 2)]);
   static const nuage = FormeIcone(chemins: ['M7 18h10a4 4 0 0 0 0-8 6 6 0 0 0-11.5 2A3 3 0 0 0 7 18z']);
 }
 

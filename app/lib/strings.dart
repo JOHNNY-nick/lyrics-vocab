@@ -111,7 +111,12 @@ class S {
   static String extraitNumero(int n) => 'EXTRAIT $n';
   static const explication = 'EXPLICATION';
   static const exemples = "PHRASES POUR L'EMPLOYER";
-  static const ecouterPhrase = 'Écouter la phrase';
+  static const repondreAVoixHaute = 'Répondre à voix haute';
+  static const arreterEcoute = "Arrêter l'écoute";
+  static const ecouteEnCours = "Je t'écoute… parle en anglais.";
+  static const dicteeIndisponible = "Micro indisponible : autorise l'accès au micro, ou écris ta réponse.";
+  static const dicteeRien = "Je n'ai rien entendu. Réessaie ou écris ta réponse.";
+  static const taReponseLabel = 'TA RÉPONSE';
   static const prochaineRevision = 'Prochaine révision';
   static String echecs(int n) => n > 1 ? 'Échecs' : 'Échec';
   static const reessayerEnrichissement = 'Réessayer l\'enrichissement';

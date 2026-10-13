@@ -48,7 +48,7 @@ Si le mot est déjà dans ta bibliothèque, l'application te le dit et propose d
 - **Extraits** : sous chaque extrait, le titre et l'artiste, puis le lien **« Écouter la chanson »** qui ouvre la chanson sur Deezer (ou une recherche YouTube si elle n'a pas été trouvée). « Artiste hors de ta liste » signale un extrait trouvé chez un autre artiste que les tiens.
 - **Explication** : marquée « Générée automatiquement », car elle est écrite par l'IA.
 - **« S'entraîner avec ce mot »** : ouvre l'exercice d'utilisation (voir 6).
-- **Phrases pour l'employer** : deux phrases anglaises de la vie courante qui utilisent le mot, avec leur traduction. Le bouton 🔊 à droite de chaque phrase la lit à voix haute. Elles sont écrites par l'IA pendant le remplissage de la fiche.
+- **Phrases pour l'employer** : deux phrases anglaises de la vie courante qui utilisent le mot, avec leur traduction. Elles sont écrites par l'IA pendant le remplissage de la fiche.
 - **Prochaine révision** et nombre d'**échecs**.
 - Menu **« … »** en haut à droite → « Supprimer ce mot ». Un message « Mot supprimé — Annuler » te laisse 5 secondes pour changer d'avis.
 - Si la fiche est incomplète (aucun extrait, IA indisponible), le lien **« Réessayer l'enrichissement »** relance la recherche.
@@ -62,9 +62,11 @@ L'accueil n'affiche pas les mots du jour, pour ne pas te donner les réponses.
 **Commencer** lance une session (20 mots au plus, réglable) où tu **emploies** tes mots :
 
 1. Une phrase en français s'affiche. Elle contient le **sens français d'un de tes mots**, sans te dire lequel.
-2. Retrouve le mot anglais que tu as ajouté et écris la traduction anglaise de toute la phrase **en l'employant**, puis **Valider**.
+2. Retrouve le mot anglais que tu as ajouté et traduis toute la phrase en anglais **en l'employant** :
+   - **à l'écrit** : tape ta traduction, puis **Valider** ;
+   - **à l'oral** : touche **🎤 Répondre à voix haute** et dis ta phrase en anglais. Le texte s'écrit au fur et à mesure dans le champ ; après 3 secondes de silence (ou en touchant **Arrêter l'écoute**), ta réponse est vérifiée automatiquement. La première fois, autorise l'accès au micro.
 3. Le verdict s'affiche : **Correct**, **Presque** ou **Incorrect**. Une traduction juste qui n'emploie pas ton mot (un synonyme, par exemple) compte au mieux comme **Presque**.
-4. Le mot est alors révélé (**TON MOT**, avec 🔊 et sa traduction), suivi de la phrase attendue, que tu peux aussi écouter.
+4. Ta réponse est rappelée (**TA RÉPONSE**, utile pour voir ce qui a été compris à l'oral), puis le mot est révélé (**TON MOT**, avec 🔊 et sa traduction) et la phrase attendue.
 5. **Suivant** passe au mot suivant ; le verdict compte comme une révision (Correct = tu savais).
 6. Un bandeau « Réponse enregistrée — **Annuler** » reste 5 secondes si tu veux revenir en arrière.
 7. À la fin, un récapitulatif affiche le nombre de mots révisés, tes réussites et la prochaine révision.
@@ -74,7 +76,7 @@ Les phrases sont écrites par l'IA du PC. Sans connexion au PC (téléphone hors
 **« Révision rapide : retrouver le mot masqué »** lance l'ancienne carte :
 
 1. L'extrait de chanson s'affiche avec le mot **masqué**. Cherche-le dans ta tête.
-2. **Révéler** affiche le mot, sa traduction, l'explication, le lien vers la chanson et les **phrases pour l'employer**, avec un bouton 🔊 pour chacune.
+2. **Révéler** affiche le mot (avec 🔊), sa traduction, l'explication, le lien vers la chanson et les **phrases pour l'employer**.
 3. Réponds honnêtement : **« Je ne savais pas »** ou **« Je savais »**.
 
 Plus tu sais un mot, plus il revient tard (1 jour, 3 jours, puis de plus en plus espacé). Un mot que tu ne savais pas revient le lendemain. Un mot est **Acquis** quand sa prochaine révision est à plus de 21 jours.
@@ -133,7 +135,8 @@ L'exercice a besoin du PC (c'est l'IA du PC qui écrit et corrige les phrases) :
 
 ## 10. Bon à savoir
 
-- **Prononciation** : elle utilise la voix anglaise de ton appareil, sans connexion au PC. Sur le PC, Chrome et Edge en ont une par défaut. Sur Android, si rien ne se passe : Paramètres → Gestion globale → Synthèse vocale (ou « Langue et saisie » → Synthèse vocale) → choisis le moteur Google ou Samsung, puis installe la voix **anglais (États-Unis)**.
+- **Réponse à voix haute** : elle utilise la reconnaissance vocale de l'appareil (celle de Chrome/Edge sur le PC, celle de Google sur Android) ; elle a besoin d'Internet et d'un micro autorisé. Si un mot est mal compris, corrige le texte dans le champ et touche **Valider**… avant la fin des 3 secondes de silence, ou refais un essai avec « Nouvelle phrase ».
+- **Prononciation** : seul le mot est prononcé (bouton 🔊). Elle utilise la voix anglaise de ton appareil, sans connexion au PC. Sur le PC, Chrome et Edge en ont une par défaut. Sur Android, si rien ne se passe : Paramètres → Gestion globale → Synthèse vocale (ou « Langue et saisie » → Synthèse vocale) → choisis le moteur Google ou Samsung, puis installe la voix **anglais (États-Unis)**.
 
 - Les extraits font au plus 2 lignes : l'application ne garde jamais les paroles complètes.
 - Tout ce qui est marqué « Générée automatiquement » vient de l'IA et peut contenir des erreurs.

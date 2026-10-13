@@ -7,6 +7,7 @@ import '../models/mot.dart';
 import '../models/revision.dart';
 import '../services/extraction.dart';
 import '../services/plateforme.dart';
+import '../services/dictee_service.dart';
 import '../services/prononciation_service.dart';
 import '../strings.dart';
 import '../theme/jetons.dart';
@@ -675,12 +676,10 @@ class BlocExplication extends StatelessWidget {
   }
 }
 
-/// Phrases d'exemple (anglais et traduction) pour apprendre à employer le mot, chacune
-/// avec son bouton de prononciation.
+/// Phrases d'exemple (anglais et traduction) pour apprendre à employer le mot.
 class BlocExemples extends StatelessWidget {
-  const BlocExemples({super.key, required this.exemples, required this.prononciation});
+  const BlocExemples({super.key, required this.exemples});
   final List<Exemple> exemples;
-  final ServicePrononciation prononciation;
 
   @override
   Widget build(BuildContext context) {
@@ -731,11 +730,6 @@ class BlocExemples extends StatelessWidget {
                         Text(exemple.fr, style: Textes.corps.copyWith(color: c.texteSecondaire)),
                       ],
                     ),
-                  ),
-                  BoutonPrononciation(
-                    mot: exemple.en,
-                    service: prononciation,
-                    libelle: '${S.ecouterPhrase} « ${exemple.en} »',
                   ),
                 ],
               ),
@@ -1414,4 +1408,109 @@ class BoutonPrononciation extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// Bouton micro des exercices : la réponse dictée en anglais remplit [controleur], puis
+/// [surReponse] la fait vérifier (sauf si rien n'a été entendu).
+class BoutonDictee extends StatefulWidget {
+  const BoutonDictee({super.key, required this.controleur, required this.service, required this.surReponse});
+  final TextEditingController controleur;
+  final ServiceDictee service;
+  final ValueChanged<String> surReponse;
+
+  @override
+  State<BoutonDictee> createState() => _BoutonDicteeState();
+}
+
+class _BoutonDicteeState extends State<BoutonDictee> {
+  bool _ecoute = false;
+  String _dernier = '';
+
+  @override
+  void dispose() {
+    if (_ecoute) widget.service.arreter();
+    super.dispose();
+  }
+
+  Future<void> _basculer() async {
+    if (_ecoute) {
+      await widget.service.arreter();
+      return;
+    }
+    if (!await widget.service.preparer()) {
+      if (mounted) afficherMessage(context, S.dicteeIndisponible);
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      _ecoute = true;
+      _dernier = '';
+    });
+    await widget.service.ecouter(
+      surTexte: (texte, _) {
+        _dernier = texte;
+        widget.controleur.text = texte;
+        widget.controleur.selection = TextSelection.collapsed(offset: texte.length);
+      },
+      surFin: () {
+        if (!mounted || !_ecoute) return;
+        setState(() => _ecoute = false);
+        final texte = _dernier.trim();
+        if (texte.isEmpty) {
+          afficherMessage(context, S.dicteeRien);
+        } else {
+          widget.surReponse(texte);
+        }
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.couleurs;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Cliquable(
+          onTap: _basculer,
+          libelle: _ecoute ? S.arreterEcoute : S.repondreAVoixHaute,
+          rayon: Rayons.bouton,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: Tailles.boutonMin),
+            padding: const EdgeInsets.symmetric(horizontal: Espaces.e16, vertical: Espaces.e10),
+            decoration: BoxDecoration(
+              color: _ecoute ? c.violet : c.surface,
+              borderRadius: BorderRadius.circular(Rayons.bouton),
+              border: Border.all(color: c.violet, width: 2),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconeTrace(_ecoute ? Icones.stop : Icones.micro, couleur: _ecoute ? c.surViolet : c.violet),
+                const SizedBox(width: Espaces.e8),
+                Flexible(
+                  child: Text(
+                    _ecoute ? S.arreterEcoute : S.repondreAVoixHaute,
+                    style: Textes.bouton.copyWith(color: _ecoute ? c.surViolet : c.violet),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_ecoute)
+          Padding(
+            padding: const EdgeInsets.only(top: Espaces.e8),
+            child: Semantics(
+              liveRegion: true,
+              child: Text(
+                S.ecouteEnCours,
+                textAlign: TextAlign.center,
+                style: Textes.legende.copyWith(color: c.violet),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }
