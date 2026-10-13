@@ -212,7 +212,7 @@ def analyser_json(brut: str) -> tuple[str, str] | None:
 
 
 SEUIL_HORS_SUJET = 0.25
-SEUIL_CORRECT_MIN = 0.5
+SEUIL_CORRECT_MIN = 0.6
 EXPLICATION_HORS_SUJET = (
     "Ta phrase ne traduit pas celle qui était proposée : compare avec la traduction attendue."
 )

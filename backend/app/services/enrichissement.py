@@ -27,6 +27,7 @@ from app.services.ollama_client import OllamaClient
 from app.services.types_externes import MorceauExterne
 
 EXTRAITS_MAX = 3
+RECHERCHES_PARALLELES = 4
 REPLI_DUREE_MAX_S = 10
 LONGUEUR_MAX_TRADUCTION = 200
 NOUVELLE_RECHERCHE_JOURS = 7
@@ -105,7 +106,8 @@ async def _chercher_dans(
         morceau.texte = None
         if extrait is not None:
             recherche.trouvailles.append(Trouvaille(extrait, morceau, artiste_id, hors_liste))
-        await services.dormir(services.parametres.pause_entre_appels_ms / 1000)
+        if getattr(services.paroles, "appel_par_morceau", True):
+            await services.dormir(services.parametres.pause_entre_appels_ms / 1000)
     return True
 
 
@@ -114,13 +116,46 @@ async def _rechercher_preferes(
 ) -> bool:
     with services.fabrique() as session:
         preferes = [(a.id, a.nom, a.musixmatch_id) for a in artistes.preferes(session)]
-    for artiste_id, nom, musixmatch_id in preferes:
+    limite = services.parametres.morceaux_par_artiste
+    avance: dict[int, asyncio.Task] = {}
+    if not getattr(services.paroles, "appel_par_morceau", True):
+        # Source sans quota (LRCLIB) : les recherches des artistes partent ensemble, 4 à la
+        # fois ; les morceaux restent parcourus dans l'ordre des préférences.
+        file = asyncio.Semaphore(RECHERCHES_PARALLELES)
+
+        async def morceaux_de(nom: str, identifiant: int | None):
+            async with file:
+                return await services.paroles.morceaux_artiste(nom, identifiant, limite)
+
+        avance = {
+            i: asyncio.create_task(morceaux_de(nom, mid))
+            for i, (_, nom, mid) in enumerate(preferes)
+        }
+    try:
+        return await _parcourir_preferes(services, recherche, terme, echeance, preferes, avance)
+    finally:
+        for tache in avance.values():
+            tache.cancel()
+
+
+async def _parcourir_preferes(
+    services: Services,
+    recherche: Recherche,
+    terme: str,
+    echeance: float,
+    preferes: list,
+    avance: dict[int, asyncio.Task],
+) -> bool:
+    for rang, (artiste_id, nom, musixmatch_id) in enumerate(preferes):
         if len(recherche.trouvailles) >= EXTRAITS_MAX or time.monotonic() > echeance:
             break
         try:
-            morceaux, identifiant = await services.paroles.morceaux_artiste(
-                nom, musixmatch_id, services.parametres.morceaux_par_artiste
-            )
+            if rang in avance:
+                morceaux, identifiant = await avance[rang]
+            else:
+                morceaux, identifiant = await services.paroles.morceaux_artiste(
+                    nom, musixmatch_id, services.parametres.morceaux_par_artiste
+                )
         except (ServiceIndisponible, QuotaDepasse) as exc:
             recherche.code_erreur = _code(exc, services.paroles.service)
             return False
@@ -346,15 +381,6 @@ async def enrichir(
         except ErreurApi as exc:
             erreurs.append(exc.code if exc.code == "ia_format_invalide" else "ia_indisponible")
 
-    if not exemples and traduction:
-        try:
-            if await services.ollama.disponible():
-                exemples = await generer_exemples(
-                    services.ollama, terme, traduction, extrait_existant
-                )
-        except ErreurApi:
-            pass  # facultatif : n'influe pas sur le statut de la fiche
-
     if traduction and extrait_existant and explication:
         statut = "ok"
     elif traduction:
@@ -372,8 +398,6 @@ async def enrichir(
             mot.source_explication = "ia"
         elif traduction:
             mot.source_explication = "traduction_seule"
-        if exemples:
-            mot.exemples = exemples
         mot.statut_enrichissement = statut
         mot.erreur_enrichissement = erreurs[0] if erreurs and statut != "ok" else None
         mot.enrichi_le = datetime.now(UTC)
@@ -400,7 +424,29 @@ async def enrichir(
             mot_id=str(mot_id),
             code=erreurs[0] if erreurs else None,
         )
+    if not exemples and traduction:
+        # Après la fiche : elle s'affiche complète sans attendre ces phrases (5 à 10 s).
+        await _ajouter_exemples(services, mot_id, terme, traduction, extrait_existant)
     return statut
+
+
+async def _ajouter_exemples(
+    services: Services, mot_id: uuid.UUID, terme: str, traduction: str, extrait: str | None
+) -> None:
+    """Phrases d'exemple, facultatives : une panne de l'IA est sans effet sur la fiche."""
+    try:
+        if not await services.ollama.disponible():
+            return
+        exemples = await generer_exemples(services.ollama, terme, traduction, extrait)
+    except ErreurApi:
+        return
+    if not exemples:
+        return
+    with services.fabrique() as session:
+        mot = session.get(Mot, mot_id)
+        if mot is not None and mot.deleted_at is None:
+            mot.exemples = exemples
+            session.commit()
 
 
 async def _rien() -> None:

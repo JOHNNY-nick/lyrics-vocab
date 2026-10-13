@@ -22,6 +22,7 @@ class MusixmatchClient(ClientExterne):
     """Accès à l'API Musixmatch (adresses et paramètres à confirmer à la phase 03)."""
 
     service = "musixmatch"
+    appel_par_morceau = True  # une requête par morceau : pause entre les appels (quota)
     code_indisponible = "musixmatch_indisponible"
 
     def __init__(self, cle: str | None, *args, adresse: str = ADRESSE_MUSIXMATCH, **kwargs) -> None:

@@ -122,3 +122,23 @@ def test_phrase_utilisee_regeneree(client, fabrique, services):
         assert not exercices_prets.phrase_prete(revision)
         assert [m.id for _, m in exercices_prets.a_preparer(session)] == [mot_id]
         assert session.get(Mot, mot_id) is not None
+
+
+def test_objet_remplace_au_mieux_proche():
+    """Cas signalé : « lamps » au lieu de « candles », « gets talent » : pas « correct »."""
+    evaluation = ai_exercise.Evaluation("correct", "Bien.", False)
+    resultat = ai_exercise.garde_fou(
+        evaluation,
+        "She has a craft for making beautiful handmade candles in her spare time.",
+        "She gets talent for making beautifull crafted lamps in her free time",
+        terme="craft",
+    )
+    assert resultat.verdict == "proche"
+    # Une paraphrase fidèle reste « correct ».
+    paraphrase = ai_exercise.garde_fou(
+        evaluation,
+        "I love playing the guitar because it helps me to express my emotions.",
+        "I love to play guitar because it lets me express my feelings.",
+        terme="love",
+    )
+    assert paraphrase.verdict == "correct"

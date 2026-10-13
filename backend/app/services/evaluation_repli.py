@@ -83,7 +83,10 @@ def _meme_mot(a: str, b: str) -> bool:
     if a == b:
         return True
     n = min(len(a), len(b))
-    return n >= PREFIXE_COMMUN and a[:PREFIXE_COMMUN] == b[:PREFIXE_COMMUN]
+    if n >= PREFIXE_COMMUN and a[:PREFIXE_COMMUN] == b[:PREFIXE_COMMUN]:
+        return True
+    court, long = sorted((a, b), key=len)
+    return len(court) >= 4 and long.startswith(court)  # « play » et « playing »
 
 
 def part_commune(reference: str, reponse: str) -> float:

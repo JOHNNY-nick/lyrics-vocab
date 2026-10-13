@@ -44,6 +44,8 @@ class LrclibClient(ClientExterne):
     """Recherche de morceaux et de paroles sur LRCLIB."""
 
     service = "lrclib"
+    # Les paroles arrivent avec la recherche : aucune requête par morceau, donc pas de pause.
+    appel_par_morceau = False
     code_indisponible = "lrclib_indisponible"
     configure = True
 
