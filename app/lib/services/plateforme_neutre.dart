@@ -8,5 +8,4 @@ void rechargerPage() {}
 String originePage() => '';
 
 /// Ouvre un lien dans l'application adaptée (Deezer, YouTube) ou le navigateur.
-Future<bool> ouvrirLien(String url) =>
-    launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+Future<bool> ouvrirLien(String url) => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
