@@ -3,7 +3,8 @@
 import re
 
 from app.core.logging import journaliser
-from app.services.ai_explainer import charger_prompts
+from app.services.ai_explainer import charger_prompts, est_refus
+from app.services.grossieretes import secours
 from app.services.ollama_client import OllamaClient
 
 JETONS_TRADUCTION = 40
@@ -22,6 +23,8 @@ def nettoyer_traduction(brut: str) -> str | None:
     texte = _PREFIXE.sub("", lignes[0]).strip().strip(_GUILLEMETS).strip().rstrip(".").strip()
     texte = texte.strip(_GUILLEMETS).strip()
     if not texte or len(texte) > LONGUEUR_MAX or len(texte.split()) > MOTS_MAX:
+        return None
+    if est_refus(texte):
         return None
     return texte
 
@@ -55,4 +58,5 @@ async def traduire_par_ia(ollama: OllamaClient, mot: str, contexte: str | None) 
             tentative=tentative,
             version_prompt=prompts["version"],
         )
-    return None
+    connu = secours(mot)  # mot grossier refusé par le modèle
+    return connu[0] if connu else None

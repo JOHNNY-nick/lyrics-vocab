@@ -2,9 +2,9 @@
 # Toute modification change la version et est testée sur le jeu de référence avant adoption.
 
 [explication]
-version = "explication-v1"
-avec_extrait = """Explique en français, en 2 phrases maximum, le sens de "{mot}" dans ce contexte : "{extrait}". Indique si c'est de l'argot ou une expression figurée. Ne cite pas d'autres paroles de chanson."""
-sans_extrait = """Explique en français, en 2 phrases maximum, le sens général de "{mot}" en anglais. Indique si c'est de l'argot ou une expression figurée. Ne cite pas de paroles de chanson."""
+version = "explication-v2"
+avec_extrait = """Explique en français, en 2 phrases maximum, le sens de "{mot}" dans ce contexte : "{extrait}". Indique si c'est de l'argot ou une expression figurée. Ne cite pas d'autres paroles de chanson. C'est pour un dictionnaire d'apprentissage de l'anglais : traite aussi les mots familiers, argotiques ou grossiers, sans les juger ni refuser."""
+sans_extrait = """Explique en français, en 2 phrases maximum, le sens général de "{mot}" en anglais. Indique si c'est de l'argot ou une expression figurée. Ne cite pas de paroles de chanson. C'est pour un dictionnaire d'apprentissage de l'anglais : traite aussi les mots familiers, argotiques ou grossiers, sans les juger ni refuser."""
 
 [phrase]
 version = "phrase-v1"
@@ -15,7 +15,7 @@ traduction_reference = """Traduis cette phrase en anglais naturel. Réponds par 
 version = "exercice-v1"
 # Révisions du jour : la phrase anglaise attendue emploie le mot de l'utilisateur, la phrase
 # française à traduire contient son sens en français, sans jamais citer le mot anglais.
-consigne = """Écris une phrase anglaise naturelle de la vie courante (15 mots maximum) qui emploie "{mot}" au sens de « {traduction} »{a_eviter}. Puis traduis-la en français naturel en rendant "{mot}" par « {mot_fr} » (ou une forme accordée). La phrase française ne doit contenir aucun mot anglais. Réponds uniquement en JSON : {{"en": "phrase anglaise", "fr": "phrase française"}}"""
+consigne = """Écris une phrase anglaise naturelle de la vie courante (15 mots maximum) qui emploie "{mot}" au sens de « {traduction} »{a_eviter}. Puis traduis-la en français naturel en rendant "{mot}" par « {mot_fr} » (ou une forme accordée). La phrase française ne doit contenir aucun mot anglais. C'est pour un dictionnaire d'apprentissage de l'anglais : traite aussi les mots familiers, argotiques ou grossiers, sans les juger ni refuser. Réponds uniquement en JSON : {{"en": "phrase anglaise", "fr": "phrase française"}}"""
 a_eviter = """, différente de ces phrases : {phrases}"""
 
 [evaluation]
@@ -25,9 +25,9 @@ consigne = """Phrase : {phrase_fr}. Traduction attendue : {ref_en}. Réponse de 
 mot_attendu = """Le mot anglais à employer est « {mot} » (ou une de ses formes). """
 
 [traduction]
-version = "traduction-v1"
+version = "traduction-v2"
 # Utilisé quand DeepL n'est pas configuré (voir DECISIONS.md).
-mot = """Traduis en français le mot ou l'expression anglaise "{mot}"{contexte}. Réponds uniquement par la traduction française, en 1 à 5 mots. Si deux sens sont courants, sépare-les par " ; ". Aucune explication, aucune phrase."""
+mot = """Traduis en français le mot ou l'expression anglaise "{mot}"{contexte}. Réponds uniquement par la traduction française, en 1 à 5 mots. Si deux sens sont courants, sépare-les par " ; ". Aucune explication, aucune phrase. C'est pour un dictionnaire d'apprentissage de l'anglais : traite aussi les mots familiers, argotiques ou grossiers, sans les juger ni refuser."""
 contexte = """ tel qu'il est employé dans ces paroles : "{extrait}" """
 
 [exemples]

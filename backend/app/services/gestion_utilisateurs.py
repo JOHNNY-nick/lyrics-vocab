@@ -342,7 +342,7 @@ class GestionUtilisateurs:
                     c,
                     "SELECT intervalle_notifications_min, notifications_debut, notifications_fin, "
                     "mots_par_session, mode_revision, heure_changement_jour, sync_wifi_seulement, "
-                    "updated_at FROM reglage LIMIT 1",
+                    "created_at, updated_at FROM reglage LIMIT 1",
                 )
                 artistes = lignes(
                     c,
@@ -370,7 +370,9 @@ class GestionUtilisateurs:
                 "base": base,
                 "acces": acces,
                 "codes_actifs": sum(1 for v in codes.values() if v == compte),
-                "cree_le": inscription.get("cree_le"),
+                # Bases créées avant le registre : date de création de leurs réglages.
+                "cree_le": inscription.get("cree_le")
+                or (reglage[0]["created_at"] if reglage else None),
                 "taille_octets": taille,
                 "bibliotheque": bibliotheque,
                 "revisions": revisions,

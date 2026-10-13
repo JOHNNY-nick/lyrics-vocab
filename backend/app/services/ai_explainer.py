@@ -93,6 +93,20 @@ class Explication:
     version_prompt: str
 
 
+# Refus du modèle (mots grossiers ou sensibles) : jamais enregistré comme traduction ou
+# explication (cas signalé : « fuck » traduit par « je suis désolé, mais je ne peux pas… »).
+REFUS = re.compile(
+    r"(je ne peux pas|je suis désolé|désolé,? mais|je ne suis pas en mesure|je refuse|"
+    r"en tant qu'(ia|intelligence)|contenu (offensant|inapproprié)|"
+    r"i can'?t|i cannot|i'?m sorry|as an ai|i won'?t)",
+    re.IGNORECASE,
+)
+
+
+def est_refus(texte: str | None) -> bool:
+    return bool(texte) and bool(REFUS.search(texte))
+
+
 def est_francais(texte: str) -> bool:
     """Détection simple : plus de mots outils français qu'anglais (IA-11)."""
     mots = [m.lower() for m in _MOT.findall(texte)]
@@ -146,7 +160,12 @@ async def expliquer(
         prompt = prompts["sans_extrait"].format(mot=mot)
     brut = await ollama.generer(prompt, max_jetons)
     texte = nettoyer_explication(brut, extrait)
-    if not texte or not est_francais(texte):
+    if not texte or not est_francais(texte) or est_refus(texte):
+        from app.services.grossieretes import secours
+
+        connu = secours(mot)  # mot grossier refusé par le modèle
+        if connu:
+            return Explication(connu[1], "dictionnaire-grossieretes")
         journaliser(
             "ia_sortie_invalide",
             "avertissement",
