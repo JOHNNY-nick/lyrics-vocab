@@ -137,6 +137,7 @@ def test_migration_non_appliquee_refuse_le_demarrage(parametres, services, base_
     from sqlalchemy import text
 
     with base_vide.begin() as connexion:
+        actuelle = connexion.execute(text("SELECT version_num FROM alembic_version")).scalar()
         connexion.execute(text("UPDATE alembic_version SET version_num='0000'"))
     try:
         app = creer_app(parametres, services, demarrer_taches=False)
@@ -144,4 +145,4 @@ def test_migration_non_appliquee_refuse_le_demarrage(parametres, services, base_
             pass
     finally:
         with base_vide.begin() as connexion:
-            connexion.execute(text("UPDATE alembic_version SET version_num='0002'"))
+            connexion.execute(text("UPDATE alembic_version SET version_num=:v"), {"v": actuelle})

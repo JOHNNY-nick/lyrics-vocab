@@ -21,3 +21,9 @@ version = "traduction-v1"
 # Utilisé quand DeepL n'est pas configuré (voir DECISIONS.md).
 mot = """Traduis en français le mot ou l'expression anglaise "{mot}"{contexte}. Réponds uniquement par la traduction française, en 1 à 5 mots. Si deux sens sont courants, sépare-les par " ; ". Aucune explication, aucune phrase."""
 contexte = """ tel qu'il est employé dans ces paroles : "{extrait}" """
+
+[exemples]
+version = "exemples-v1"
+# Phrases pour apprendre à employer le mot (demande de l'utilisateur, voir DECISIONS.md).
+consigne = """Écris 2 phrases d'exemple courtes (15 mots maximum) et naturelles en anglais courant qui utilisent "{mot}" au sens de « {traduction} »{contexte}. Les phrases doivent être différentes des paroles de chansons et ne pas citer de chanson. Pour chacune, donne la traduction française. Réponds uniquement en JSON : [{{"en": "phrase anglaise", "fr": "traduction française"}}, {{"en": "...", "fr": "..."}}]"""
+contexte = """ (comme dans ces paroles : "{extrait}")"""

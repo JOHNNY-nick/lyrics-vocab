@@ -37,6 +37,13 @@ class ExtraitSortie(BaseModel):
     morceau: MorceauSortie
 
 
+class Exemple(BaseModel):
+    """Phrase d'exemple générée par l'IA, avec sa traduction."""
+
+    en: str
+    fr: str
+
+
 class MotResume(BaseModel):
     """Mot dans une liste."""
 
@@ -56,6 +63,7 @@ class MotDetail(MotResume):
     explication: str | None
     source_explication: Literal["ia", "traduction_seule"] | None
     erreur_enrichissement: str | None = None
+    exemples: list[Exemple] = []
     nb_echecs: int
     extraits: list[ExtraitSortie]
     created_at: DateHeureUtc

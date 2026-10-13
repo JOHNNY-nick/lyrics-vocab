@@ -51,6 +51,7 @@ def dues(
                 "indice": revisions.indice_depuis(premier),
                 "explication": mot.explication,
                 "source_explication": mot.source_explication,
+                "exemples": mot.exemples or [],
                 "extrait": premier,
             }
         )

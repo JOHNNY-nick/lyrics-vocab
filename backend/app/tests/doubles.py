@@ -143,12 +143,16 @@ class FauxOllama:
     )
     panne: bool = False
     prompts: list[str] = field(default_factory=list)
+    # Phrases d'exemple : réponse séparée pour ne pas consommer les réponses programmées.
+    exemples: str = '[{"en": "%s", "fr": "Exemple."}]'
 
     async def generer(self, prompt: str, max_jetons: int = 150) -> str:
         if self.panne:
             raise IaIndisponible()
         self.compteur.incrementer("ollama")
         self.prompts.append(prompt)
+        if "phrases d'exemple" in prompt:
+            return self.exemples % prompt.split('"')[1]
         return self.reponses.pop(0) if self.reponses else self.defaut
 
     async def disponible(self) -> bool:

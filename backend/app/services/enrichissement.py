@@ -15,6 +15,7 @@ from app.core.errors import ErreurApi, IaIndisponible, QuotaDepasse, ServiceIndi
 from app.core.logging import journaliser
 from app.models import Artiste, Extrait, Morceau, Mot
 from app.services import ai_explainer, artistes
+from app.services.ai_exemples import generer_exemples
 from app.services.ai_traduction import traduire_par_ia
 from app.services.deepl_client import DeeplClient
 from app.services.deezer_client import DeezerClient
@@ -290,6 +291,7 @@ async def enrichir(
         explication = mot.explication if mot.source_explication == "ia" else None
         erreur_precedente = mot.erreur_enrichissement
         enrichi_le = mot.enrichi_le
+        exemples = mot.exemples
         extrait_existant = _premier_extrait(session, mot_id)
     journaliser("enrichissement_debut", mot_id=str(mot_id), longueur_terme=len(terme))
 
@@ -344,6 +346,15 @@ async def enrichir(
         except ErreurApi as exc:
             erreurs.append(exc.code if exc.code == "ia_format_invalide" else "ia_indisponible")
 
+    if not exemples and traduction:
+        try:
+            if await services.ollama.disponible():
+                exemples = await generer_exemples(
+                    services.ollama, terme, traduction, extrait_existant
+                )
+        except ErreurApi:
+            pass  # facultatif : n'influe pas sur le statut de la fiche
+
     if traduction and extrait_existant and explication:
         statut = "ok"
     elif traduction:
@@ -361,6 +372,8 @@ async def enrichir(
             mot.source_explication = "ia"
         elif traduction:
             mot.source_explication = "traduction_seule"
+        if exemples:
+            mot.exemples = exemples
         mot.statut_enrichissement = statut
         mot.erreur_enrichissement = erreurs[0] if erreurs and statut != "ok" else None
         mot.enrichi_le = datetime.now(UTC)

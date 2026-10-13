@@ -1,11 +1,18 @@
 // Prononciation vocale des mots : synthèse vocale de l'appareil (Web Speech API dans la PWA,
 // moteur de synthèse d'Android sur le téléphone). Aucun serveur ni clé, fonctionne hors ligne
 // si la voix anglaise est installée sur l'appareil.
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_tts/flutter_tts.dart';
+
+import 'plateforme.dart';
 
 const langueAnglaise = 'en-US';
 const vitesseNormale = 0.45;
 const vitesseLente = 0.25;
+
+// Web Speech API : 1,0 est la vitesse normale.
+const vitesseNormaleWeb = 0.9;
+const vitesseLenteWeb = 0.55;
 
 abstract class ServicePrononciation {
   /// Prononce [texte] en anglais ; [lent] pour une diction ralentie. Faux si impossible.
@@ -27,6 +34,13 @@ class PrononciationAppareil implements ServicePrononciation {
 
   @override
   Future<bool> prononcer(String texte, {bool lent = false}) async {
+    if (kIsWeb) {
+      try {
+        return prononcerNavigateur(texte, vitesse: lent ? vitesseLenteWeb : vitesseNormaleWeb);
+      } catch (_) {
+        return false;
+      }
+    }
     try {
       await _preparer();
       await _tts.stop();

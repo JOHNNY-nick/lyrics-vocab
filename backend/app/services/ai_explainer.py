@@ -163,5 +163,5 @@ def est_argot(explication: str | None, traduction: str | None) -> bool:
     """Vrai si l'explication ou la traduction signale de l'argot (pastille « Argot »)."""
     contenu = " ".join(x for x in (explication, traduction) if x).lower()
     return bool(re.search(r"\bargot", contenu)) and not re.search(
-        r"(pas|n'est pas|non)\s+(de l')?argot", contenu
+        r"(pas|non|ni)\s+(d'|de l'|de |du )?\s*argot", contenu
     )

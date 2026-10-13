@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:lyrics_vocab/app.dart';
 import 'package:lyrics_vocab/models/divers.dart';
 import 'package:lyrics_vocab/models/extrait.dart';
+import 'package:lyrics_vocab/models/mot.dart';
 import 'package:lyrics_vocab/providers/providers.dart';
 import 'package:lyrics_vocab/services/connectivite_service.dart';
 import 'package:lyrics_vocab/services/depot_local.dart';
@@ -86,6 +87,7 @@ Future<void> ajouterExtrait(Banc banc, String motId, {bool horsListe = false}) a
       explication: 'Argot : veut dire un peu.',
       sourceExplication: 'ia',
       statutEnrichissement: 'ok',
+      exemples: const [Exemple(en: 'I lowkey love this song.', fr: "J'aime un peu cette chanson.")],
     ),
   );
 }
@@ -142,7 +144,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 500));
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.text(S.ficheDuMot), findsOneWidget);
-    expect(find.text(S.etiquetteIA), findsOneWidget);
+    expect(find.text(S.etiquetteIA), findsNWidgets(2)); // explication et phrases d'exemple
+    expect(find.text(S.exemples), findsOneWidget);
     expect(find.text(S.horsListe), findsOneWidget);
     expect(find.text(S.argot), findsOneWidget);
     expect(find.text('Titre — Artiste'), findsOneWidget);
@@ -173,6 +176,14 @@ void main() {
     await tester.tap(find.text(S.reveler));
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('discrètement'), findsOneWidget);
+    // Phrases pour employer le mot, avec leur prononciation.
+    expect(find.text(S.exemples), findsOneWidget);
+    expect(find.text("J'aime un peu cette chanson."), findsOneWidget);
+    final phrase = find.bySemanticsLabel('${S.ecouterPhrase} « I lowkey love this song. »');
+    await tester.ensureVisible(phrase);
+    await tester.tap(phrase);
+    await tester.pump();
+    expect((banc.env.prononciation as PrononciationNeutre).demandes, [('I lowkey love this song.', false)]);
     expect(tester.widget<BoutonPrincipal>(savais).onPressed, isNotNull);
     await tester.ensureVisible(savais);
     await tester.tap(savais);

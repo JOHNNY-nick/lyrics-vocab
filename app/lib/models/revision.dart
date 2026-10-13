@@ -1,6 +1,7 @@
 import '../services/sm2.dart';
 import 'extrait.dart';
 import 'json.dart';
+import 'mot.dart';
 
 /// Révision planifiée ou faite (17.4, 40.1).
 class Revision {
@@ -127,6 +128,7 @@ class RevisionDue {
     this.indice,
     this.explication,
     this.sourceExplication,
+    this.exemples = const [],
     this.extrait,
   });
 
@@ -139,6 +141,7 @@ class RevisionDue {
   final String? indice;
   final String? explication;
   final String? sourceExplication;
+  final List<Exemple> exemples;
   final Extrait? extrait;
 
   factory RevisionDue.fromJson(Map<String, dynamic> json) => RevisionDue(
@@ -151,6 +154,7 @@ class RevisionDue {
     indice: json['indice'] as String?,
     explication: json['explication'] as String?,
     sourceExplication: json['source_explication'] as String?,
+    exemples: Exemple.liste(json['exemples']),
     extrait: json['extrait'] == null
         ? null
         : Extrait.fromJson(json['extrait'] as Map<String, dynamic>, motId: json['mot_id'] as String),

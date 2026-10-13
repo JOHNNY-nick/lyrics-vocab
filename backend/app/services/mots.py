@@ -53,6 +53,7 @@ def _reprendre_cache(session: Session, mot: Mot) -> None:
     if ancien.source_explication == "ia":
         mot.explication = ancien.explication
         mot.source_explication = ancien.source_explication
+    mot.exemples = ancien.exemples
     anciens_extraits = session.scalars(select(Extrait).where(Extrait.mot_id == ancien.id)).all()
     for extrait in anciens_extraits:
         session.add(
@@ -238,6 +239,7 @@ def detail(session: Session, mot: Mot) -> dict:
         "explication": mot.explication,
         "source_explication": mot.source_explication,
         "erreur_enrichissement": mot.erreur_enrichissement,
+        "exemples": mot.exemples or [],
         "nb_echecs": mot.nb_echecs,
         "extraits": extraits_du_mot(session, mot.id),
         "created_at": mot.created_at,

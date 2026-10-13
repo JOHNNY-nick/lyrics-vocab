@@ -346,6 +346,7 @@ class _Fiche extends StatelessWidget {
       _apparition(context, traduction, cle: 't${mot.traductionFr}$_enCours'),
       _apparition(context, explication, cle: 'e${mot.explication}$_enCours'),
       entrainement, // juste sous l'explication
+      if (mot.exemples.isNotEmpty) BlocExemples(exemples: mot.exemples, prononciation: prononciation),
     ];
     final droite = [
       _apparition(context, colonne(extraits), cle: 'x${mot.extraits.length}$_enCours'),
@@ -362,7 +363,7 @@ class _Fiche extends StatelessWidget {
               Expanded(child: colonne(droite)),
             ],
           )
-        : colonne([gauche[0], droite.first, gauche[1], gauche[2], ...droite.skip(1)]);
+        : colonne([gauche[0], droite.first, ...gauche.skip(1), ...droite.skip(1)]);
 
     return SingleChildScrollView(
       child: ContenuCentre(

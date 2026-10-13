@@ -112,6 +112,13 @@ Demande de l'utilisateur : une version complètement fonctionnelle, en s'autoris
 | --- | --- | --- |
 | Prononciation des mots (hors périmètre v1 au cahier, demandée par l'utilisateur) | Synthèse vocale de l'appareil via `flutter_tts` : Web Speech API dans la PWA, moteur de synthèse d'Android sur le téléphone ; voix `en-US`, vitesse 0,45 (appui) et 0,25 (appui long). Bouton sur la fiche, sur la carte de révision après révélation, et sur l'écran d'exercice. | Aucun serveur, aucune clé, fonctionne hors ligne si la voix est installée ; le mot n'est jamais prononcé avant la révélation pour ne pas donner la réponse. |
 
+## Phrases pour employer le mot (2026-10-13)
+
+| Sujet | Décision | Raison |
+| --- | --- | --- |
+| Phrases d'exemple (demande de l'utilisateur) | Colonne `mot.exemples` (JSONB, migration 0003) : 2 phrases anglaises courtes et leur traduction, écrites par l'IA locale (prompt `exemples-v1`) pendant l'enrichissement, à partir du sens traduit et du premier extrait. Une phrase n'est gardée que si elle contient le mot ou une de ses formes (≤ 160 caractères). Affichées sur la carte de révision après « Révéler » et sur la fiche, chacune avec son bouton de prononciation. `scripts/completer_exemples.py` complète les mots existants. | Montrer le mot dans des phrases du quotidien, différentes des paroles, pour apprendre à l'employer ; étape facultative qui ne change pas le statut de la fiche ; la colonne part dans la synchronisation, donc les phrases sont aussi disponibles hors ligne sur le téléphone. |
+| Prononciation dans la PWA | Web Speech API appelée directement (`speechSynthesis`), voix anglaise choisie en priorité `en-US`, vitesse 0,9 et 0,55 ; `flutter_tts` reste utilisé sur Android. | `flutter_tts` levait une erreur interne dans Chrome. |
+
 ## Exigences [S] non réalisées (reportées en v2, REC-03)
 
 - NOT-09 : relance 3 heures après la notification.

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../models/extrait.dart';
+import '../models/mot.dart';
 import '../models/revision.dart';
 import '../services/extraction.dart';
 import '../services/plateforme.dart';
@@ -674,6 +675,77 @@ class BlocExplication extends StatelessWidget {
   }
 }
 
+/// Phrases d'exemple (anglais et traduction) pour apprendre à employer le mot, chacune
+/// avec son bouton de prononciation.
+class BlocExemples extends StatelessWidget {
+  const BlocExemples({super.key, required this.exemples, required this.prononciation});
+  final List<Exemple> exemples;
+  final ServicePrononciation prononciation;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.couleurs;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(Espaces.e20, Espaces.e18, Espaces.e8, Espaces.e10),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(Rayons.carte),
+        border: Border.all(color: c.bordure),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: Espaces.e12),
+            child: SizedBox(
+              width: double.infinity,
+              child: Wrap(
+                alignment: WrapAlignment.spaceBetween,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: Espaces.e8,
+                runSpacing: Espaces.e6,
+                children: [
+                  Semantics(
+                    header: true,
+                    child: Text(S.exemples, style: Textes.libelleCarte.copyWith(color: c.violetFonce)),
+                  ),
+                  const EtiquetteIA(),
+                ],
+              ),
+            ),
+          ),
+          for (final exemple in exemples)
+            Padding(
+              padding: const EdgeInsets.only(top: Espaces.e8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          exemple.en,
+                          style: Textes.corps.copyWith(color: c.encre, fontWeight: FontWeight.w600),
+                        ),
+                        Text(exemple.fr, style: Textes.corps.copyWith(color: c.texteSecondaire)),
+                      ],
+                    ),
+                  ),
+                  BoutonPrononciation(
+                    mot: exemple.en,
+                    service: prononciation,
+                    libelle: '${S.ecouterPhrase} « ${exemple.en} »',
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
 /// Texte d'un extrait avec le mot surligné, ou masqué sur la carte de révision (43.5).
 class ExtraitSurligne extends StatelessWidget {
   const ExtraitSurligne({
@@ -1311,10 +1383,17 @@ class LienChanson extends StatelessWidget {
 
 /// Bouton haut-parleur : prononce le mot en anglais ; appui long pour une diction lente.
 class BoutonPrononciation extends StatelessWidget {
-  const BoutonPrononciation({super.key, required this.mot, required this.service, this.couleur});
+  const BoutonPrononciation({
+    super.key,
+    required this.mot,
+    required this.service,
+    this.couleur,
+    this.libelle,
+  });
   final String mot;
   final ServicePrononciation service;
   final Color? couleur;
+  final String? libelle;
 
   Future<void> _dire(BuildContext context, {required bool lent}) async {
     final ok = await service.prononcer(mot, lent: lent);
@@ -1327,7 +1406,7 @@ class BoutonPrononciation extends StatelessWidget {
     child: Cliquable(
       onTap: () => _dire(context, lent: false),
       onLongPress: () => _dire(context, lent: true),
-      libelle: S.prononcer(mot),
+      libelle: libelle ?? S.prononcer(mot),
       rayon: Rayons.etiquetteIA,
       child: SizedBox.square(
         dimension: Tailles.zoneTactileMin,

@@ -56,6 +56,7 @@ def test_enrichissement_complet(fabrique, services):
         detail = mots.detail(session, session.get(Mot, mot_id))
     assert detail["extraits"][0]["morceau"]["url_genius"] == "https://lien.test/Chanson"
     assert "lowkey" in services.ollama.prompts[0]
+    assert [e["fr"] for e in detail["exemples"]] == ["Exemple."]
 
 
 def test_sans_extrait(fabrique, services):

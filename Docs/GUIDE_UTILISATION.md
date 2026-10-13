@@ -47,8 +47,9 @@ Si le mot est déjà dans ta bibliothèque, l'application te le dit et propose d
 - **Pastilles** sous le mot : « Argot » si c'est de l'argot, et ton niveau (Nouveau, En cours, Acquis).
 - **Extraits** : sous chaque extrait, le titre et l'artiste, puis le lien **« Écouter la chanson »** qui ouvre la chanson sur Deezer (ou une recherche YouTube si elle n'a pas été trouvée). « Artiste hors de ta liste » signale un extrait trouvé chez un autre artiste que les tiens.
 - **Explication** : marquée « Générée automatiquement », car elle est écrite par l'IA.
-- **Prochaine révision** et nombre d'**échecs**.
 - **« S'entraîner avec ce mot »** : ouvre l'exercice d'utilisation (voir 6).
+- **Phrases pour l'employer** : deux phrases anglaises de la vie courante qui utilisent le mot, avec leur traduction. Le bouton 🔊 à droite de chaque phrase la lit à voix haute. Elles sont écrites par l'IA pendant le remplissage de la fiche.
+- **Prochaine révision** et nombre d'**échecs**.
 - Menu **« … »** en haut à droite → « Supprimer ce mot ». Un message « Mot supprimé — Annuler » te laisse 5 secondes pour changer d'avis.
 - Si la fiche est incomplète (aucun extrait, IA indisponible), le lien **« Réessayer l'enrichissement »** relance la recherche.
 
@@ -58,7 +59,7 @@ L'onglet **Révisions** montre combien de mots sont à revoir, le temps estimé,
 
 1. **Commencer** lance une session (20 mots au plus, réglable).
 2. La carte montre l'extrait avec le mot **masqué**. Cherche le mot dans ta tête.
-3. **Révéler** affiche le mot, sa traduction, l'explication et le lien vers la chanson.
+3. **Révéler** affiche le mot, sa traduction, l'explication, le lien vers la chanson et les **phrases pour l'employer** : deux phrases de tous les jours qui utilisent le mot, avec leur traduction et un bouton 🔊 pour les écouter. Lis-les à voix haute, puis essaie d'en inventer une à toi.
 4. Réponds honnêtement : **« Je ne savais pas »** ou **« Je savais »**.
    - Un bandeau « Réponse enregistrée — **Annuler** » reste 5 secondes si tu t'es trompé de bouton.
 5. À la fin, un récapitulatif affiche le nombre de mots révisés, tes réussites et la prochaine révision.

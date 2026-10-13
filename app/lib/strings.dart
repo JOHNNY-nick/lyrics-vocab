@@ -110,6 +110,8 @@ class S {
   static const extrait = 'EXTRAIT';
   static String extraitNumero(int n) => 'EXTRAIT $n';
   static const explication = 'EXPLICATION';
+  static const exemples = "PHRASES POUR L'EMPLOYER";
+  static const ecouterPhrase = 'Écouter la phrase';
   static const prochaineRevision = 'Prochaine révision';
   static String echecs(int n) => n > 1 ? 'Échecs' : 'Échec';
   static const reessayerEnrichissement = 'Réessayer l\'enrichissement';

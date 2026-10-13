@@ -7,7 +7,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.schemas.communs import DateHeureEntree, Niveau, Verdict
-from app.schemas.mots import ExtraitSortie
+from app.schemas.mots import Exemple, ExtraitSortie
 
 
 class ReponseRevision(BaseModel):
@@ -46,6 +46,7 @@ class RevisionDue(BaseModel):
     indice: str | None
     explication: str | None = None
     source_explication: str | None = None
+    exemples: list[Exemple] = []
     extrait: ExtraitSortie | None = None
 
 

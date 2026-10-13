@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import CheckConstraint, DateTime, Index, Integer, Text, text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base, SynchroMixin
@@ -59,3 +59,5 @@ class Mot(SynchroMixin, Base):
         Integer, nullable=False, server_default=text("0"), default=0
     )
     derniere_revision_le: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Phrases d'exemple générées par l'IA : [{"en": "...", "fr": "..."}] (voir DECISIONS.md).
+    exemples: Mapped[list | None] = mapped_column(JSONB)

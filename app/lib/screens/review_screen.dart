@@ -551,6 +551,13 @@ class _CarteRappel extends StatelessWidget {
                         const SizedBox(height: Espaces.e14),
                         BlocExplication(texte: carte.explication!),
                       ],
+                      if (carte.exemples.isNotEmpty) ...[
+                        const SizedBox(height: Espaces.e14),
+                        BlocExemples(
+                          exemples: carte.exemples,
+                          prononciation: ref.read(environnementProvider).prononciation,
+                        ),
+                      ],
                     ],
                   ),
                 ),

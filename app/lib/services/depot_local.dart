@@ -150,6 +150,7 @@ class DepotLocal implements DepotDonnees {
               : masquerMot(extrait.texte, extrait.surbrillanceDebut, extrait.surbrillanceFin),
           explication: mot.explication,
           sourceExplication: mot.sourceExplication,
+          exemples: mot.exemples,
           extrait: extrait,
         ),
       );

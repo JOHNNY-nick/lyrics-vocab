@@ -4,6 +4,23 @@ import 'json.dart';
 /// Statuts finaux de l'enrichissement.
 const statutsFinaux = {'ok', 'partiel', 'echec'};
 
+/// Phrase d'exemple générée par l'IA, pour apprendre à employer le mot.
+class Exemple {
+  const Exemple({required this.en, required this.fr});
+  final String en;
+  final String fr;
+
+  factory Exemple.fromJson(Map<String, dynamic> json) =>
+      Exemple(en: json['en'] as String? ?? '', fr: json['fr'] as String? ?? '');
+
+  Map<String, dynamic> toJson() => {'en': en, 'fr': fr};
+
+  /// Liste depuis le JSON du serveur (liste absente ou mal formée : vide).
+  static List<Exemple> liste(Object? brut) => brut is List
+      ? brut.whereType<Map<String, dynamic>>().map(Exemple.fromJson).where((e) => e.en.isNotEmpty).toList()
+      : const [];
+}
+
 /// Mot ou expression et sa fiche (18.1, 18.2, 40.1).
 class Mot {
   const Mot({
@@ -18,6 +35,7 @@ class Mot {
     this.niveau = 'nouveau',
     this.nbEchecs = 0,
     this.extraits = const [],
+    this.exemples = const [],
     this.prochaineRevision,
     required this.createdAt,
     required this.updatedAt,
@@ -35,6 +53,7 @@ class Mot {
   final String niveau;
   final int nbEchecs;
   final List<Extrait> extraits;
+  final List<Exemple> exemples;
   final DateTime? prochaineRevision;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -47,7 +66,7 @@ class Mot {
   bool get estArgot {
     final contenu = '${explication ?? ''} ${traductionFr ?? ''}'.toLowerCase();
     if (!RegExp(r'\bargot').hasMatch(contenu)) return false;
-    return !RegExp(r"(pas|n'est pas|non)\s+(de l')?argot").hasMatch(contenu);
+    return !RegExp(r"(pas|non|ni)\s+(d'|de l'|de |du )?\s*argot").hasMatch(contenu);
   }
 
   factory Mot.fromJson(Map<String, dynamic> json) {
@@ -67,6 +86,7 @@ class Mot {
       niveau: (json['niveau'] as String?) ?? 'nouveau',
       nbEchecs: lireEntier(json['nb_echecs']),
       extraits: extraits,
+      exemples: Exemple.liste(json['exemples']),
       prochaineRevision: lireJour(json['prochaine_revision']),
       createdAt: lireInstant(json['created_at']) ?? maintenant,
       updatedAt: lireInstant(json['updated_at']) ?? maintenant,
@@ -85,6 +105,7 @@ class Mot {
     'erreur_enrichissement': erreurEnrichissement,
     'niveau': niveau,
     'nb_echecs': nbEchecs,
+    'exemples': [for (final e in exemples) e.toJson()],
     'prochaine_revision': ecrireJour(prochaineRevision),
     'created_at': ecrireInstant(createdAt),
     'updated_at': ecrireInstant(updatedAt),
@@ -100,6 +121,7 @@ class Mot {
     String? niveau,
     int? nbEchecs,
     List<Extrait>? extraits,
+    List<Exemple>? exemples,
     Object? prochaineRevision = absent,
     DateTime? updatedAt,
     Object? deletedAt = absent,
@@ -117,6 +139,7 @@ class Mot {
     niveau: niveau ?? this.niveau,
     nbEchecs: nbEchecs ?? this.nbEchecs,
     extraits: extraits ?? this.extraits,
+    exemples: exemples ?? this.exemples,
     prochaineRevision: identical(prochaineRevision, absent)
         ? this.prochaineRevision
         : prochaineRevision as DateTime?,
