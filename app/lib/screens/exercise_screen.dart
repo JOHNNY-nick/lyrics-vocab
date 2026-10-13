@@ -123,6 +123,7 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen> {
                   controleur: _reponse,
                   service: ref.read(environnementProvider).dictee,
                   surReponse: (_) => _valider(),
+                  motAttendu: widget.terme,
                 ),
             ] else ...[
               BlocVerdict(verdict: _verdict!),

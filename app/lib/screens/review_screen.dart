@@ -616,6 +616,7 @@ class _CarteExercice extends ConsumerWidget {
                 controleur: controleur,
                 service: ref.read(environnementProvider).dictee,
                 surReponse: notifier.evaluer,
+                motAttendu: carte.terme,
               ),
           ] else ...[
             BlocVerdict(verdict: verdict),

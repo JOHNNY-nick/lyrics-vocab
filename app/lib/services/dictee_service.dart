@@ -9,7 +9,7 @@ import 'plateforme.dart';
 
 const langueDictee = 'en-US';
 const dureeEcouteMax = Duration(seconds: 30);
-const silenceFin = Duration(seconds: 3);
+const silenceFin = Duration(milliseconds: 2500);
 
 /// Texte reconnu ; [fin] vaut vrai pour le résultat définitif.
 typedef SurTexteDicte = void Function(String texte, bool fin);
@@ -20,7 +20,12 @@ abstract class ServiceDictee {
 
   /// Écoute jusqu'à un silence de 3 s ou 30 s au plus ; [surFin] est appelé quand l'écoute
   /// s'arrête, même sans texte reconnu.
-  Future<void> ecouter({required SurTexteDicte surTexte, required void Function() surFin});
+  /// [motAttendu] : parmi les transcriptions possibles, celle qui contient ce mot est préférée.
+  Future<void> ecouter({
+    required SurTexteDicte surTexte,
+    required void Function() surFin,
+    String? motAttendu,
+  });
   Future<void> arreter();
 }
 
@@ -37,8 +42,9 @@ class DicteeAppareil implements ServiceDictee {
     if (_pret == true) return true;
     try {
       _pret = await _reconnaissance.initialize(
+        // « notListening » arrive avant le résultat définitif : seule la fin (« done ») compte.
         onStatus: (statut) {
-          if (statut == SpeechToText.doneStatus || statut == SpeechToText.notListeningStatus) _terminer();
+          if (statut == SpeechToText.doneStatus) _terminer();
         },
         onError: (_) => _terminer(),
       );
@@ -55,11 +61,20 @@ class DicteeAppareil implements ServiceDictee {
   }
 
   @override
-  Future<void> ecouter({required SurTexteDicte surTexte, required void Function() surFin}) async {
+  Future<void> ecouter({
+    required SurTexteDicte surTexte,
+    required void Function() surFin,
+    String? motAttendu,
+  }) async {
     _surFin = surFin;
     if (kIsWeb) {
       try {
-        _arretWeb = dicterNavigateur(langue: langueDictee, surTexte: surTexte, surFin: _terminer);
+        _arretWeb = dicterNavigateur(
+          langue: langueDictee,
+          motAttendu: motAttendu,
+          surTexte: surTexte,
+          surFin: _terminer,
+        );
       } catch (_) {
         _arretWeb = null;
       }
@@ -67,7 +82,10 @@ class DicteeAppareil implements ServiceDictee {
       return;
     }
     await _reconnaissance.listen(
-      onResult: (SpeechRecognitionResult r) => surTexte(r.recognizedWords, r.finalResult),
+      onResult: (SpeechRecognitionResult r) {
+        surTexte(_meilleure(r, motAttendu), r.finalResult);
+        if (r.finalResult) _terminer();
+      },
       listenOptions: SpeechListenOptions(
         // Android attend « en_US », le navigateur « en-US ».
         localeId: kIsWeb ? langueDictee : langueDictee.replaceAll('-', '_'),
@@ -78,6 +96,16 @@ class DicteeAppareil implements ServiceDictee {
         cancelOnError: true,
       ),
     );
+  }
+
+  static String _meilleure(SpeechRecognitionResult r, String? mot) {
+    final cible = mot?.toLowerCase();
+    if (cible != null) {
+      for (final alternative in r.alternates) {
+        if (alternative.recognizedWords.toLowerCase().contains(cible)) return alternative.recognizedWords;
+      }
+    }
+    return r.recognizedWords;
   }
 
   @override
@@ -105,8 +133,15 @@ class DicteeNeutre implements ServiceDictee {
   @override
   Future<bool> preparer() async => disponible;
 
+  String? motAttendu;
+
   @override
-  Future<void> ecouter({required SurTexteDicte surTexte, required void Function() surFin}) async {
+  Future<void> ecouter({
+    required SurTexteDicte surTexte,
+    required void Function() surFin,
+    String? motAttendu,
+  }) async {
+    this.motAttendu = motAttendu;
     final texte = phrase;
     if (texte != null) surTexte(texte, true);
     surFin();

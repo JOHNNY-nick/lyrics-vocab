@@ -1413,10 +1413,19 @@ class BoutonPrononciation extends StatelessWidget {
 /// Bouton micro des exercices : la réponse dictée en anglais remplit [controleur], puis
 /// [surReponse] la fait vérifier (sauf si rien n'a été entendu).
 class BoutonDictee extends StatefulWidget {
-  const BoutonDictee({super.key, required this.controleur, required this.service, required this.surReponse});
+  const BoutonDictee({
+    super.key,
+    required this.controleur,
+    required this.service,
+    required this.surReponse,
+    this.motAttendu,
+  });
   final TextEditingController controleur;
   final ServiceDictee service;
   final ValueChanged<String> surReponse;
+
+  /// Mot de l'exercice : aide à choisir la bonne transcription (jamais affiché).
+  final String? motAttendu;
 
   @override
   State<BoutonDictee> createState() => _BoutonDicteeState();
@@ -1447,6 +1456,7 @@ class _BoutonDicteeState extends State<BoutonDictee> {
       _dernier = '';
     });
     await widget.service.ecouter(
+      motAttendu: widget.motAttendu,
       surTexte: (texte, _) {
         _dernier = texte;
         widget.controleur.text = texte;

@@ -9,6 +9,7 @@ import 'plateforme.dart';
 const langueAnglaise = 'en-US';
 const vitesseNormale = 0.45;
 const vitesseLente = 0.25;
+const moteurGoogle = 'com.google.android.tts';
 
 // Web Speech API : 1,0 est la vitesse normale.
 const vitesseNormaleWeb = 0.9;
@@ -22,27 +23,42 @@ abstract class ServicePrononciation {
 
 class PrononciationAppareil implements ServicePrononciation {
   final FlutterTts _tts = FlutterTts();
-  bool _pret = false;
+  bool? _pret;
 
-  Future<void> _preparer() async {
-    if (_pret) return;
-    await _tts.setLanguage(langueAnglaise);
+  /// Moteur Google s'il est installé (meilleures voix anglaises que celui du fabricant), puis
+  /// anglais américain, à défaut britannique. Faux si aucune voix anglaise n'est disponible :
+  /// mieux vaut un message qu'un mot lu avec la voix française.
+  Future<bool> _preparer() async {
+    if (_pret != null) return _pret!;
+    try {
+      final moteurs = (await _tts.getEngines as List?)?.cast<Object?>() ?? const [];
+      if (moteurs.contains(moteurGoogle)) await _tts.setEngine(moteurGoogle);
+    } catch (_) {}
+    var langue = '';
+    for (final candidate in const [langueAnglaise, 'en-GB']) {
+      if (await _tts.isLanguageAvailable(candidate) == true) {
+        langue = candidate;
+        break;
+      }
+    }
+    if (langue.isEmpty) return _pret = false;
+    await _tts.setLanguage(langue);
     await _tts.setPitch(1.0);
     await _tts.awaitSpeakCompletion(false);
-    _pret = true;
+    return _pret = true;
   }
 
   @override
   Future<bool> prononcer(String texte, {bool lent = false}) async {
     if (kIsWeb) {
       try {
-        return prononcerNavigateur(texte, vitesse: lent ? vitesseLenteWeb : vitesseNormaleWeb);
+        return await prononcerNavigateur(texte, vitesse: lent ? vitesseLenteWeb : vitesseNormaleWeb);
       } catch (_) {
         return false;
       }
     }
     try {
-      await _preparer();
+      if (!await _preparer()) return false;
       await _tts.stop();
       await _tts.setSpeechRate(lent ? vitesseLente : vitesseNormale);
       final resultat = await _tts.speak(texte);

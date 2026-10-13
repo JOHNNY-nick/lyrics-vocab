@@ -275,6 +275,7 @@ void main() {
     await tester.tap(micro);
     await tester.pump(const Duration(milliseconds: 300));
     expect(evaluees, {'I lowkey love this restaurant'});
+    expect((banc.env.dictee as DicteeNeutre).motAttendu, 'lowkey'); // aide à la transcription
     expect(find.text(S.taReponseLabel), findsOneWidget);
     expect(find.text('I lowkey love this restaurant'), findsOneWidget);
     expect(find.text(S.motAEmployer), findsOneWidget);

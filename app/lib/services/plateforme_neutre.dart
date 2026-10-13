@@ -11,11 +11,12 @@ String originePage() => '';
 Future<bool> ouvrirLien(String url) => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
 
 /// Synthèse vocale du navigateur : sans objet hors du web.
-bool prononcerNavigateur(String texte, {required double vitesse}) => false;
+Future<bool> prononcerNavigateur(String texte, {required double vitesse}) async => false;
 
 /// Reconnaissance vocale du navigateur : sans objet hors du web.
 void Function()? dicterNavigateur({
   required String langue,
+  String? motAttendu,
   required void Function(String texte, bool fin) surTexte,
   required void Function() surFin,
 }) => null;
