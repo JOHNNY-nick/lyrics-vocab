@@ -1,7 +1,9 @@
-"""Page et API d'administration des utilisateurs (/admin), réservées au propriétaire.
+"""Page et API d'administration des utilisateurs (/admin), sur ce PC uniquement.
 
-Accès : requêtes locales (127.0.0.1, sans en-tête de compte) ou appareils du propriétaire
-par Tailscale. Toujours refusé par le tunnel Cloudflare (même avec un code) et aux amis.
+Accès : seulement les requêtes faites sur le PC lui-même (http://127.0.0.1:8000/admin).
+Refusé par Tailscale (même depuis les appareils du propriétaire) et par le tunnel Cloudflare :
+ces requêtes arrivent avec l'adresse de l'appareil distant (en-têtes X-Forwarded-For) et un
+en-tête Tailscale-User-Login ou Cf-Ray.
 """
 
 import asyncio
@@ -13,7 +15,7 @@ from pydantic import BaseModel, Field
 
 from app.core.codes_acces import EN_TETE_TUNNEL
 from app.core.errors import ErreurApi
-from app.core.locataires import compte
+from app.core.locataires import EN_TETE_COMPTE
 from app.services.gestion_utilisateurs import GestionUtilisateurs
 
 PAGE = Path(__file__).resolve().parents[1] / "admin" / "index.html"
@@ -23,16 +25,18 @@ routeur = APIRouter(tags=["administration"])
 
 class AccesAdminRefuse(ErreurApi):
     code, statut_http = "acces_admin_refuse", 403
-    message_defaut = "Cette page est réservée au propriétaire du PC."
+    message_defaut = "Cette page ne s'ouvre que sur le PC lui-même : http://127.0.0.1:8000/admin"
+
+
+# « testclient » : client des tests automatiques (jamais vu en production).
+HOTES_LOCAUX = {"127.0.0.1", "::1", "localhost", "testclient"}
 
 
 def proprietaire(request: Request) -> None:
-    """Refuse tout ce qui n'est pas le propriétaire (dépendance des routes)."""
-    if EN_TETE_TUNNEL in request.headers:
-        raise AccesAdminRefuse()
-    login = compte(request)
-    attendu = request.app.state.parametres.proprietaire_login.strip().lower()
-    if login is not None and login != attendu:
+    """Refuse toute requête qui ne vient pas du PC lui-même (dépendance des routes)."""
+    distante = EN_TETE_TUNNEL in request.headers or EN_TETE_COMPTE in request.headers
+    hote = request.client.host if request.client else None
+    if distante or hote not in HOTES_LOCAUX:
         raise AccesAdminRefuse()
 
 

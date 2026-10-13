@@ -271,7 +271,7 @@ cd C:\lyrics-vocab\depot\backend
 .\.venv\Scripts\python.exe ..\scripts\utilisateurs.py supprimer Prénom   # bloque l'accès et efface sa bibliothèque
 ```
 
-**Page d'administration** : https://desktop-jd3qf3s.tail971f32.ts.net/admin (ou http://127.0.0.1:8000/admin sur le PC), réservée au propriétaire (refusée par le tunnel et aux comptes Tailscale des amis) : liste des utilisateurs, création de codes, retrait, suppression.
+**Page d'administration** : http://127.0.0.1:8000/admin, **sur le PC uniquement** (refusée par Tailscale, même depuis tes appareils, et par le tunnel) : liste des utilisateurs, création de codes, retrait, suppression.
 
 Les codes sont stockés hachés dans `C:/lyrics-vocab/secrets/codes_acces.json` (`CODES_ACCES_FICHIER`). Sans code valide, le tunnel ne donne accès qu'à `/api/health`.
 

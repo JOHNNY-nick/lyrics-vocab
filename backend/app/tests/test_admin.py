@@ -28,19 +28,17 @@ def _ligne(client, nom: str) -> dict:
     return next(u for u in lignes if u["nom"] == nom)
 
 
-def test_reservee_au_proprietaire(admin):
+def test_seulement_sur_le_pc(admin):
     client, _ = admin
     assert client.get("/admin").status_code == 200  # requête locale
+    # Par Tailscale, même depuis un appareil du propriétaire : refusé.
     moi = {"Tailscale-User-Login": PROPRIETAIRE}
-    assert client.get("/admin", headers=moi).status_code == 200
+    assert client.get("/admin", headers=moi).status_code == 403
     ami = {"Tailscale-User-Login": "ami@exemple.com"}
-    assert client.get("/admin", headers=ami).status_code == 403
-    assert client.get("/admin", headers={**TUNNEL, **moi}).status_code == 403
-    assert client.get("/api/admin/utilisateurs", headers=TUNNEL).status_code in (
-        401,
-        403,
-    )
-    reponse = client.post("/api/admin/invitations", json={"prenom": "Zoé"}, headers=ami)
+    assert client.get("/api/admin/utilisateurs", headers=ami).status_code == 403
+    assert client.get("/admin", headers=TUNNEL).status_code == 403
+    assert client.get("/api/admin/utilisateurs", headers=TUNNEL).status_code in (401, 403)
+    reponse = client.post("/api/admin/invitations", json={"prenom": "Zoé"}, headers=moi)
     assert reponse.status_code == 403
 
 
