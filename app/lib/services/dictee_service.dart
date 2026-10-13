@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
+import 'plateforme.dart';
+
 const langueDictee = 'en-US';
 const dureeEcouteMax = Duration(seconds: 30);
 const silenceFin = Duration(seconds: 3);
@@ -27,8 +29,11 @@ class DicteeAppareil implements ServiceDictee {
   bool? _pret;
   void Function()? _surFin;
 
+  void Function()? _arretWeb;
+
   @override
   Future<bool> preparer() async {
+    if (kIsWeb) return true; // l'accès au micro est demandé par le navigateur au démarrage
     if (_pret == true) return true;
     try {
       _pret = await _reconnaissance.initialize(
@@ -52,6 +57,15 @@ class DicteeAppareil implements ServiceDictee {
   @override
   Future<void> ecouter({required SurTexteDicte surTexte, required void Function() surFin}) async {
     _surFin = surFin;
+    if (kIsWeb) {
+      try {
+        _arretWeb = dicterNavigateur(langue: langueDictee, surTexte: surTexte, surFin: _terminer);
+      } catch (_) {
+        _arretWeb = null;
+      }
+      if (_arretWeb == null) _terminer();
+      return;
+    }
     await _reconnaissance.listen(
       onResult: (SpeechRecognitionResult r) => surTexte(r.recognizedWords, r.finalResult),
       listenOptions: SpeechListenOptions(
@@ -68,6 +82,13 @@ class DicteeAppareil implements ServiceDictee {
 
   @override
   Future<void> arreter() async {
+    if (kIsWeb) {
+      // L'arrêt déclenche « onend », qui transmet le dernier texte reconnu.
+      final arret = _arretWeb;
+      _arretWeb = null;
+      if (arret != null) return arret();
+      return _terminer();
+    }
     try {
       await _reconnaissance.stop();
     } catch (_) {}
