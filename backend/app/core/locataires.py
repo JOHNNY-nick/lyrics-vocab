@@ -27,6 +27,8 @@ from app.services.enrichissement import GestionnaireEnrichissement, Services
 
 EN_TETE_COMPTE = "tailscale-user-login"
 SUFFIXE = "_u_"
+CONNEXIONS_AMI = 1
+CONNEXIONS_AMI_SUP = 4
 
 
 @dataclass
@@ -151,7 +153,12 @@ class Locataires:
             command.upgrade(config_alembic(self._url_base(base)), "head")
 
     def _ouvrir(self, base: str) -> Locataire:
-        fabrique = creer_fabrique(creer_moteur(self._url_base(base)))
+        # Une connexion gardée ouverte par ami (4 de plus au besoin) : PostgreSQL en accepte 100
+        # en tout ; la base du propriétaire en garde 5.
+        moteur = creer_moteur(
+            self._url_base(base), pool_size=CONNEXIONS_AMI, max_overflow=CONNEXIONS_AMI_SUP
+        )
+        fabrique = creer_fabrique(moteur)
         services = replace(self.principal.services, fabrique=fabrique)
         gestionnaire = GestionnaireEnrichissement(services)
         if self.demarrer_taches and self.boucle is not None:

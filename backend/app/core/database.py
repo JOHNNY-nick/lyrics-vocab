@@ -14,9 +14,11 @@ from app.core.logging import journaliser
 INTERVALLE_TENTATIVE_S = 2
 
 
-def creer_moteur(url: str) -> Engine:
+def creer_moteur(url: str, pool_size: int = 5, max_overflow: int = 5) -> Engine:
     """Crée le moteur avec vérification des connexions (reprise après un arrêt de PostgreSQL)."""
-    return create_engine(url, pool_pre_ping=True, pool_size=5, max_overflow=5, future=True)
+    return create_engine(
+        url, pool_pre_ping=True, pool_size=pool_size, max_overflow=max_overflow, future=True
+    )
 
 
 def creer_fabrique(moteur: Engine) -> sessionmaker[Session]:
