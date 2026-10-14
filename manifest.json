@@ -1,0 +1,14 @@
+{
+    "name": "Lyrics & Vocab",
+    "short_name": "Lyrics&Vocab",
+    "description": "Apprends l'anglais avec tes chansons",
+    "lang": "fr",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#F6F4FF",
+    "theme_color": "#6C4DFF",
+    "icons": [
+        {"src": "icone.png", "sizes": "192x192", "type": "image/png", "purpose": "any"}
+    ]
+}

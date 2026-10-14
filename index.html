@@ -8,12 +8,15 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Lyrics &amp; Vocab">
+<link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icone.png">
 <link rel="icon" type="image/png" href="icone.png">
 <title>Lyrics &amp; Vocab</title>
 <!-- Page de lancement pour iPhone : l'adresse du tunnel change à chaque démarrage du PC ;
-     cette page, à une adresse fixe, la lit sur la branche « adresse » du dépôt puis ouvre
-     l'application en lui passant le code d'invitation (#code=…, jamais envoyé au serveur). -->
+     cette page, à une adresse fixe, la lit sur la branche « adresse » du dépôt, vérifie le
+     code d'invitation auprès du PC puis ouvre l'application en lui passant le code
+     (#code=…, jamais envoyé dans l'adresse au serveur). Adresse fixe : c'est aussi elle qui
+     reçoit les notifications (Web Push, sw.js) et les transmet à l'application (&abo=…). -->
 <style>
   :root { --fond:#F6F4FF; --encre:#1C1530; --texte:#5B5470; --violet:#6C4DFF; --carte:#FFFFFF; --bord:#DDD7F5; --erreur:#C62D3A; }
   @media (prefers-color-scheme: dark) {
@@ -48,6 +51,7 @@
   <h1>Lyrics &amp; Vocab</h1>
 
   <section id="saisie" hidden>
+    <p class="erreur" id="refus" hidden>Ce code n'est pas reconnu. Vérifie-le et entre-le de nouveau.</p>
     <p>Entre le code d'invitation que tu as reçu (<span style="white-space:nowrap">LV-XXXX-XXXX</span>). Il n'est demandé qu'une fois.</p>
     <form id="formulaire">
       <input id="code" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="20" placeholder="LV-XXXX-XXXX" aria-label="Code d'invitation">
@@ -60,6 +64,12 @@
     <p>Recherche du PC…</p>
   </section>
 
+  <section id="notifications" hidden>
+    <p>Recevoir un mot de ta bibliothèque en notification, avec sa traduction ? Le rythme se règle dans Réglages → Notifications.</p>
+    <button id="activer">Activer les notifications</button>
+    <button class="lien" id="plusTard">Plus tard</button>
+  </section>
+
   <section id="echec" hidden>
     <p class="erreur" id="message"></p>
     <button id="reessayer">Réessayer</button>
@@ -69,11 +79,17 @@
 <script>
   var ADRESSE = 'https://api.github.com/repos/JOHNNY-nick/lyrics-vocab/contents/adresse.json?ref=adresse';
   var CLE = 'lyrics-vocab-code';
+  var CLE_PLUS_TARD = 'lyrics-vocab-notifications-plus-tard';
+  var RELANCE_MS = 3 * 24 * 3600 * 1000; // « Plus tard » : nouvelle question dans 3 jours
+  // Fiche à ouvrir (notification touchée : ./?mot=ID).
+  var MOT = new URLSearchParams(location.search).get('mot');
+  if (MOT && !/^[0-9a-fA-F-]{36}$/.test(MOT)) MOT = null;
+  var demandeNotifications = location.hash === '#notifications';
 
-  function lire() { try { return localStorage.getItem(CLE); } catch (e) { return null; } }
-  function ecrire(v) { try { v ? localStorage.setItem(CLE, v) : localStorage.removeItem(CLE); } catch (e) {} }
+  function lire(cle) { try { return localStorage.getItem(cle); } catch (e) { return null; } }
+  function ecrire(cle, v) { try { v ? localStorage.setItem(cle, v) : localStorage.removeItem(cle); } catch (e) {} }
   function montrer(id) {
-    ['saisie', 'attente', 'echec'].forEach(function (s) { document.getElementById(s).hidden = s !== id; });
+    ['saisie', 'attente', 'notifications', 'echec'].forEach(function (s) { document.getElementById(s).hidden = s !== id; });
   }
   function echec(texte) { document.getElementById('message').textContent = texte; montrer('echec'); }
 
@@ -81,8 +97,81 @@
     return Promise.race([promesse, new Promise(function (_, non) { setTimeout(non, ms); })]);
   }
 
+  // --- Notifications (Web Push) ------------------------------------------------------------
+  var pushPossible = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  var inscription = pushPossible ? navigator.serviceWorker.register('sw.js').catch(function () { return null; }) : Promise.resolve(null);
+
+  function octets(b64) {
+    var brut = atob(b64.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((b64.length + 3) % 4));
+    var t = new Uint8Array(brut.length);
+    for (var i = 0; i < brut.length; i++) t[i] = brut.charCodeAt(i);
+    return t;
+  }
+  function memesOctets(a, b) {
+    if (!a || a.length !== b.length) return false;
+    for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  }
+  function b64url(texte) {
+    return btoa(unescape(encodeURIComponent(texte))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  // Abonnement de cet iPhone (JSON en base64url), créé au besoin ; null sans autorisation.
+  async function abonnement(cle) {
+    if (!pushPossible || !cle || Notification.permission !== 'granted') return null;
+    try {
+      var reg = await delai(inscription.then(function () { return navigator.serviceWorker.ready; }), 5000);
+      var cleServeur = octets(cle);
+      var actuel = await reg.pushManager.getSubscription();
+      var cleActuelle = actuel && actuel.options && actuel.options.applicationServerKey;
+      if (actuel && cleActuelle && !memesOctets(new Uint8Array(cleActuelle), cleServeur)) {
+        await actuel.unsubscribe(); // clé du PC changée : nouvel abonnement
+        actuel = null;
+      }
+      actuel = actuel || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: cleServeur });
+      return b64url(JSON.stringify(actuel.toJSON()));
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // Propose les notifications (une fois tous les 3 jours, ou sur demande depuis les Réglages).
+  function proposerNotifications(cle) {
+    var plusTard = Number(lire(CLE_PLUS_TARD) || 0);
+    if (!pushPossible || !cle || Notification.permission !== 'default') return Promise.resolve();
+    if (!demandeNotifications && Date.now() - plusTard < RELANCE_MS) return Promise.resolve();
+    montrer('notifications');
+    return new Promise(function (fini) {
+      document.getElementById('activer').onclick = function () {
+        // Demande faite directement dans le geste (exigence de Safari).
+        Notification.requestPermission().then(fini, fini);
+      };
+      document.getElementById('plusTard').onclick = function () {
+        ecrire(CLE_PLUS_TARD, String(Date.now()));
+        fini();
+      };
+    });
+  }
+
+  // --- Lancement ---------------------------------------------------------------------------
+  async function verifier(adresse, code) {
+    try {
+      var r = await delai(fetch(adresse + '/api/acces/verifier', {
+        method: 'POST', body: code, headers: { 'Content-Type': 'text/plain' }, cache: 'no-store'
+      }), 10000);
+      if (r.ok) return await r.json();
+    } catch (e) {}
+    // PC d'une version précédente (sans vérification) : on vérifie seulement qu'il répond.
+    try {
+      await delai(fetch(adresse + '/api/health', { mode: 'no-cors', cache: 'no-store' }), 10000);
+      return { valide: null, cle_push: null };
+    } catch (e) {
+      return null;
+    }
+  }
+
   async function lancer() {
-    var code = lire();
+    var code = lire(CLE);
     if (!code) { montrer('saisie'); document.getElementById('code').focus(); return; }
     montrer('attente');
     var adresse;
@@ -95,25 +184,35 @@
       echec("Adresse du PC introuvable. Vérifie ta connexion Internet.");
       return;
     }
-    try {
-      await delai(fetch(adresse + '/api/health', { mode: 'no-cors', cache: 'no-store' }), 10000);
-    } catch (e) {
+    var resultat = await verifier(adresse, code);
+    if (resultat === null) {
       echec("Le PC d'Arthur ne répond pas pour l'instant (il est peut-être éteint). Réessaie dans un moment.");
       return;
     }
-    location.replace(adresse + '/#code=' + encodeURIComponent(code));
+    if (resultat.valide === false) {
+      ecrire(CLE, null);
+      document.getElementById('refus').hidden = false;
+      document.getElementById('code').value = code;
+      montrer('saisie');
+      return;
+    }
+    await proposerNotifications(resultat.cle_push);
+    montrer('attente');
+    var abo = await abonnement(resultat.cle_push);
+    location.replace(adresse + '/' + (MOT ? '?mot=' + MOT : '') + '#code=' + encodeURIComponent(code) + (abo ? '&abo=' + abo : ''));
   }
 
   document.getElementById('formulaire').addEventListener('submit', function (e) {
     e.preventDefault();
     var code = document.getElementById('code').value.trim().toUpperCase();
     if (!/^[A-Z0-9-]{4,20}$/.test(code)) return;
-    ecrire(code);
+    document.getElementById('refus').hidden = true;
+    ecrire(CLE, code);
     lancer();
   });
   document.getElementById('reessayer').addEventListener('click', lancer);
   document.getElementById('changer').addEventListener('click', function () {
-    ecrire(null);
+    ecrire(CLE, null);
     document.getElementById('code').value = '';
     montrer('saisie');
   });
