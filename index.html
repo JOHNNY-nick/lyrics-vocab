@@ -180,7 +180,9 @@
       var donnees = await r.json();
       adresse = donnees && donnees.adresse;
     } catch (e) {}
-    if (typeof adresse !== 'string' || !/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/.test(adresse)) {
+    // Tailscale Funnel (adresse fixe), ou tunnel Cloudflare en secours.
+    if (typeof adresse !== 'string' ||
+        !/^https:\/\/([a-z0-9-]+\.trycloudflare\.com|[a-z0-9-]+\.[a-z0-9-]+\.ts\.net)$/.test(adresse)) {
       echec("Adresse du PC introuvable. Vérifie ta connexion Internet.");
       return;
     }
